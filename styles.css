@@ -95,7 +95,40 @@ body{
   height:8px;
   border-radius:50%;
   background:var(--green);
-  box-shadow:0 0 10px rgba(73,215,154,.8);
+  box-shadow:0 0 7px rgba(73,215,154,.55);
+  animation:yuraOnlineBreath 3.2s ease-in-out infinite;
+  transform-origin:center;
+}
+
+.system-state span:last-child{
+  animation:yuraOnlineTextBreath 3.2s ease-in-out infinite;
+}
+
+@keyframes yuraOnlineBreath{
+  0%,100%{
+    opacity:.45;
+    transform:scale(.82);
+    box-shadow:0 0 5px rgba(73,215,154,.35);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.18);
+    box-shadow:
+      0 0 8px rgba(73,215,154,.85),
+      0 0 18px rgba(73,215,154,.35);
+  }
+}
+
+@keyframes yuraOnlineTextBreath{
+  0%,100%{opacity:.72}
+  50%{opacity:1}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .dot,
+  .system-state span:last-child{
+    animation:none;
+  }
 }
 
 .shell{
@@ -122,14 +155,13 @@ body{
 .avatar{
   width:54px;
   height:54px;
-  display:grid;
-  place-items:center;
+  display:block;
+  flex:0 0 54px;
   border-radius:12px;
   border:1px solid #343b45;
-  background:linear-gradient(145deg,#171b22,#0d1015);
-  color:var(--accent);
-  font-weight:900;
-  font-size:22px;
+  object-fit:cover;
+  object-position:center;
+  background:#0d1015;
 }
 
 .profile-meta strong{
