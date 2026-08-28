@@ -1,0 +1,53 @@
+[
+  {
+    "command": "!points",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!points",
+    "description": "Sprawdza aktualne saldo punktów Y.U.R.A."
+  },
+  {
+    "command": "!gamble",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!gamble <kwota | procent% | all>",
+    "description": "Hazard punktami. Obsługuje konkretną kwotę, procent salda i all. Możliwy CRIT WIN."
+  },
+  {
+    "command": "!give",
+    "aliases": [
+      "!transfer"
+    ],
+    "permission": "Everyone",
+    "usage": "!give @nick <kwota | procent% | all>",
+    "description": "Przekazuje własne punkty innemu użytkownikowi."
+  },
+  {
+    "command": "!addpoints",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!addpoints @nick <kwota>",
+    "description": "Dodaje punkty wybranemu użytkownikowi."
+  },
+  {
+    "command": "!removepoints",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!removepoints @nick <kwota>",
+    "description": "Odbiera punkty wybranemu użytkownikowi. Saldo nie spada poniżej zera."
+  },
+  {
+    "command": "!donocel",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donocel <kwota>",
+    "description": "Ustawia nowy cel donacji."
+  },
+  {
+    "command": "!donoreset",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donoreset",
+    "description": "Resetuje aktualnie uzbieraną kwotę celu donacji."
+  }
+]

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0d10">
+  <title>Y.U.R.A. Network — Commands</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Y</div>
+      <div>
+        <div class="brand-title">Y.U.R.A. NETWORK</div>
+        <div class="brand-sub">PUBLIC COMMAND DATABASE</div>
+      </div>
+    </div>
+
+    <div class="system-state">
+      <span class="dot"></span>
+      <span>ONLINE</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <aside class="sidebar">
+      <section class="profile-card">
+        <div class="avatar">H</div>
+        <div class="profile-meta">
+          <strong>Heiyeshi</strong>
+          <a href="https://twitch.tv/heiyeshi" target="_blank" rel="noreferrer">twitch.tv/heiyeshi</a>
+        </div>
+      </section>
+
+      <nav class="side-nav" aria-label="Nawigacja">
+        <button class="side-item active" type="button">Commands</button>
+        <button class="side-item disabled" type="button" disabled>
+          Leaderboard
+          <span>SOON</span>
+        </button>
+      </nav>
+
+      <section class="side-note">
+        <div class="eyebrow">Y.U.R.A. CORE</div>
+        <p>Publiczna lista komend działających na kanale.</p>
+      </section>
+    </aside>
+
+    <section class="content">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">PUBLIC TERMINAL</div>
+          <h1>Komendy kanału</h1>
+          <p>Wyszukaj komendę, sprawdź składnię i wymagane uprawnienia.</p>
+        </div>
+        <div class="status-chip">DATABASE READY</div>
+      </div>
+
+      <div class="toolbar">
+        <div class="tabs" role="tablist" aria-label="Filtr uprawnień">
+          <button class="tab active" type="button" data-filter="all">Wszystkie <span id="count-all">0</span></button>
+          <button class="tab" type="button" data-filter="Everyone">Dla widzów <span id="count-everyone">0</span></button>
+          <button class="tab" type="button" data-filter="Moderator">Moderator <span id="count-moderator">0</span></button>
+        </div>
+
+        <label class="search-box">
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="search" placeholder="Szukaj komendy..." autocomplete="off">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Permissions</th>
+              <th>Usage / Description</th>
+            </tr>
+          </thead>
+          <tbody id="commandsBody">
+            <tr class="loading-row">
+              <td colspan="3">Ładowanie bazy komend...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        Brak komend pasujących do filtra.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Y.U.R.A. NETWORK</span>
+    <span>•</span>
+    <span>Heiyeshi Channel Systems</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
