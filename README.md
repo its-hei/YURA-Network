@@ -35,3 +35,10 @@ Przykład:
   "description": "Opis komendy."
 }
 ```
+
+
+## v3
+- `Widzowie` jest domyślną zakładką.
+- `Wszystkie` jest trzecią zakładką.
+- avatar jest w osobnym, większym panelu obok danych profilu.
+- zielona kropka `ONLINE` ma powolną animację pulsowania.

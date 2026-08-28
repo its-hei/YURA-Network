@@ -1,6 +1,6 @@
 const state = {
   commands: [],
-  filter: "all",
+  filter: "Everyone",
   query: ""
 };
 
