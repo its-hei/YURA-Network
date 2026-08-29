@@ -198,3 +198,18 @@ Note: GoatCounter's public visitor-counter response may be cached for up to four
 Replace the C# in `Leaderboard Sync -> Execute Code` with
 `tools/StreamerBot_Leaderboard_Sync_v20.cs.txt`.
 The exporter adds `rankDelta` and `isNew` fields to the live leaderboard JSON.
+
+
+## v20.1 — remove confusing root leaderboard placeholder
+- removed the unused root-level `leaderboard.json`
+- live ranking still loads from the `live-data` branch
+- local generated leaderboard remains `tools/leaderboard.json`
+
+
+## v21 — Monthly VIP Candidates
+- replace `POMIŃ VIP / MOD` with a cleaner `KANDYDACI VIP` toggle
+- while candidate mode is active, the same button changes to `WSZYSCY`
+- change filtered ranking status from `VIP ELIGIBLE` to `KANDYDACI VIP`
+- simplify ranking subtitle to `Ranking punktów Y.U.R.A.`
+- add the monthly VIP reward rule directly to the ranking view
+- bump frontend cache version to v21

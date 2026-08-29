@@ -1455,3 +1455,75 @@ footer{
     flex-direction:column;
   }
 }
+
+
+/* ==============================
+   V21 // MONTHLY VIP RULE
+   ============================== */
+.monthly-vip-rule{
+  margin-top:12px;
+  padding:12px 14px;
+  border:1px solid rgba(242,140,24,.22);
+  border-radius:12px;
+  background:
+    linear-gradient(90deg,rgba(242,140,24,.07),transparent 68%),
+    var(--panel);
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:11px;
+  align-items:start;
+  box-shadow:var(--shadow);
+}
+
+.monthly-vip-icon{
+  width:28px;
+  height:28px;
+  border:1px solid rgba(242,140,24,.32);
+  border-radius:8px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  line-height:1;
+}
+
+.monthly-vip-copy{
+  min-width:0;
+}
+
+.monthly-vip-kicker{
+  display:block;
+  margin-bottom:4px;
+  color:var(--accent);
+  font-family:Consolas,Monaco,monospace;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+
+.monthly-vip-copy p{
+  margin:0;
+  max-width:900px;
+  color:#8d98a7;
+  font-size:11px;
+  line-height:1.55;
+}
+
+.eligibility-toggle.active{
+  border-color:rgba(242,140,24,.48);
+  background:var(--accent-soft);
+  color:#fff;
+}
+
+@media(max-width:620px){
+  .monthly-vip-rule{
+    grid-template-columns:24px minmax(0,1fr);
+    padding:11px 12px;
+  }
+
+  .monthly-vip-icon{
+    width:24px;
+    height:24px;
+  }
+}

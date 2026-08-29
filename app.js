@@ -229,7 +229,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=20", { cache: "no-store" })
+fetch("./commands.json?v=21", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -260,6 +260,7 @@ const leaderboardStatus = document.getElementById("leaderboardStatus");
 const leaderboardUpdated = document.getElementById("leaderboardUpdated");
 const leaderboardSearchInput = document.getElementById("leaderboardSearchInput");
 const leaderboardEligibilityToggle = document.getElementById("leaderboardEligibilityToggle");
+const leaderboardEligibilityLabel = document.getElementById("leaderboardEligibilityLabel");
 const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
@@ -361,6 +362,18 @@ function renderLeaderboard(data) {
       "aria-pressed",
       state.leaderboardHidePrivileged ? "true" : "false"
     );
+
+    if (leaderboardEligibilityLabel) {
+      leaderboardEligibilityLabel.textContent =
+        state.leaderboardHidePrivileged
+          ? "WSZYSCY"
+          : "KANDYDACI VIP";
+    }
+
+    leaderboardEligibilityToggle.title =
+      state.leaderboardHidePrivileged
+        ? "Wróć do pełnego rankingu"
+        : "Pokaż ranking kandydatów do miesięcznego VIP-a";
   }
 
   if (vipCandidate) {
@@ -389,7 +402,7 @@ function renderLeaderboard(data) {
   }
 
   leaderboardStatus.textContent = state.leaderboardHidePrivileged
-    ? "VIP ELIGIBLE"
+    ? "KANDYDACI VIP"
     : "LIVE DATA";
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
@@ -565,7 +578,7 @@ function renderChangelog(items) {
   `).join("");
 }
 
-fetch("./changelog.json?v=20", { cache: "no-store" })
+fetch("./changelog.json?v=21", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać changelog.json");

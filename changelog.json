@@ -1,5 +1,16 @@
 [
   {
+    "version": "v21",
+    "date": "2026-08-30",
+    "title": "Monthly VIP Candidates",
+    "items": [
+      "Przełącznik rankingu uproszczono do KANDYDACI VIP / WSZYSCY.",
+      "Usunięto zbędną informację o wykluczeniu streamera i botów z opisu rankingu.",
+      "Dodano zasady miesięcznej nagrody VIP dla #1 w rankingu kandydatów.",
+      "Status filtrowanego rankingu pokazuje teraz KANDYDACI VIP."
+    ]
+  },
+  {
     "version": "v20",
     "date": "2026-08-29",
     "title": "Ranking Intelligence",

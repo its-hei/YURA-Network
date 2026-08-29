@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
   <title>Y.U.R.A. Network — Komendy, Ranking i Changelog</title>
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <div class="ambient"></div>
@@ -36,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=20" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=21" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -130,7 +130,7 @@
         <div>
           <div class="eyebrow">Y.U.R.A. POINT NETWORK</div>
           <h1>Ranking</h1>
-          <p>Ranking punktów Y.U.R.A. bez streamera i kont botów.</p>
+          <p>Ranking punktów Y.U.R.A.</p>
         </div>
         <div class="status-chip leaderboard-status" id="leaderboardStatus">WAITING FOR DATA</div>
       </div>
@@ -150,16 +150,28 @@
             id="leaderboardEligibilityToggle"
             type="button"
             aria-pressed="false"
-            title="Ukryj osoby, które są już VIP-em lub moderatorem"
+            title="Pokaż ranking kandydatów do miesięcznego VIP-a"
           >
             <span class="eligibility-dot" aria-hidden="true"></span>
-            POMIŃ VIP / MOD
+            <span id="leaderboardEligibilityLabel">KANDYDACI VIP</span>
           </button>
 
           <label class="search-box leaderboard-search-box">
             <span class="search-icon">⌕</span>
             <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie na liście..." autocomplete="off">
           </label>
+        </div>
+      </div>
+
+      <div class="monthly-vip-rule">
+        <div class="monthly-vip-icon" aria-hidden="true">★</div>
+        <div class="monthly-vip-copy">
+          <span class="monthly-vip-kicker">MIESIĘCZNY VIP</span>
+          <p>
+            #1 w rankingu kandydatów na koniec miesiąca otrzymuje VIP-a na kolejny miesiąc.
+            Aktualni VIP-y i moderatorzy nie biorą udziału. Jeśli zwycięzca obroni #1 w kolejnym miesiącu,
+            VIP zostaje przedłużony.
+          </p>
         </div>
       </div>
 
@@ -215,10 +227,10 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
-  <script src="network-hits.js?v=20"></script>
+  <script src="network-hits.js?v=21"></script>
 
   <!-- GoatCounter pageview tracking -->
   <script
