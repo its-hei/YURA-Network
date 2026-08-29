@@ -1527,3 +1527,138 @@ footer{
     height:24px;
   }
 }
+
+
+/* ==============================
+   V22 // VIP CANDIDATE FOCUS
+   ============================== */
+
+/* The top status remains a pure data-status indicator. */
+.leaderboard-status.is-live{
+  border-color:rgba(73,215,154,.34);
+  background:var(--green-soft);
+  color:var(--green);
+}
+
+/* Candidate CTA: VIP-inspired violet with an attention pulse. */
+.eligibility-toggle.candidate-cta{
+  border-color:rgba(183,161,255,.42);
+  background:
+    linear-gradient(90deg,rgba(183,161,255,.12),rgba(183,161,255,.04));
+  color:#cbbcff;
+  box-shadow:
+    inset 0 0 18px rgba(183,161,255,.025),
+    0 0 0 1px rgba(183,161,255,.03);
+}
+
+.eligibility-toggle.candidate-cta:hover{
+  border-color:rgba(183,161,255,.68);
+  color:#e0d8ff;
+  box-shadow:
+    0 0 18px rgba(183,161,255,.08),
+    inset 0 0 18px rgba(183,161,255,.04);
+}
+
+.eligibility-toggle.candidate-cta .eligibility-dot{
+  background:#b7a1ff;
+  box-shadow:0 0 8px rgba(183,161,255,.7);
+  animation:vipCandidatePulse 1.45s ease-in-out infinite;
+}
+
+/* After entering candidate mode, WSZYSCY becomes a quieter exit control. */
+.eligibility-toggle.show-all{
+  border-color:var(--line);
+  background:#0d1116;
+  color:#8c96a5;
+}
+
+.eligibility-toggle.show-all:hover{
+  border-color:rgba(242,140,24,.34);
+  color:#dce2ea;
+}
+
+.eligibility-toggle.show-all .eligibility-dot{
+  background:#4d5662;
+  box-shadow:none;
+  animation:none;
+}
+
+@keyframes vipCandidatePulse{
+  0%,100%{
+    opacity:.5;
+    transform:scale(.78);
+    box-shadow:0 0 4px rgba(183,161,255,.35);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.2);
+    box-shadow:
+      0 0 8px rgba(183,161,255,.85),
+      0 0 16px rgba(183,161,255,.25);
+  }
+}
+
+/* Remove the old horizontal NEXT VIP panel completely. */
+.vip-candidate{
+  display:none !important;
+}
+
+/* The podium owns the compact NEXT VIP marker. */
+.podium-stage{
+  position:relative;
+  margin-top:16px;
+}
+
+.podium-stage .podium{
+  margin-top:0;
+}
+
+.podium.candidate-mode::before{
+  content:"NEXT VIP";
+  position:absolute;
+  z-index:5;
+  left:-54px;
+  top:50%;
+  transform:translateY(-50%) rotate(-90deg);
+  transform-origin:center;
+  padding:5px 9px;
+  border:1px solid rgba(183,161,255,.34);
+  border-radius:999px;
+  background:rgba(15,16,24,.96);
+  color:#b7a1ff;
+  box-shadow:
+    0 0 14px rgba(183,161,255,.08),
+    inset 0 0 10px rgba(183,161,255,.04);
+  font-family:Consolas,Monaco,monospace;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.17em;
+  line-height:1;
+  white-space:nowrap;
+}
+
+/* Subtle cue on the actual #1 candidate card. */
+.podium.candidate-mode .podium-card.rank-1{
+  border-color:rgba(183,161,255,.42);
+  background:
+    radial-gradient(circle at 80% 10%,rgba(183,161,255,.1),transparent 38%),
+    linear-gradient(145deg,rgba(255,255,255,.025),transparent 40%),
+    var(--panel);
+}
+
+.podium.candidate-mode .podium-card.rank-1::after{
+  background:linear-gradient(90deg,transparent,#b7a1ff,transparent);
+  opacity:.5;
+}
+
+@media(max-width:1180px){
+  .podium.candidate-mode::before{
+    left:-45px;
+  }
+}
+
+@media(max-width:760px){
+  .podium.candidate-mode::before{
+    display:none;
+  }
+}

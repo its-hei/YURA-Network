@@ -213,3 +213,13 @@ The exporter adds `rankDelta` and `isNew` fields to the live leaderboard JSON.
 - simplify ranking subtitle to `Ranking punktów Y.U.R.A.`
 - add the monthly VIP reward rule directly to the ranking view
 - bump frontend cache version to v21
+
+
+## v22 — VIP Candidate Focus
+- keep the ranking status chip as `LIVE DATA` regardless of active filter
+- give `KANDYDACI VIP` a violet VIP accent and pulsing status dot
+- make `WSZYSCY` a quiet return control while candidate mode is active
+- remove the wide `NEXT VIP CANDIDATE` banner
+- add a rotated `NEXT VIP` marker immediately left of the #1 candidate card
+- subtly highlight the #1 candidate card in candidate mode
+- bump frontend cache version to v22

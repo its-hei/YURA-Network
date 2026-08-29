@@ -229,7 +229,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=21", { cache: "no-store" })
+fetch("./commands.json?v=22", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -265,9 +265,6 @@ const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
 const leaderboardEmpty = document.getElementById("leaderboardEmpty");
-const vipCandidate = document.getElementById("vipCandidate");
-const vipCandidateName = document.getElementById("vipCandidateName");
-const vipCandidatePoints = document.getElementById("vipCandidatePoints");
 const changelogView = document.getElementById("changelogView");
 const changelogList = document.getElementById("changelogList");
 
@@ -355,7 +352,11 @@ function renderLeaderboard(data) {
 
   if (leaderboardEligibilityToggle) {
     leaderboardEligibilityToggle.classList.toggle(
-      "active",
+      "candidate-cta",
+      !state.leaderboardHidePrivileged
+    );
+    leaderboardEligibilityToggle.classList.toggle(
+      "show-all",
       state.leaderboardHidePrivileged
     );
     leaderboardEligibilityToggle.setAttribute(
@@ -376,34 +377,21 @@ function renderLeaderboard(data) {
         : "Pokaż ranking kandydatów do miesięcznego VIP-a";
   }
 
-  if (vipCandidate) {
-    const candidate = state.leaderboardHidePrivileged
-      ? eligibleEntries[0]
-      : null;
-
-    if (candidate) {
-      vipCandidateName.textContent = candidate.name;
-      vipCandidatePoints.textContent = `${formatPoints(candidate.points)} PTS`;
-      vipCandidate.hidden = false;
-    } else {
-      vipCandidate.hidden = true;
-    }
-  }
+  leaderboardPodium?.classList.toggle(
+    "candidate-mode",
+    state.leaderboardHidePrivileged && eligibleEntries.length > 0
+  );
 
   if (!entries.length) {
-    leaderboardStatus.textContent = state.leaderboardHidePrivileged
-      ? "BRAK KANDYDATÓW"
-      : "WAITING FOR DATA";
-    leaderboardStatus.classList.remove("is-live");
+    leaderboardStatus.textContent = "LIVE DATA";
+    leaderboardStatus.classList.add("is-live");
     leaderboardPodium.hidden = true;
     leaderboardList.hidden = true;
     leaderboardEmpty.hidden = false;
     return;
   }
 
-  leaderboardStatus.textContent = state.leaderboardHidePrivileged
-    ? "KANDYDACI VIP"
-    : "LIVE DATA";
+  leaderboardStatus.textContent = "LIVE DATA";
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
 
@@ -578,7 +566,7 @@ function renderChangelog(items) {
   `).join("");
 }
 
-fetch("./changelog.json?v=21", { cache: "no-store" })
+fetch("./changelog.json?v=22", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać changelog.json");

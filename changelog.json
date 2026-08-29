@@ -1,5 +1,17 @@
 [
   {
+    "version": "v22",
+    "date": "2026-08-30",
+    "title": "VIP Candidate Focus",
+    "items": [
+      "Status nad rankingiem pozostaje zawsze LIVE DATA.",
+      "Przycisk KANDYDACI VIP dostał fioletowy akcent i pulsującą kropkę.",
+      "Po wejściu w tryb kandydatów przycisk zmienia się w neutralne WSZYSCY.",
+      "Usunięto poziomy panel NEXT VIP CANDIDATE.",
+      "NEXT VIP jest teraz pionowym znacznikiem obok karty #1."
+    ]
+  },
+  {
     "version": "v21",
     "date": "2026-08-30",
     "title": "Monthly VIP Candidates",
