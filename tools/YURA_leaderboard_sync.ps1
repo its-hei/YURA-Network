@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$JsonPath = "$PSScriptRoot\leaderboard.json",
     [string]$TokenPath = "$PSScriptRoot\github_token.txt"
 )
@@ -42,7 +42,7 @@ $null = $LocalText | ConvertFrom-Json
 $Sha = $null
 try {
     $Current = Invoke-RestMethod `
-        -Uri ("{0}?ref={1}" -f $ApiUrl, $Branch) `
+        -Uri "$ApiUrl?ref=$Branch" `
         -Headers $Headers `
         -Method Get
 

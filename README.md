@@ -117,3 +117,9 @@ Leaderboard data is now loaded from the `live-data` branch:
 
 The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should update
 `leaderboard.json` on the `live-data` branch whenever the points snapshot changes.
+
+
+## v12 — leaderboard sync label
+- changed the visible leaderboard cadence from `AUTO REFRESH 15 SEC` to `POINT SYNC 5 MIN`
+- kept the internal page polling at 15 seconds so instant point changes from gamble/transfer/admin actions can still appear quickly
+- the 5-minute label now reflects the normal passive points accrual cadence
