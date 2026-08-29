@@ -66,3 +66,10 @@ Przykład:
 - Y.U.R.A. CORE moved below the avatar.
 - Commands/Leaderboard are the same width as the avatar panel.
 - Footer is fixed near the bottom-left on desktop and stays in place while scrolling.
+
+## v7
+- Zaktualizowano publiczną bazę komend do bieżącej konfiguracji Streamer.bot.
+- Dodano komendy standardowe, punktowe oraz kontrolę alertów.
+- Dodano aktualne aliasy i składnię komend.
+- Zachowano dotychczasowy layout v6 oraz domyślną zakładkę `Widzowie`.
+- Zaktualizowano cache-busting do `v=7`.

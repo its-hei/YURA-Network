@@ -1,26 +1,171 @@
 [
   {
-    "command": "!points",
+    "command": "!afk",
     "aliases": [],
+    "permission": "Everyone",
+    "usage": "!afk",
+    "description": "Uruchamia funkcję AFK na overlayu."
+  },
+  {
+    "command": "!dc",
+    "aliases": ["!discord"],
+    "permission": "Everyone",
+    "usage": "!dc",
+    "description": "Wyświetla link do Discorda społeczności."
+  },
+  {
+    "command": "!nuke",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!nuke",
+    "description": "Samodzielny 1-sekundowy timeout."
+  },
+  {
+    "command": "!ref",
+    "aliases": ["!referal"],
+    "permission": "Everyone",
+    "usage": "!ref",
+    "description": "Wyświetla kod Recruit a Friend do Final Fantasy XIV."
+  },
+  {
+    "command": "!accountage",
+    "aliases": ["!accage", "!created"],
+    "permission": "Everyone",
+    "usage": "!accountage [@nick]",
+    "description": "Sprawdza wiek konta Twitch swojego lub wskazanego użytkownika."
+  },
+  {
+    "command": "!commands",
+    "aliases": ["!polecenia"],
+    "permission": "Everyone",
+    "usage": "!commands",
+    "description": "Wyświetla link do publicznej bazy komend Y.U.R.A."
+  },
+  {
+    "command": "!followage",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!followage [@nick]",
+    "description": "Sprawdza, jak długo użytkownik obserwuje kanał."
+  },
+  {
+    "command": "!watchtime",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!watchtime [@nick]",
+    "description": "Pokazuje czas oglądania kanału zapisany przez Y.U.R.A."
+  },
+  {
+    "command": "!points",
+    "aliases": ["!punkty"],
     "permission": "Everyone",
     "usage": "!points",
     "description": "Sprawdza aktualne saldo punktów Y.U.R.A."
   },
   {
     "command": "!gamble",
-    "aliases": [],
+    "aliases": ["!gamba"],
     "permission": "Everyone",
     "usage": "!gamble <kwota | procent% | all>",
-    "description": "Hazard punktami. Obsługuje konkretną kwotę, procent salda i all. Możliwy CRIT WIN."
+    "description": "Hazard punktami. Obsługuje kwotę, procent salda lub all; możliwy jest CRIT WIN."
   },
   {
-    "command": "!give",
-    "aliases": [
-      "!transfer"
-    ],
+    "command": "!top",
+    "aliases": ["!ranking"],
     "permission": "Everyone",
-    "usage": "!give @nick <kwota | procent% | all>",
+    "usage": "!top",
+    "description": "Pokazuje TOP 5 rankingu punktów Y.U.R.A. bez streamera i botów."
+  },
+  {
+    "command": "!transfer",
+    "aliases": ["!give"],
+    "permission": "Everyone",
+    "usage": "!transfer @nick <kwota | procent% | all>",
     "description": "Przekazuje własne punkty innemu użytkownikowi."
+  },
+  {
+    "command": "!skip",
+    "aliases": ["!alert skip"],
+    "permission": "Moderator",
+    "usage": "!skip",
+    "description": "Natychmiast ukrywa aktualny alert dla widzów i pomija jego dźwięk na streamie."
+  },
+  {
+    "command": "!alerts",
+    "aliases": ["!alert"],
+    "permission": "Moderator",
+    "usage": "!alerts",
+    "description": "Sprawdza, czy kolejka alertów jest obecnie aktywna czy wstrzymana."
+  },
+  {
+    "command": "!pause",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!pause",
+    "description": "Wstrzymuje kolejkę alertów. Nowe alerty czekają do czasu wznowienia."
+  },
+  {
+    "command": "!unpause",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!unpause",
+    "description": "Wznawia kolejkę alertów i uruchamia oczekujące alerty."
+  },
+  {
+    "command": "!mute",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!mute",
+    "description": "Wycisza dźwięk alertów na streamie, pozostawiając warstwę wizualną aktywną."
+  },
+  {
+    "command": "!unmute",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!unmute",
+    "description": "Ponownie włącza dźwięk alertów na streamie."
+  },
+  {
+    "command": "!dedge",
+    "aliases": ["!deska"],
+    "permission": "Moderator",
+    "usage": "!dedge",
+    "description": "Aktualizuje licznik śmierci na overlayu."
+  },
+  {
+    "command": "!donation",
+    "aliases": ["!dono"],
+    "permission": "Moderator",
+    "usage": "!donation <tytuł>",
+    "description": "Zmienia tytuł aktualnego celu donacji."
+  },
+  {
+    "command": "!donocel",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donocel <kwota>",
+    "description": "Ustawia nową kwotę celu donacji."
+  },
+  {
+    "command": "!donoreset",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donoreset",
+    "description": "Resetuje aktualnie uzbieraną kwotę celu donacji."
+  },
+  {
+    "command": "!tits",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!tits <tekst>",
+    "description": "Odtwarza wiadomość TTS żeńskim głosem."
+  },
+  {
+    "command": "!tts",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!tts <tekst>",
+    "description": "Odtwarza wiadomość TTS męskim głosem."
   },
   {
     "command": "!addpoints",
@@ -34,20 +179,6 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!removepoints @nick <kwota>",
-    "description": "Odbiera punkty wybranemu użytkownikowi. Saldo nie spada poniżej zera."
-  },
-  {
-    "command": "!donocel",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!donocel <kwota>",
-    "description": "Ustawia nowy cel donacji."
-  },
-  {
-    "command": "!donoreset",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!donoreset",
-    "description": "Resetuje aktualnie uzbieraną kwotę celu donacji."
+    "description": "Odbiera punkty wybranemu użytkownikowi; saldo nie spada poniżej zera."
   }
 ]
