@@ -88,7 +88,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json?v=4", { cache: "no-store" })
+fetch("commands.json?v=5", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");

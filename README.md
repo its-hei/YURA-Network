@@ -50,3 +50,11 @@ Przykład:
 - Między panelami jest 8 px przerwy.
 - `Widzowie` jest domyślnym filtrem po wejściu na stronę.
 - Dodano cache-busting do CSS/JS/JSON, żeby GitHub Pages nie pokazywał starej wersji po pushu.
+
+
+## v5
+- Duży, kwadratowy panel avatara po lewej.
+- Osobny panel Heiyeshi po prawej.
+- Link Twitch i Discord w panelu profilu.
+- Y.U.R.A. CORE znajduje się pod panelem profilu, obok avatara.
+- Nawigacja Commands / Leaderboard pozostaje poniżej całego bloku profilu.
