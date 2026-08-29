@@ -159,3 +159,20 @@ The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should up
 3. Push this version to GitHub Pages and open the live site with ad blocking disabled for the first test.
 
 Note: GoatCounter's public visitor-counter response may be cached for up to four hours even though pageviews normally appear in the GoatCounter dashboard much sooner.
+
+
+## v17 — NETWORK HITS runtime fix
+- remove duplicate `networkHits` JavaScript declaration that stopped the entire app
+- restore command database loading
+- restore leaderboard JavaScript
+- keep GoatCounter TOTAL visitor counter integration
+- bump frontend cache keys to v17
+
+
+## v18 — isolate NETWORK HITS
+- move GoatCounter counter code out of the main `app.js`
+- add standalone `network-hits.js`
+- commands and ranking no longer depend on GoatCounter in any way
+- failure/adblock/CORS on GoatCounter can only affect the hit counter
+- force-refresh `commands.json` with v18 cache key
+- bump site assets to v18

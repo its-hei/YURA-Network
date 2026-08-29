@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
   <title>Y.U.R.A. Network — Komendy i Ranking</title>
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <div class="ambient"></div>
@@ -36,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=16" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=18" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -171,11 +171,17 @@
     <span>Heiyeshi Channel Systems</span>
   </footer>
 
+  <!-- Core site logic: independent from analytics/counter -->
+  <script src="app.js?v=18"></script>
+
+  <!-- NETWORK HITS is isolated: failure here cannot break the site -->
+  <script src="network-hits.js?v=18"></script>
+
+  <!-- GoatCounter pageview tracking -->
   <script
     data-goatcounter="https://yura-network.goatcounter.com/count"
     async
     src="https://gc.zgo.at/count.js"></script>
 
-  <script src="app.js?v=16"></script>
 </body>
 </html>
