@@ -6,6 +6,7 @@ const state = {
   leaderboardQuery: "",
   leaderboardEntries: [],
   leaderboardUpdatedAt: null,
+  leaderboardHidePrivileged: false,
   initialGroupOpened: false
 };
 
@@ -160,7 +161,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=18", { cache: "no-store" })
+fetch("./commands.json?v=19", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -190,6 +191,7 @@ const leaderboardView = document.getElementById("leaderboardView");
 const leaderboardStatus = document.getElementById("leaderboardStatus");
 const leaderboardUpdated = document.getElementById("leaderboardUpdated");
 const leaderboardSearchInput = document.getElementById("leaderboardSearchInput");
+const leaderboardEligibilityToggle = document.getElementById("leaderboardEligibilityToggle");
 const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
@@ -224,29 +226,54 @@ function rankMark(rank) {
 }
 
 function renderLeaderboard(data) {
-  const allEntries = Array.isArray(data?.entries)
+  const sourceEntries = Array.isArray(data?.entries)
     ? data.entries
         .filter(item => item && item.name && Number(item.points) >= 0)
         .sort((a, b) => Number(b.points) - Number(a.points))
-        .slice(0, 10)
-        .map((item, index) => ({
+        .map(item => ({
           ...item,
           points: Number(item.points) || 0,
-          rank: index + 1
+          isVip: item.isVip === true,
+          isModerator: item.isModerator === true
         }))
     : [];
 
-  state.leaderboardEntries = allEntries;
-  leaderboardUpdated.textContent = formatSync(data?.updatedAt);
+  state.leaderboardEntries = sourceEntries;
+  if (data?.updatedAt) state.leaderboardUpdatedAt = data.updatedAt;
+  leaderboardUpdated.textContent = formatSync(state.leaderboardUpdatedAt);
+
+  const eligibleEntries = state.leaderboardHidePrivileged
+    ? sourceEntries.filter(entry => !entry.isVip && !entry.isModerator)
+    : sourceEntries;
+
+  const entries = eligibleEntries
+    .slice(0, 10)
+    .map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
 
   const query = state.leaderboardQuery.trim().toLowerCase();
   const matches = query
-    ? allEntries.filter(entry => String(entry.name).toLowerCase().includes(query))
+    ? entries.filter(entry => String(entry.name).toLowerCase().includes(query))
     : [];
   const matchNames = new Set(matches.map(entry => entry.name));
 
-  if (!allEntries.length) {
-    leaderboardStatus.textContent = "WAITING FOR DATA";
+  if (leaderboardEligibilityToggle) {
+    leaderboardEligibilityToggle.classList.toggle(
+      "active",
+      state.leaderboardHidePrivileged
+    );
+    leaderboardEligibilityToggle.setAttribute(
+      "aria-pressed",
+      state.leaderboardHidePrivileged ? "true" : "false"
+    );
+  }
+
+  if (!entries.length) {
+    leaderboardStatus.textContent = state.leaderboardHidePrivileged
+      ? "BRAK KANDYDATÓW"
+      : "WAITING FOR DATA";
     leaderboardStatus.classList.remove("is-live");
     leaderboardPodium.hidden = true;
     leaderboardList.hidden = true;
@@ -254,11 +281,13 @@ function renderLeaderboard(data) {
     return;
   }
 
-  leaderboardStatus.textContent = "LIVE DATA";
+  leaderboardStatus.textContent = state.leaderboardHidePrivileged
+    ? "VIP ELIGIBLE"
+    : "LIVE DATA";
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
 
-  const top = allEntries.slice(0, 3);
+  const top = entries.slice(0, 3);
   leaderboardPodium.innerHTML = top.map(entry => {
     const rank = entry.rank;
     const isMatch = query && matchNames.has(entry.name);
@@ -274,7 +303,7 @@ function renderLeaderboard(data) {
   }).join("");
   leaderboardPodium.hidden = false;
 
-  const remaining = allEntries.slice(3);
+  const remaining = entries.slice(3);
   if (remaining.length) {
     leaderboardRows.innerHTML = remaining.map(entry => {
       const isMatch = query && matchNames.has(entry.name);
@@ -367,6 +396,15 @@ function switchView(view) {
 
 viewButtons.forEach(button => {
   button.addEventListener("click", () => switchView(button.dataset.view));
+});
+
+leaderboardEligibilityToggle?.addEventListener("click", () => {
+  state.leaderboardHidePrivileged = !state.leaderboardHidePrivileged;
+
+  renderLeaderboard({
+    updatedAt: state.leaderboardUpdatedAt,
+    entries: state.leaderboardEntries
+  });
 });
 
 leaderboardSearchInput?.addEventListener("input", event => {

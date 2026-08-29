@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
   <title>Y.U.R.A. Network — Komendy i Ranking</title>
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
   <div class="ambient"></div>
@@ -36,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=18" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=19" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -140,10 +140,23 @@
           <span class="meta-label">LAST SYNC</span>
           <strong id="leaderboardUpdated">—</strong>
         </div>
-        <label class="search-box leaderboard-search-box">
-          <span class="search-icon">⌕</span>
-          <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie na liście..." autocomplete="off">
-        </label>
+        <div class="leaderboard-tools">
+          <button
+            class="eligibility-toggle"
+            id="leaderboardEligibilityToggle"
+            type="button"
+            aria-pressed="false"
+            title="Ukryj osoby, które są już VIP-em lub moderatorem"
+          >
+            <span class="eligibility-dot" aria-hidden="true"></span>
+            POMIŃ VIP / MOD
+          </button>
+
+          <label class="search-box leaderboard-search-box">
+            <span class="search-icon">⌕</span>
+            <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie na liście..." autocomplete="off">
+          </label>
+        </div>
       </div>
 
       <div class="podium" id="leaderboardPodium" hidden></div>
@@ -172,10 +185,10 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
-  <script src="network-hits.js?v=18"></script>
+  <script src="network-hits.js?v=19"></script>
 
   <!-- GoatCounter pageview tracking -->
   <script

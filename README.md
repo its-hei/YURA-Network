@@ -176,3 +176,11 @@ Note: GoatCounter's public visitor-counter response may be cached for up to four
 - failure/adblock/CORS on GoatCounter can only affect the hit counter
 - force-refresh `commands.json` with v18 cache key
 - bump site assets to v18
+
+
+## v19 — VIP/MOD eligibility filter
+- add `POMIŃ VIP / MOD` toggle to the ranking toolbar
+- when enabled, users already marked VIP or Moderator are removed before TOP 10 is calculated
+- keep the normal ranking unchanged when the toggle is off
+- leaderboard JSON now expects `isVip` and `isModerator` flags per entry
+- export more than the visible TOP 10 so filtering can still produce a full eligible TOP 10
