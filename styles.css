@@ -1077,3 +1077,34 @@ footer{
   .leaderboard-list-head{font-size:8px}
   .leaderboard-points{font-size:12px}
 }
+
+/* NETWORK HITS */
+.online-state,
+.network-hits{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.system-divider{
+  color:#3f4752;
+  opacity:.75;
+}
+.network-hits{
+  font-family:Consolas,Monaco,monospace;
+  letter-spacing:.08em;
+}
+.network-hits-label{
+  color:#6f7987;
+  font-size:10px;
+  font-weight:700;
+}
+.network-hits strong{
+  min-width:54px;
+  color:#f1a347;
+  font-size:11px;
+  letter-spacing:.12em;
+}
+.network-hits strong[data-state="waiting"]{
+  color:#6f7987;
+}
+

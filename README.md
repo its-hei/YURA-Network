@@ -144,3 +144,18 @@ The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should up
 - kept the ONLINE indicator and pulse intact
 - added a six-digit padded counter hook (`#networkHits`)
 - no fake/local counting is performed yet; the value stays at `000000` until the real global counter backend is connected
+
+
+## v16 — live NETWORK HITS
+- connected GoatCounter tracking for `yura-network.goatcounter.com`
+- NETWORK HITS now reads the public site-wide TOTAL counter
+- six-digit padded display is kept (`000001`, `001284`, etc.)
+- counter refreshes locally every 5 minutes
+- no API token or secret is stored in the public repository
+
+### GoatCounter setup required
+1. Verify the GoatCounter account email.
+2. In GoatCounter Settings enable `Allow adding visitor counts on your website`.
+3. Push this version to GitHub Pages and open the live site with ad blocking disabled for the first test.
+
+Note: GoatCounter's public visitor-counter response may be cached for up to four hours even though pageviews normally appear in the GoatCounter dashboard much sooner.

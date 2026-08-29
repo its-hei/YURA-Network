@@ -389,3 +389,45 @@ leaderboardSearchInput?.addEventListener("input", event => {
     entries: state.leaderboardEntries
   });
 });
+
+// ==============================
+// NETWORK HITS // GOATCOUNTER
+// ==============================
+const networkHits = document.getElementById("networkHits");
+
+function formatNetworkHits(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "000000";
+  return digits.padStart(6, "0");
+}
+
+async function loadNetworkHits() {
+  if (!networkHits) return;
+
+  try {
+    const response = await fetch(
+      `https://yura-network.goatcounter.com/counter/TOTAL.json?t=${Date.now()}`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    networkHits.textContent = formatNetworkHits(data?.count);
+    networkHits.dataset.state = "live";
+  } catch (error) {
+    // Public visitor counters may return 404 until the first pageview exists
+    // or until display counters are enabled in GoatCounter settings.
+    networkHits.textContent = "000000";
+    networkHits.dataset.state = "waiting";
+    console.warn("NETWORK HITS unavailable:", error);
+  }
+}
+
+// The tracking script records the pageview on load. Give GoatCounter a moment
+// to receive the first hit, then read the public TOTAL counter.
+window.setTimeout(loadNetworkHits, 1200);
+window.setInterval(loadNetworkHits, 5 * 60 * 1000);
+
