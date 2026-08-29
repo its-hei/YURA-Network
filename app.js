@@ -9,6 +9,9 @@ const empty = document.getElementById("emptyState");
 const searchInput = document.getElementById("searchInput");
 const tabs = [...document.querySelectorAll(".tab")];
 
+const initiallyActiveTab = document.querySelector(".tab.active");
+state.filter = initiallyActiveTab?.dataset.filter || "Everyone";
+
 function esc(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -85,7 +88,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json", { cache: "no-store" })
+fetch("commands.json?v=4", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
