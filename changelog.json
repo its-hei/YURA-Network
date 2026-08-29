@@ -1,5 +1,16 @@
 [
   {
+    "version": "v24",
+    "date": "2026-08-30",
+    "title": "Profil kanału i harmonogram",
+    "items": [
+      "Dodano sekcję O mnie z krótkim opisem kanału, profilu i systemu Y.U.R.A.",
+      "Dodano osobną sekcję Harmonogram z godzinami transmisji w tygodniu i weekendy.",
+      "Dodano informację o przerwie od poniedziałku do piątku raz na trzy tygodnie związaną z pracą.",
+      "Dodano przypomnienie, że zmiany grafiku i dodatkowe dni wolne są ogłaszane na Discordzie."
+    ]
+  },
+  {
     "version": "v23",
     "date": "2026-08-30",
     "title": "Czytelniejsze sterowanie rankingiem VIP",

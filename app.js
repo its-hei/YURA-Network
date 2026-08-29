@@ -229,7 +229,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=23", { cache: "no-store" })
+fetch("./commands.json?v=24", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -265,6 +265,8 @@ const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
 const leaderboardEmpty = document.getElementById("leaderboardEmpty");
+const aboutView = document.getElementById("aboutView");
+const scheduleView = document.getElementById("scheduleView");
 const changelogView = document.getElementById("changelogView");
 const changelogList = document.getElementById("changelogList");
 
@@ -500,6 +502,8 @@ function switchView(view) {
 
   commandsView.hidden = view !== "commands";
   leaderboardView.hidden = view !== "leaderboard";
+  aboutView.hidden = view !== "about";
+  scheduleView.hidden = view !== "schedule";
   changelogView.hidden = view !== "changelog";
 
   if (view === "leaderboard") {
@@ -566,7 +570,7 @@ function renderChangelog(items) {
   `).join("");
 }
 
-fetch("./changelog.json?v=23", { cache: "no-store" })
+fetch("./changelog.json?v=24", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać changelog.json");

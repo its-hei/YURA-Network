@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
-  <title>Y.U.R.A. Network — Komendy, Ranking i Changelog</title>
-  <link rel="stylesheet" href="styles.css?v=23">
+  <title>Y.U.R.A. Network — Heiyeshi Channel Hub</title>
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body>
   <div class="ambient"></div>
@@ -36,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=23" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=24" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -72,9 +72,17 @@
             Ranking
             <span>TOP 10</span>
           </button>
+          <button class="side-item" type="button" data-view="about">
+            O mnie
+            <span>PROFILE</span>
+          </button>
+          <button class="side-item" type="button" data-view="schedule">
+            Harmonogram
+            <span>STREAM</span>
+          </button>
           <button class="side-item" type="button" data-view="changelog">
             Changelog
-            <span>v20</span>
+            <span>v24</span>
           </button>
         </nav>
       </div>
@@ -194,6 +202,181 @@
         <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
       </div>
     </section>
+    <section class="content view-panel" id="aboutView" hidden>
+      <div class="hero">
+        <div>
+          <div class="eyebrow">SYSTEM PROFILE</div>
+          <h1>O mnie</h1>
+          <p>Kilka słów o kanale, grach i tym, czego możesz spodziewać się na transmisjach.</p>
+        </div>
+        <div class="status-chip">PROFILE LOADED</div>
+      </div>
+
+      <div class="about-layout">
+        <article class="about-main-card">
+          <div class="about-ident">
+            <div class="about-avatar-wrap">
+              <img src="avatar.png?v=24" alt="Heiyeshi" class="about-avatar">
+            </div>
+            <div>
+              <div class="eyebrow">HEIYESHI // OPERATOR</div>
+              <h2>Siema, jestem Heiyeshi.</h2>
+            </div>
+          </div>
+
+          <div class="about-copy">
+            <p>
+              Od lat siedzę w MMO i RPG. Na streamie stawiam przede wszystkim na luźne granie,
+              rozmowę z widzami i spokojne odkrywanie tego, co aktualnie wciągnęło mnie najbardziej.
+            </p>
+            <p>
+              Najczęściej trafisz tu na Final Fantasy XIV, Tibię i inne gry MMO/RPG.
+              Nie ścigamy się tu z tabelkami — bardziej liczy się klimat, ekipa i dobra sesja po pracy.
+            </p>
+            <p>
+              Y.U.R.A. to mój własny system kanałowy: bot, punkty, ranking, alerty i kolejne małe
+              eksperymenty, które rozwijamy razem ze społecznością.
+            </p>
+          </div>
+        </article>
+
+        <div class="about-side-grid">
+          <article class="system-card">
+            <span class="system-card-label">CONTENT //</span>
+            <strong>MMO / RPG / CHAT</strong>
+            <p>Głównie długoterminowe gry, progres i rozmowa.</p>
+          </article>
+
+          <article class="system-card">
+            <span class="system-card-label">LANGUAGE //</span>
+            <strong>PL</strong>
+            <p>Stream po polsku, w grach i community także angielski.</p>
+          </article>
+
+          <article class="system-card">
+            <span class="system-card-label">MODE //</span>
+            <strong>CASUAL</strong>
+            <p>Bez spiny, ale z zamiłowaniem do dłubania w systemach.</p>
+          </article>
+
+          <article class="system-card">
+            <span class="system-card-label">COMMUNITY //</span>
+            <strong>DISCORD</strong>
+            <p>Dodatkowe informacje, wolne dni i kontakt ze społecznością.</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="about-links">
+        <a href="https://twitch.tv/heiyeshi" target="_blank" rel="noreferrer" class="about-link-card">
+          <span>TWITCH //</span>
+          <strong>twitch.tv/heiyeshi</strong>
+        </a>
+        <a href="https://discord.gg/8NHhFsRed5" target="_blank" rel="noreferrer" class="about-link-card">
+          <span>DISCORD //</span>
+          <strong>discord.gg/8NHhFsRed5</strong>
+        </a>
+      </div>
+    </section>
+
+    <section class="content view-panel" id="scheduleView" hidden>
+      <div class="hero">
+        <div>
+          <div class="eyebrow">STREAM WINDOW</div>
+          <h1>Harmonogram</h1>
+          <p>Orientacyjne godziny transmisji. Zmiany i dodatkowe wolne dni pojawiają się na Discordzie.</p>
+        </div>
+        <div class="status-chip">SCHEDULE ACTIVE</div>
+      </div>
+
+      <div class="schedule-summary">
+        <article class="schedule-window-card weekday">
+          <div class="schedule-window-top">
+            <span class="schedule-code">PN–PT</span>
+            <span class="schedule-state">WEEKDAY</span>
+          </div>
+          <strong>16:00 — 19:00</strong>
+          <p>Standardowe okno transmisji w tygodniu.</p>
+        </article>
+
+        <article class="schedule-window-card weekend">
+          <div class="schedule-window-top">
+            <span class="schedule-code">SOB–ND</span>
+            <span class="schedule-state">WEEKEND</span>
+          </div>
+          <strong>16:00 — 24:00</strong>
+          <p>Dłuższe weekendowe sesje.</p>
+        </article>
+      </div>
+
+      <div class="schedule-week">
+        <article class="day-card">
+          <span class="day-name">PON</span>
+          <strong>16:00–19:00</strong>
+          <span class="day-note">STREAM WINDOW</span>
+        </article>
+        <article class="day-card">
+          <span class="day-name">WT</span>
+          <strong>16:00–19:00</strong>
+          <span class="day-note">STREAM WINDOW</span>
+        </article>
+        <article class="day-card">
+          <span class="day-name">ŚR</span>
+          <strong>16:00–19:00</strong>
+          <span class="day-note">STREAM WINDOW</span>
+        </article>
+        <article class="day-card">
+          <span class="day-name">CZW</span>
+          <strong>16:00–19:00</strong>
+          <span class="day-note">STREAM WINDOW</span>
+        </article>
+        <article class="day-card">
+          <span class="day-name">PT</span>
+          <strong>16:00–19:00</strong>
+          <span class="day-note">STREAM WINDOW</span>
+        </article>
+        <article class="day-card weekend">
+          <span class="day-name">SOB</span>
+          <strong>16:00–24:00</strong>
+          <span class="day-note">LONG SESSION</span>
+        </article>
+        <article class="day-card weekend">
+          <span class="day-name">ND</span>
+          <strong>16:00–24:00</strong>
+          <span class="day-note">LONG SESSION</span>
+        </article>
+      </div>
+
+      <div class="schedule-notices">
+        <article class="schedule-notice work-cycle">
+          <div class="notice-icon">03</div>
+          <div>
+            <span class="notice-label">CYKL PRACY //</span>
+            <strong>Co 3 tygodnie przerwa PN–PT</strong>
+            <p>
+              Raz na trzy tygodnie od poniedziałku do piątku wypada przerwa od streamów związana z pracą.
+              Weekend pozostaje standardowym oknem transmisji.
+            </p>
+          </div>
+        </article>
+
+        <article class="schedule-notice discord-notice">
+          <div class="notice-icon">i</div>
+          <div>
+            <span class="notice-label">EXTRA OFF //</span>
+            <strong>Zmiany sprawdzaj na Discordzie</strong>
+            <p>
+              Informacje o dodatkowych dniach wolnych, przesunięciach godzin i spontanicznych streamach
+              pojawiają się na Discordzie.
+            </p>
+            <a href="https://discord.gg/8NHhFsRed5" target="_blank" rel="noreferrer">
+              discord.gg/8NHhFsRed5
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="content view-panel" id="changelogView" hidden>
       <div class="hero">
         <div>
@@ -221,10 +404,10 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=23"></script>
+  <script src="app.js?v=24"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
-  <script src="network-hits.js?v=23"></script>
+  <script src="network-hits.js?v=24"></script>
 
   <!-- GoatCounter pageview tracking -->
   <script

@@ -231,3 +231,13 @@ The exporter adds `rankDelta` and `isNew` fields to the live leaderboard JSON.
 - `WSZYSCY` ma własny pomarańczowy akcent i pulsującą kropkę
 - od tej wersji wpisy w publicznym changelogu są po polsku
 - podbito cache frontendu do v23
+
+
+## v24 — Profil kanału i harmonogram
+- dodano zakładkę `O mnie`
+- dodano zakładkę `Harmonogram`
+- harmonogram: PN–PT 16:00–19:00, SOB–ND 16:00–24:00
+- dodano informację o przerwie PN–PT raz na trzy tygodnie związaną z pracą
+- dodano informację o zmianach i dodatkowych dniach wolnych publikowanych na Discordzie
+- publiczny changelog pozostaje po polsku
+- podbito cache frontendu do v24
