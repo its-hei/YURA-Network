@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-29T19:18:01.5530588+02:00",
+  "updatedAt": "2026-08-29T19:23:02.5440275+02:00",
   "entries": [
-    {"name":"humiihu","points":3600},
-    {"name":"yurasei","points":2300},
+    {"name":"humiihu","points":3900},
+    {"name":"yurasei","points":2351},
+    {"name":"NeverBlameMe","points":2000},
     {"name":"Belgron","points":1900},
     {"name":"hikari_katari","points":1900},
     {"name":"kajustrasz","points":1900},
-    {"name":"NeverBlameMe","points":1900},
-    {"name":"wielki_gekon_expiciel","points":1500}
+    {"name":"wielki_gekon_expiciel","points":1750}
   ]
 }
