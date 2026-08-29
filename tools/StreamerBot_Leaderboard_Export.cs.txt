@@ -1,0 +1,156 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+public class CPHInline
+{
+    public bool Execute()
+    {
+        try
+        {
+            string outputPath =
+                @"D:\Programs\OBS Studio\Own Apps\YURA\Tools\leaderboard.json";
+
+            var allUsers =
+                CPH.GetTwitchUsersVar<string>(
+                    "points",
+                    true
+                );
+
+            var ranking =
+                new List<KeyValuePair<string, long>>();
+
+            if (allUsers != null)
+            {
+                foreach (var user in allUsers)
+                {
+                    string login = "";
+
+                    if (!string.IsNullOrWhiteSpace(user.UserLogin))
+                        login = user.UserLogin.Trim().ToLowerInvariant();
+
+                    if (string.IsNullOrWhiteSpace(login))
+                        continue;
+
+                    if (
+                        login == "heiyeshi" ||
+                        login == "yuranetwork" ||
+                        login == "streamelements" ||
+                        login == "nightbot" ||
+                        login == "sery_bot" ||
+                        login == "serybot" ||
+                        login == "creatisbot" ||
+                        login == "moobot" ||
+                        login == "fossabot" ||
+                        login == "streamlabs"
+                    )
+                    {
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(user.Value))
+                        continue;
+
+                    long points;
+                    if (!long.TryParse(user.Value.Trim(), out points))
+                        continue;
+
+                    if (points <= 0)
+                        continue;
+
+                    string displayName = login;
+
+                    if (!string.IsNullOrWhiteSpace(user.UserName))
+                        displayName = user.UserName.Trim();
+
+                    ranking.Add(
+                        new KeyValuePair<string, long>(
+                            displayName,
+                            points
+                        )
+                    );
+                }
+            }
+
+            ranking.Sort(
+                delegate(
+                    KeyValuePair<string, long> a,
+                    KeyValuePair<string, long> b
+                )
+                {
+                    return b.Value.CompareTo(a.Value);
+                }
+            );
+
+            int limit = ranking.Count;
+            if (limit > 10)
+                limit = 10;
+
+            StringBuilder json = new StringBuilder();
+
+            json.Append("{\r\n");
+            json.Append("  \"updatedAt\": \"");
+            json.Append(DateTimeOffset.Now.ToString("o"));
+            json.Append("\",\r\n");
+            json.Append("  \"entries\": [\r\n");
+
+            for (int i = 0; i < limit; i++)
+            {
+                string safeName = ranking[i].Key
+                    .Replace("\\", "\\\\")
+                    .Replace("\"", "\\\"")
+                    .Replace("\r", "")
+                    .Replace("\n", "");
+
+                json.Append("    {\"name\":\"");
+                json.Append(safeName);
+                json.Append("\",\"points\":");
+                json.Append(ranking[i].Value);
+                json.Append("}");
+
+                if (i < limit - 1)
+                    json.Append(",");
+
+                json.Append("\r\n");
+            }
+
+            json.Append("  ]\r\n");
+            json.Append("}\r\n");
+
+            string directory = Path.GetDirectoryName(outputPath);
+
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllText(
+                outputPath,
+                json.ToString(),
+                new UTF8Encoding(false)
+            );
+
+            CPH.SetArgument(
+                "leaderboardFile",
+                outputPath
+            );
+
+            CPH.LogInfo(
+                "[YURA Leaderboard] Exported TOP " +
+                limit +
+                " -> " +
+                outputPath
+            );
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            CPH.LogError(
+                "[YURA Leaderboard] ERROR: " +
+                ex.ToString()
+            );
+
+            return false;
+        }
+    }
+}

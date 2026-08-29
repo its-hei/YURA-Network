@@ -273,9 +273,10 @@ async function loadLeaderboard() {
   if (leaderboardRefresh) leaderboardRefresh.disabled = true;
 
   try {
-    const response = await fetch(`leaderboard.json?t=${Date.now()}`, {
-      cache: "no-store"
-    });
+    const response = await fetch(
+      `https://raw.githubusercontent.com/its-hei/YURA-Network/live-data/leaderboard.json?t=${Date.now()}`,
+      { cache: "no-store" }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);

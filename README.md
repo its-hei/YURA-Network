@@ -90,7 +90,7 @@ Przykład:
 - Zaktualizowano cache-busting do `v=9`.
 
 
-## v10 — Leaderboard
+## v11 — Leaderboard
 
 - aktywowano zakładkę `Leaderboard`
 - dodano TOP 3 w formie podium oraz miejsca 4–10 w tabeli
@@ -109,3 +109,11 @@ Format `leaderboard.json`:
   ]
 }
 ```
+
+
+## v11 — live leaderboard transport
+Leaderboard data is now loaded from the `live-data` branch:
+`https://raw.githubusercontent.com/its-hei/YURA-Network/live-data/leaderboard.json`
+
+The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should update
+`leaderboard.json` on the `live-data` branch whenever the points snapshot changes.

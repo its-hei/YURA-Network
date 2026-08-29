@@ -1,0 +1,5 @@
+WKLEJ TOKEN GITHUB DO PLIKU github_token.txt
+NIE dodawaj github_token.txt do repozytorium.
+Fine-grained PAT:
+- Repository access: Only select repositories -> YURA-Network
+- Repository permissions -> Contents: Read and write
