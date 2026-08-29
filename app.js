@@ -2,7 +2,11 @@ const state = {
   commands: [],
   filter: "Everyone",
   query: "",
-  openGroups: new Set()
+  openGroups: new Set(),
+  leaderboardQuery: "",
+  leaderboardEntries: [],
+  leaderboardUpdatedAt: null,
+  initialGroupOpened: false
 };
 
 const body = document.getElementById("commandsBody");
@@ -60,10 +64,20 @@ function render() {
     group.commands.push(command);
   });
 
+  const firstCategory = groups[0]?.category || null;
+
+  if (!state.initialGroupOpened && query.length === 0 && firstCategory) {
+    state.openGroups.clear();
+    state.openGroups.add(firstCategory);
+    state.initialGroupOpened = true;
+  }
+
   body.innerHTML = groups.map(group => {
-    // Grupy są domyślnie zwinięte. Podczas wyszukiwania rozwijamy trafienia,
-    // żeby wynik nie był schowany za nagłówkiem sekcji.
-    const isOpen = query.length > 0 || state.openGroups.has(group.category);
+    // Po starcie i po zmianie filtra pierwsza grupa otwiera się automatycznie.
+    // Podczas wyszukiwania rozwijamy trafienia, żeby wynik nie był schowany.
+    const isOpen =
+      query.length > 0 ||
+      state.openGroups.has(group.category);
 
     const rows = group.commands.map(command => {
       const aliases = command.aliases || [];
@@ -135,8 +149,9 @@ tabs.forEach(tab => {
     tabs.forEach(item => item.classList.remove("active"));
     tab.classList.add("active");
     state.filter = tab.dataset.filter;
-    // Każdy filtr startuje z czytelnym, zwiniętym widokiem.
+    // Każdy filtr startuje z automatycznie rozwiniętą pierwszą grupą.
     state.openGroups.clear();
+    state.initialGroupOpened = false;
     render();
   });
 });
@@ -146,7 +161,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json?v=10", { cache: "no-store" })
+fetch("commands.json?v=13", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -175,7 +190,7 @@ const commandsView = document.getElementById("commandsView");
 const leaderboardView = document.getElementById("leaderboardView");
 const leaderboardStatus = document.getElementById("leaderboardStatus");
 const leaderboardUpdated = document.getElementById("leaderboardUpdated");
-const leaderboardRefresh = document.getElementById("leaderboardRefresh");
+const leaderboardSearchInput = document.getElementById("leaderboardSearchInput");
 const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
@@ -210,16 +225,28 @@ function rankMark(rank) {
 }
 
 function renderLeaderboard(data) {
-  const entries = Array.isArray(data?.entries)
+  const allEntries = Array.isArray(data?.entries)
     ? data.entries
         .filter(item => item && item.name && Number(item.points) >= 0)
         .sort((a, b) => Number(b.points) - Number(a.points))
         .slice(0, 10)
+        .map((item, index) => ({
+          ...item,
+          points: Number(item.points) || 0,
+          rank: index + 1
+        }))
     : [];
 
+  state.leaderboardEntries = allEntries;
   leaderboardUpdated.textContent = formatSync(data?.updatedAt);
 
-  if (!entries.length) {
+  const query = state.leaderboardQuery.trim().toLowerCase();
+  const matches = query
+    ? allEntries.filter(entry => String(entry.name).toLowerCase().includes(query))
+    : [];
+  const matchNames = new Set(matches.map(entry => entry.name));
+
+  if (!allEntries.length) {
     leaderboardStatus.textContent = "WAITING FOR DATA";
     leaderboardStatus.classList.remove("is-live");
     leaderboardPodium.hidden = true;
@@ -232,11 +259,12 @@ function renderLeaderboard(data) {
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
 
-  const top = entries.slice(0, 3);
-  leaderboardPodium.innerHTML = top.map((entry, index) => {
-    const rank = index + 1;
+  const top = allEntries.slice(0, 3);
+  leaderboardPodium.innerHTML = top.map(entry => {
+    const rank = entry.rank;
+    const isMatch = query && matchNames.has(entry.name);
     return `
-      <article class="podium-card rank-${rank}">
+      <article class="podium-card rank-${rank} ${isMatch ? "is-match" : ""}" data-rank="${rank}" data-name="${esc(entry.name)}">
         <div class="podium-rank">${rankMark(rank)}</div>
         <div class="podium-kicker">RANK ${String(rank).padStart(2, "0")}</div>
         <strong class="podium-name">${esc(entry.name)}</strong>
@@ -247,13 +275,13 @@ function renderLeaderboard(data) {
   }).join("");
   leaderboardPodium.hidden = false;
 
-  const remaining = entries.slice(3);
+  const remaining = allEntries.slice(3);
   if (remaining.length) {
-    leaderboardRows.innerHTML = remaining.map((entry, index) => {
-      const rank = index + 4;
+    leaderboardRows.innerHTML = remaining.map(entry => {
+      const isMatch = query && matchNames.has(entry.name);
       return `
-        <div class="leaderboard-row">
-          <span class="leaderboard-rank">${rankMark(rank)}</span>
+        <div class="leaderboard-row ${isMatch ? "is-match" : ""}" data-rank="${entry.rank}" data-name="${esc(entry.name)}">
+          <span class="leaderboard-rank">${rankMark(entry.rank)}</span>
           <strong class="leaderboard-name">${esc(entry.name)}</strong>
           <span class="leaderboard-points">${formatPoints(entry.points)}</span>
         </div>
@@ -264,13 +292,26 @@ function renderLeaderboard(data) {
     leaderboardRows.innerHTML = "";
     leaderboardList.hidden = true;
   }
+
+  if (query) {
+    if (matches.length) {
+      const firstMatch = matches[0];
+      leaderboardStatus.textContent = `ZNALEZIONO ${matches.length}`;
+      leaderboardStatus.classList.add("is-live");
+      window.requestAnimationFrame(() => {
+        const target = document.querySelector(`[data-rank="${firstMatch.rank}"]`);
+        target?.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    } else {
+      leaderboardStatus.textContent = "BRAK WYNIKÓW";
+      leaderboardStatus.classList.remove("is-live");
+    }
+  }
 }
 
 async function loadLeaderboard() {
   if (leaderboardBusy) return;
   leaderboardBusy = true;
-
-  if (leaderboardRefresh) leaderboardRefresh.disabled = true;
 
   try {
     const response = await fetch(
@@ -287,11 +328,11 @@ async function loadLeaderboard() {
   } catch (error) {
     leaderboardStatus.textContent = "SYNC ERROR";
     leaderboardStatus.classList.remove("is-live");
+    state.leaderboardUpdatedAt = null;
     leaderboardUpdated.textContent = "—";
     console.error("Leaderboard sync failed:", error);
   } finally {
     leaderboardBusy = false;
-    if (leaderboardRefresh) leaderboardRefresh.disabled = false;
   }
 }
 
@@ -329,4 +370,10 @@ viewButtons.forEach(button => {
   button.addEventListener("click", () => switchView(button.dataset.view));
 });
 
-leaderboardRefresh?.addEventListener("click", loadLeaderboard);
+leaderboardSearchInput?.addEventListener("input", event => {
+  state.leaderboardQuery = event.target.value;
+  renderLeaderboard({
+    updatedAt: state.leaderboardUpdatedAt,
+    entries: state.leaderboardEntries
+  });
+});

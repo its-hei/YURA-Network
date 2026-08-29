@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
-  <title>Y.U.R.A. Network — Commands & Leaderboard</title>
-  <link rel="stylesheet" href="styles.css?v=12">
+  <title>Y.U.R.A. Network — Komendy i Ranking</title>
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <div class="ambient"></div>
@@ -29,7 +29,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=12" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=14" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -60,9 +60,9 @@
         </section>
 
         <nav class="side-nav" aria-label="Nawigacja">
-          <button class="side-item active" type="button" data-view="commands">Commands</button>
+          <button class="side-item active" type="button" data-view="commands">Komendy</button>
           <button class="side-item" type="button" data-view="leaderboard">
-            Leaderboard
+            Ranking
             <span>TOP 10</span>
           </button>
         </nav>
@@ -118,7 +118,7 @@
       <div class="hero">
         <div>
           <div class="eyebrow">Y.U.R.A. POINT NETWORK</div>
-          <h1>Leaderboard</h1>
+          <h1>Ranking</h1>
           <p>Ranking punktów Y.U.R.A. bez streamera i kont botów.</p>
         </div>
         <div class="status-chip leaderboard-status" id="leaderboardStatus">WAITING FOR DATA</div>
@@ -133,7 +133,10 @@
           <span class="meta-label">LAST SYNC</span>
           <strong id="leaderboardUpdated">—</strong>
         </div>
-        <button class="refresh-button" id="leaderboardRefresh" type="button">↻ Odśwież teraz</button>
+        <label class="search-box leaderboard-search-box">
+          <span class="search-icon">⌕</span>
+          <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie na liście..." autocomplete="off">
+        </label>
       </div>
 
       <div class="podium" id="leaderboardPodium" hidden></div>
@@ -149,7 +152,7 @@
 
       <div id="leaderboardEmpty" class="leaderboard-empty">
         <div class="empty-code">NO DATA</div>
-        <strong>Leaderboard czeka na pierwszy sync.</strong>
+        <strong>Ranking czeka na pierwszy sync.</strong>
         <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
       </div>
     </section>
@@ -161,6 +164,6 @@
     <span>Heiyeshi Channel Systems</span>
   </footer>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

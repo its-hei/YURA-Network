@@ -123,3 +123,17 @@ The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should up
 - changed the visible leaderboard cadence from `AUTO REFRESH 15 SEC` to `POINT SYNC 5 MIN`
 - kept the internal page polling at 15 seconds so instant point changes from gamble/transfer/admin actions can still appear quickly
 - the 5-minute label now reflects the normal passive points accrual cadence
+
+
+## v13 — labels + leaderboard search
+- side navigation renamed to `Komendy` and `Ranking`
+- leaderboard title changed from `Leaderboard` to `Ranking`
+- removed `Odśwież teraz` button and replaced it with viewer search on the ranking
+- search highlights matching users and scrolls to the first match
+- first commands group is expanded automatically on page load
+
+
+## v14 — polish labels + stable search
+- kept the same UI changes from v13
+- fixed the commands view so the first group opens automatically only on initial load or filter change
+- fixed leaderboard search so `LAST SYNC` stays correct while typing

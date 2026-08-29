@@ -821,6 +821,11 @@ footer{
   font-size:12px;
 }
 
+.leaderboard-search-box{
+  margin-left:auto;
+  min-width:min(100%, 300px);
+}
+
 .refresh-button{
   margin-left:auto;
   padding:9px 12px;
@@ -838,6 +843,20 @@ footer{
   color:#fff;
 }
 .refresh-button:disabled{opacity:.45;cursor:wait}
+
+
+.leaderboard-search-box input{
+  font-size:12px;
+}
+
+.podium-card.is-match,
+.leaderboard-row.is-match{
+  border-color:rgba(242,140,24,.55) !important;
+  background:
+    linear-gradient(90deg, rgba(242,140,24,.12), transparent 68%),
+    #11161d;
+  box-shadow:0 0 0 1px rgba(242,140,24,.18), var(--shadow);
+}
 
 .podium{
   margin-top:16px;
@@ -1010,7 +1029,12 @@ footer{
 
 @media(max-width:620px){
   .leaderboard-toolbar{align-items:flex-start;flex-wrap:wrap}
-  .refresh-button{width:100%;margin-left:0}
+  .leaderboard-search-box{
+  margin-left:auto;
+  min-width:min(100%, 300px);
+}
+
+.refresh-button{width:100%;margin-left:0}
   .leaderboard-list-head,
   .leaderboard-row{grid-template-columns:52px minmax(0,1fr) 92px;gap:8px}
   .leaderboard-list-head{font-size:8px}
