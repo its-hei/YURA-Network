@@ -13,6 +13,18 @@ const body = document.getElementById("commandsBody");
 const empty = document.getElementById("emptyState");
 const searchInput = document.getElementById("searchInput");
 const tabs = [...document.querySelectorAll(".tab")];
+const networkHits = document.getElementById("networkHits");
+
+function setNetworkHits(value) {
+  const hits = Math.max(0, Number.parseInt(value, 10) || 0);
+  if (networkHits) {
+    networkHits.textContent = String(hits).padStart(6, "0");
+  }
+}
+
+// UI jest gotowe pod prawdziwy globalny licznik wejść.
+// Do czasu podpięcia backendu nie naliczamy sztucznych lokalnych odsłon.
+setNetworkHits(0);
 
 const initiallyActiveTab = document.querySelector(".tab.active");
 state.filter = initiallyActiveTab?.dataset.filter || "Everyone";

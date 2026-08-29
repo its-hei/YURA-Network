@@ -137,3 +137,10 @@ The public page polls the data every 15 seconds. Streamer.bot/Y.U.R.A. should up
 - kept the same UI changes from v13
 - fixed the commands view so the first group opens automatically only on initial load or filter change
 - fixed leaderboard search so `LAST SYNC` stays correct while typing
+
+
+## v15 — NETWORK HITS UI
+- added `NETWORK HITS // 000000` to the top-right system status
+- kept the ONLINE indicator and pulse intact
+- added a six-digit padded counter hook (`#networkHits`)
+- no fake/local counting is performed yet; the value stays at `000000` until the real global counter backend is connected

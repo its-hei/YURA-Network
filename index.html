@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
   <title>Y.U.R.A. Network — Komendy i Ranking</title>
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <div class="ambient"></div>
@@ -20,8 +20,15 @@
     </div>
 
     <div class="system-state">
-      <span class="dot"></span>
-      <span>ONLINE</span>
+      <span class="online-state">
+        <span class="dot"></span>
+        <span>ONLINE</span>
+      </span>
+      <span class="system-divider" aria-hidden="true">•</span>
+      <span class="network-hits">
+        <span class="network-hits-label">NETWORK HITS //</span>
+        <strong id="networkHits">000000</strong>
+      </span>
     </div>
   </header>
 
@@ -29,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=14" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=15" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -164,6 +171,6 @@
     <span>Heiyeshi Channel Systems</span>
   </footer>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
