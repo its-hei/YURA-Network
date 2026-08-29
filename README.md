@@ -223,3 +223,11 @@ The exporter adds `rankDelta` and `isNew` fields to the live leaderboard JSON.
 - add a rotated `NEXT VIP` marker immediately left of the #1 candidate card
 - subtly highlight the #1 candidate card in candidate mode
 - bump frontend cache version to v22
+
+
+## v23 — Czytelniejsze sterowanie rankingiem VIP
+- powiększono pionowy znacznik `NEXT VIP`
+- `KANDYDACI VIP` i `WSZYSCY` mają identyczną szerokość
+- `WSZYSCY` ma własny pomarańczowy akcent i pulsującą kropkę
+- od tej wersji wpisy w publicznym changelogu są po polsku
+- podbito cache frontendu do v23

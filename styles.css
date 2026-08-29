@@ -1662,3 +1662,82 @@ footer{
     display:none;
   }
 }
+
+
+/* ==============================
+   V23 // VIP CONTROLS VISIBILITY
+   ============================== */
+
+/* KANDYDACI VIP and WSZYSCY always occupy the same width. */
+.eligibility-toggle{
+  min-width:154px;
+  justify-content:center;
+}
+
+/* Candidate CTA remains violet. */
+.eligibility-toggle.candidate-cta{
+  min-width:154px;
+}
+
+/* WSZYSCY gets its own orange system accent instead of looking disabled. */
+.eligibility-toggle.show-all{
+  min-width:154px;
+  border-color:rgba(242,140,24,.42);
+  background:
+    linear-gradient(90deg,rgba(242,140,24,.12),rgba(242,140,24,.035));
+  color:#f2a24c;
+  box-shadow:
+    inset 0 0 16px rgba(242,140,24,.025),
+    0 0 0 1px rgba(242,140,24,.025);
+}
+
+.eligibility-toggle.show-all:hover{
+  border-color:rgba(242,140,24,.7);
+  color:#ffc276;
+  box-shadow:
+    0 0 16px rgba(242,140,24,.08),
+    inset 0 0 16px rgba(242,140,24,.04);
+}
+
+.eligibility-toggle.show-all .eligibility-dot{
+  background:var(--accent);
+  box-shadow:0 0 8px rgba(242,140,24,.65);
+  animation:showAllPulse 1.7s ease-in-out infinite;
+}
+
+@keyframes showAllPulse{
+  0%,100%{
+    opacity:.55;
+    transform:scale(.82);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.12);
+    box-shadow:
+      0 0 8px rgba(242,140,24,.75),
+      0 0 14px rgba(242,140,24,.2);
+  }
+}
+
+/* Make NEXT VIP noticeably larger and easier to read. */
+.podium.candidate-mode::before{
+  left:-64px;
+  padding:8px 13px;
+  border-color:rgba(183,161,255,.52);
+  background:rgba(15,16,24,.98);
+  color:#cabdff;
+  box-shadow:
+    0 0 18px rgba(183,161,255,.14),
+    inset 0 0 12px rgba(183,161,255,.055);
+  font-size:11px;
+  letter-spacing:.16em;
+  text-shadow:0 0 9px rgba(183,161,255,.22);
+}
+
+@media(max-width:1180px){
+  .podium.candidate-mode::before{
+    left:-56px;
+    font-size:10px;
+    padding:7px 11px;
+  }
+}

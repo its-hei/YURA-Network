@@ -1,5 +1,16 @@
 [
   {
+    "version": "v23",
+    "date": "2026-08-30",
+    "title": "Czytelniejsze sterowanie rankingiem VIP",
+    "items": [
+      "Powiększono pionowy znacznik NEXT VIP przy pierwszym miejscu.",
+      "Przyciski KANDYDACI VIP i WSZYSCY mają teraz identyczną szerokość.",
+      "WSZYSCY otrzymało pomarańczowy akcent oraz subtelnie pulsującą kropkę.",
+      "Wzmocniono kontrast elementów związanych z wyborem miesięcznego VIP-a."
+    ]
+  },
+  {
     "version": "v22",
     "date": "2026-08-30",
     "title": "VIP Candidate Focus",

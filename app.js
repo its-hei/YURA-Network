@@ -229,7 +229,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=22", { cache: "no-store" })
+fetch("./commands.json?v=23", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -566,7 +566,7 @@ function renderChangelog(items) {
   `).join("");
 }
 
-fetch("./changelog.json?v=22", { cache: "no-store" })
+fetch("./changelog.json?v=23", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać changelog.json");
