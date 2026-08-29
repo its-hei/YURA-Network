@@ -146,7 +146,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json?v=9", { cache: "no-store" })
+fetch("commands.json?v=10", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -165,3 +165,167 @@ fetch("commands.json?v=9", { cache: "no-store" })
       </tr>
     `;
   });
+
+
+// ==============================
+// VIEW SWITCHING + LEADERBOARD
+// ==============================
+const viewButtons = [...document.querySelectorAll(".side-item[data-view]")];
+const commandsView = document.getElementById("commandsView");
+const leaderboardView = document.getElementById("leaderboardView");
+const leaderboardStatus = document.getElementById("leaderboardStatus");
+const leaderboardUpdated = document.getElementById("leaderboardUpdated");
+const leaderboardRefresh = document.getElementById("leaderboardRefresh");
+const leaderboardPodium = document.getElementById("leaderboardPodium");
+const leaderboardList = document.getElementById("leaderboardList");
+const leaderboardRows = document.getElementById("leaderboardRows");
+const leaderboardEmpty = document.getElementById("leaderboardEmpty");
+
+let activeView = "commands";
+let leaderboardTimer = null;
+let leaderboardBusy = false;
+
+function formatPoints(value) {
+  const number = Number(value) || 0;
+  return new Intl.NumberFormat("pl-PL").format(number);
+}
+
+function formatSync(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function rankMark(rank) {
+  if (rank === 1) return "Ⅰ";
+  if (rank === 2) return "Ⅱ";
+  if (rank === 3) return "Ⅲ";
+  return String(rank).padStart(2, "0");
+}
+
+function renderLeaderboard(data) {
+  const entries = Array.isArray(data?.entries)
+    ? data.entries
+        .filter(item => item && item.name && Number(item.points) >= 0)
+        .sort((a, b) => Number(b.points) - Number(a.points))
+        .slice(0, 10)
+    : [];
+
+  leaderboardUpdated.textContent = formatSync(data?.updatedAt);
+
+  if (!entries.length) {
+    leaderboardStatus.textContent = "WAITING FOR DATA";
+    leaderboardStatus.classList.remove("is-live");
+    leaderboardPodium.hidden = true;
+    leaderboardList.hidden = true;
+    leaderboardEmpty.hidden = false;
+    return;
+  }
+
+  leaderboardStatus.textContent = "LIVE DATA";
+  leaderboardStatus.classList.add("is-live");
+  leaderboardEmpty.hidden = true;
+
+  const top = entries.slice(0, 3);
+  leaderboardPodium.innerHTML = top.map((entry, index) => {
+    const rank = index + 1;
+    return `
+      <article class="podium-card rank-${rank}">
+        <div class="podium-rank">${rankMark(rank)}</div>
+        <div class="podium-kicker">RANK ${String(rank).padStart(2, "0")}</div>
+        <strong class="podium-name">${esc(entry.name)}</strong>
+        <div class="podium-points">${formatPoints(entry.points)}</div>
+        <div class="podium-unit">Y.U.R.A. POINTS</div>
+      </article>
+    `;
+  }).join("");
+  leaderboardPodium.hidden = false;
+
+  const remaining = entries.slice(3);
+  if (remaining.length) {
+    leaderboardRows.innerHTML = remaining.map((entry, index) => {
+      const rank = index + 4;
+      return `
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">${rankMark(rank)}</span>
+          <strong class="leaderboard-name">${esc(entry.name)}</strong>
+          <span class="leaderboard-points">${formatPoints(entry.points)}</span>
+        </div>
+      `;
+    }).join("");
+    leaderboardList.hidden = false;
+  } else {
+    leaderboardRows.innerHTML = "";
+    leaderboardList.hidden = true;
+  }
+}
+
+async function loadLeaderboard() {
+  if (leaderboardBusy) return;
+  leaderboardBusy = true;
+
+  if (leaderboardRefresh) leaderboardRefresh.disabled = true;
+
+  try {
+    const response = await fetch(`leaderboard.json?t=${Date.now()}`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    renderLeaderboard(data);
+  } catch (error) {
+    leaderboardStatus.textContent = "SYNC ERROR";
+    leaderboardStatus.classList.remove("is-live");
+    leaderboardUpdated.textContent = "—";
+    console.error("Leaderboard sync failed:", error);
+  } finally {
+    leaderboardBusy = false;
+    if (leaderboardRefresh) leaderboardRefresh.disabled = false;
+  }
+}
+
+function startLeaderboardPolling() {
+  stopLeaderboardPolling();
+  loadLeaderboard();
+  leaderboardTimer = window.setInterval(loadLeaderboard, 15000);
+}
+
+function stopLeaderboardPolling() {
+  if (leaderboardTimer) {
+    window.clearInterval(leaderboardTimer);
+    leaderboardTimer = null;
+  }
+}
+
+function switchView(view) {
+  activeView = view;
+
+  viewButtons.forEach(button => {
+    button.classList.toggle("active", button.dataset.view === view);
+  });
+
+  commandsView.hidden = view !== "commands";
+  leaderboardView.hidden = view !== "leaderboard";
+
+  if (view === "leaderboard") {
+    startLeaderboardPolling();
+  } else {
+    stopLeaderboardPolling();
+  }
+}
+
+viewButtons.forEach(button => {
+  button.addEventListener("click", () => switchView(button.dataset.view));
+});
+
+leaderboardRefresh?.addEventListener("click", loadLeaderboard);

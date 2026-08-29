@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
-  <title>Y.U.R.A. Network — Commands</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <title>Y.U.R.A. Network — Commands & Leaderboard</title>
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <div class="ambient"></div>
@@ -29,7 +29,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=7" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=10" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -60,16 +60,16 @@
         </section>
 
         <nav class="side-nav" aria-label="Nawigacja">
-          <button class="side-item active" type="button">Commands</button>
-          <button class="side-item disabled" type="button" disabled>
+          <button class="side-item active" type="button" data-view="commands">Commands</button>
+          <button class="side-item" type="button" data-view="leaderboard">
             Leaderboard
-            <span>SOON</span>
+            <span>TOP 10</span>
           </button>
         </nav>
       </div>
     </aside>
 
-    <section class="content">
+    <section class="content view-panel" id="commandsView">
       <div class="hero">
         <div>
           <div class="eyebrow">PUBLIC TERMINAL</div>
@@ -113,6 +113,46 @@
         Brak komend pasujących do filtra.
       </div>
     </section>
+
+    <section class="content view-panel" id="leaderboardView" hidden>
+      <div class="hero">
+        <div>
+          <div class="eyebrow">Y.U.R.A. POINT NETWORK</div>
+          <h1>Leaderboard</h1>
+          <p>Ranking punktów Y.U.R.A. bez streamera i kont botów.</p>
+        </div>
+        <div class="status-chip leaderboard-status" id="leaderboardStatus">WAITING FOR DATA</div>
+      </div>
+
+      <div class="leaderboard-toolbar">
+        <div class="leaderboard-meta">
+          <span class="meta-label">AUTO REFRESH</span>
+          <strong>15 SEC</strong>
+        </div>
+        <div class="leaderboard-meta">
+          <span class="meta-label">LAST SYNC</span>
+          <strong id="leaderboardUpdated">—</strong>
+        </div>
+        <button class="refresh-button" id="leaderboardRefresh" type="button">↻ Odśwież teraz</button>
+      </div>
+
+      <div class="podium" id="leaderboardPodium" hidden></div>
+
+      <div class="leaderboard-list" id="leaderboardList" hidden>
+        <div class="leaderboard-list-head">
+          <span>Pozycja</span>
+          <span>Użytkownik</span>
+          <span>Punkty</span>
+        </div>
+        <div id="leaderboardRows"></div>
+      </div>
+
+      <div id="leaderboardEmpty" class="leaderboard-empty">
+        <div class="empty-code">NO DATA</div>
+        <strong>Leaderboard czeka na pierwszy sync.</strong>
+        <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -121,6 +161,6 @@
     <span>Heiyeshi Channel Systems</span>
   </footer>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

@@ -88,3 +88,24 @@ Przykład:
 - `!afk` przeniesiono do komend moderatorskich / Overlay.
 - `!tts` i `!tits` są dostępne dla wszystkich widzów.
 - Zaktualizowano cache-busting do `v=9`.
+
+
+## v10 — Leaderboard
+
+- aktywowano zakładkę `Leaderboard`
+- dodano TOP 3 w formie podium oraz miejsca 4–10 w tabeli
+- ranking ładuje dane z `leaderboard.json`
+- automatyczne odświeżanie co 15 sekund podczas otwartej zakładki
+- ręczny przycisk odświeżania i znacznik ostatniej synchronizacji
+- pusty stan do czasu podłączenia automatycznej publikacji danych z Y.U.R.A.
+
+Format `leaderboard.json`:
+
+```json
+{
+  "updatedAt": "2026-08-29T15:00:00+02:00",
+  "entries": [
+    { "name": "viewer", "points": 2500 }
+  ]
+}
+```
