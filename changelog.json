@@ -1,0 +1,49 @@
+[
+  {
+    "version": "v20",
+    "date": "2026-08-29",
+    "title": "Ranking Intelligence",
+    "items": [
+      "Dodano ruch pozycji w rankingu: ↑, ↓, NEW oraz brak zmiany.",
+      "Dodano NEXT VIP CANDIDATE dla rankingu bez VIP-ów i moderatorów.",
+      "Komendy i aliasy można kopiować jednym kliknięciem.",
+      "Dodano publiczny Changelog Y.U.R.A."
+    ]
+  },
+  {
+    "version": "v19",
+    "date": "2026-08-29",
+    "title": "VIP / MOD Filter",
+    "items": [
+      "Ranking rozpoznaje aktualnych VIP-ów i moderatorów.",
+      "Przełącznik POMIŃ VIP / MOD tworzy listę osób kwalifikujących się do VIP-a."
+    ]
+  },
+  {
+    "version": "v18",
+    "date": "2026-08-29",
+    "title": "Safe Network Hits",
+    "items": [
+      "NETWORK HITS został odseparowany od głównej logiki strony.",
+      "Błąd lub blokada trackera nie może już wyłączyć komend ani rankingu."
+    ]
+  },
+  {
+    "version": "v16",
+    "date": "2026-08-29",
+    "title": "Network Hits",
+    "items": [
+      "Dodano licznik NETWORK HITS oparty o GoatCounter.",
+      "Zachowano terminalowy sześciocyfrowy format licznika."
+    ]
+  },
+  {
+    "version": "v14",
+    "date": "2026-08-29",
+    "title": "Ranking Search",
+    "items": [
+      "Dodano wyszukiwanie użytkownika w rankingu.",
+      "Pierwsza grupa komend rozwija się automatycznie po wejściu."
+    ]
+  }
+]

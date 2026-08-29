@@ -184,3 +184,17 @@ Note: GoatCounter's public visitor-counter response may be cached for up to four
 - keep the normal ranking unchanged when the toggle is off
 - leaderboard JSON now expects `isVip` and `isModerator` flags per entry
 - export more than the visible TOP 10 so filtering can still produce a full eligible TOP 10
+
+
+## v20 — Ranking Intelligence
+- add global rank movement (`↑`, `↓`, `NEW`, `—`) based on the previous leaderboard snapshot
+- add `NEXT VIP CANDIDATE` when `POMIŃ VIP / MOD` is enabled
+- make commands and aliases click-to-copy with terminal feedback
+- add a dedicated Changelog view backed by `changelog.json`
+- keep VIP/MOD eligibility filtering, search, ranking sync, and NETWORK HITS
+- bump frontend cache version to v20
+
+### Streamer.bot requirement
+Replace the C# in `Leaderboard Sync -> Execute Code` with
+`tools/StreamerBot_Leaderboard_Sync_v20.cs.txt`.
+The exporter adds `rankDelta` and `isNew` fields to the live leaderboard JSON.

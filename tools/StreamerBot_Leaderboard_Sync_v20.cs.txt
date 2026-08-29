@@ -1,0 +1,681 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+public class CPHInline
+{
+    private class RankingEntry
+    {
+        public string UserId;
+        public string Login;
+        public string DisplayName;
+        public long Points;
+        public bool IsVip;
+        public bool IsModerator;
+        public int RankDelta;
+        public bool IsNew;
+    }
+
+    public bool Execute()
+    {
+        try
+        {
+            string outputPath =
+                @"D:\Programs\OBS Studio\Own Apps\YURA-Network\YURA-Network\tools\leaderboard.json";
+
+            // =========================================
+            // POPRZEDNIE POZYCJE
+            // =========================================
+
+            Dictionary<string, int> previousRanks =
+                ReadPreviousRanks(outputPath);
+
+            var allUsers =
+                CPH.GetTwitchUsersVar<string>(
+                    "points",
+                    true
+                );
+
+            if (allUsers == null || allUsers.Count == 0)
+                return true;
+
+            // =========================================
+            // AKTUALNI VIP / MOD
+            // =========================================
+
+            var vipIds =
+                new Dictionary<string, bool>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            var modIds =
+                new Dictionary<string, bool>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            var vips =
+                CPH.TwitchGetVips();
+
+            if (vips != null)
+            {
+                foreach (var vip in vips)
+                {
+                    if (
+                        vip == null ||
+                        string.IsNullOrWhiteSpace(vip.UserId)
+                    )
+                    {
+                        continue;
+                    }
+
+                    vipIds[vip.UserId.Trim()] = true;
+                }
+            }
+
+            var mods =
+                CPH.TwitchGetMods();
+
+            if (mods != null)
+            {
+                foreach (var mod in mods)
+                {
+                    if (
+                        mod == null ||
+                        string.IsNullOrWhiteSpace(mod.UserId)
+                    )
+                    {
+                        continue;
+                    }
+
+                    modIds[mod.UserId.Trim()] = true;
+                }
+            }
+
+            // =========================================
+            // DEDUPLIKACJA PO TWITCH USER ID
+            // =========================================
+
+            var unique =
+                new Dictionary<string, RankingEntry>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+            foreach (var user in allUsers)
+            {
+                if (string.IsNullOrWhiteSpace(user.UserId))
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(user.Value))
+                    continue;
+
+                long points;
+
+                if (
+                    !long.TryParse(
+                        user.Value.Trim(),
+                        out points
+                    )
+                )
+                {
+                    continue;
+                }
+
+                if (points <= 0)
+                    continue;
+
+                string userId =
+                    user.UserId.Trim();
+
+                string login =
+                    (user.UserLogin ?? "")
+                    .Trim()
+                    .ToLowerInvariant();
+
+                string displayName =
+                    string.IsNullOrWhiteSpace(user.UserName)
+                        ? login
+                        : user.UserName.Trim();
+
+                if (
+                    IsExcluded(login) ||
+                    IsExcluded(displayName)
+                )
+                {
+                    continue;
+                }
+
+                bool isVip =
+                    vipIds.ContainsKey(userId);
+
+                bool isModerator =
+                    modIds.ContainsKey(userId);
+
+                RankingEntry existing;
+
+                if (
+                    unique.TryGetValue(
+                        userId,
+                        out existing
+                    )
+                )
+                {
+                    if (points > existing.Points)
+                    {
+                        existing.Points =
+                            points;
+
+                        existing.Login =
+                            login;
+
+                        existing.DisplayName =
+                            displayName;
+                    }
+
+                    existing.IsVip =
+                        existing.IsVip ||
+                        isVip;
+
+                    existing.IsModerator =
+                        existing.IsModerator ||
+                        isModerator;
+                }
+                else
+                {
+                    RankingEntry entry =
+                        new RankingEntry();
+
+                    entry.UserId =
+                        userId;
+
+                    entry.Login =
+                        login;
+
+                    entry.DisplayName =
+                        displayName;
+
+                    entry.Points =
+                        points;
+
+                    entry.IsVip =
+                        isVip;
+
+                    entry.IsModerator =
+                        isModerator;
+
+                    unique.Add(
+                        userId,
+                        entry
+                    );
+                }
+            }
+
+            // =========================================
+            // PEŁNY RANKING
+            // =========================================
+
+            var ranking =
+                new List<RankingEntry>();
+
+            foreach (var item in unique)
+            {
+                ranking.Add(
+                    item.Value
+                );
+            }
+
+            ranking.Sort(
+                delegate(
+                    RankingEntry a,
+                    RankingEntry b
+                )
+                {
+                    int pointsCompare =
+                        b.Points.CompareTo(
+                            a.Points
+                        );
+
+                    if (pointsCompare != 0)
+                        return pointsCompare;
+
+                    return string.Compare(
+                        a.DisplayName,
+                        b.DisplayName,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+                }
+            );
+
+            // =========================================
+            // RUCH W RANKINGU
+            //
+            // rankDelta > 0 = awans
+            // rankDelta < 0 = spadek
+            // isNew = brak w poprzednim snapshotcie
+            // =========================================
+
+            for (
+                int i = 0;
+                i < ranking.Count;
+                i++
+            )
+            {
+                RankingEntry entry =
+                    ranking[i];
+
+                int currentRank =
+                    i + 1;
+
+                int previousRank = 0;
+
+                string rankKey =
+                    NormalizeRankKey(
+                        entry.DisplayName
+                    );
+
+                if (
+                    previousRanks.TryGetValue(
+                        rankKey,
+                        out previousRank
+                    )
+                )
+                {
+                    entry.IsNew = false;
+                    entry.RankDelta =
+                        previousRank -
+                        currentRank;
+                }
+                else
+                {
+                    entry.IsNew = true;
+                    entry.RankDelta = 0;
+                }
+            }
+
+            // =========================================
+            // JSON
+            // =========================================
+
+            StringBuilder json =
+                new StringBuilder();
+
+            json.Append("{\r\n");
+
+            json.Append(
+                "  \"updatedAt\": \""
+            );
+
+            json.Append(
+                DateTimeOffset.Now.ToString("o")
+            );
+
+            json.Append("\",\r\n");
+
+            json.Append(
+                "  \"entries\": [\r\n"
+            );
+
+            for (
+                int i = 0;
+                i < ranking.Count;
+                i++
+            )
+            {
+                RankingEntry entry =
+                    ranking[i];
+
+                json.Append(
+                    "    {\"name\":\""
+                );
+
+                json.Append(
+                    EscapeJson(
+                        entry.DisplayName
+                    )
+                );
+
+                json.Append(
+                    "\",\"points\":"
+                );
+
+                json.Append(
+                    entry.Points
+                );
+
+                json.Append(
+                    ",\"isVip\":"
+                );
+
+                json.Append(
+                    entry.IsVip
+                        ? "true"
+                        : "false"
+                );
+
+                json.Append(
+                    ",\"isModerator\":"
+                );
+
+                json.Append(
+                    entry.IsModerator
+                        ? "true"
+                        : "false"
+                );
+
+                json.Append(
+                    ",\"rankDelta\":"
+                );
+
+                json.Append(
+                    entry.RankDelta
+                );
+
+                json.Append(
+                    ",\"isNew\":"
+                );
+
+                json.Append(
+                    entry.IsNew
+                        ? "true"
+                        : "false"
+                );
+
+                json.Append("}");
+
+                if (
+                    i <
+                    ranking.Count - 1
+                )
+                {
+                    json.Append(",");
+                }
+
+                json.Append("\r\n");
+            }
+
+            json.Append(
+                "  ]\r\n"
+            );
+
+            json.Append(
+                "}\r\n"
+            );
+
+            File.WriteAllText(
+                outputPath,
+                json.ToString(),
+                new UTF8Encoding(false)
+            );
+
+            CPH.SetArgument(
+                "lbStage",
+                "DONE"
+            );
+
+            CPH.SetArgument(
+                "lbTotalCount",
+                ranking.Count
+            );
+
+            CPH.SetArgument(
+                "lbVipCount",
+                vipIds.Count
+            );
+
+            CPH.SetArgument(
+                "lbModCount",
+                modIds.Count
+            );
+
+            CPH.LogInfo(
+                "[YURA Leaderboard] Exported " +
+                ranking.Count +
+                " users | VIPs=" +
+                vipIds.Count +
+                " | MODs=" +
+                modIds.Count
+            );
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            CPH.SetArgument(
+                "lbStage",
+                "ERROR"
+            );
+
+            CPH.SetArgument(
+                "lbError",
+                ex.GetType().Name +
+                ": " +
+                ex.Message
+            );
+
+            CPH.LogError(
+                "[YURA Leaderboard] ERROR: " +
+                ex.ToString()
+            );
+
+            return false;
+        }
+    }
+
+    private Dictionary<string, int> ReadPreviousRanks(
+        string path
+    )
+    {
+        var result =
+            new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase
+            );
+
+        if (!File.Exists(path))
+            return result;
+
+        try
+        {
+            string[] lines =
+                File.ReadAllLines(path);
+
+            int rank = 0;
+
+            foreach (string rawLine in lines)
+            {
+                string line =
+                    rawLine.Trim();
+
+                int nameStart =
+                    line.IndexOf(
+                        "\"name\":\"",
+                        StringComparison.Ordinal
+                    );
+
+                if (nameStart < 0)
+                    continue;
+
+                nameStart += 8;
+
+                int nameEnd =
+                    FindJsonStringEnd(
+                        line,
+                        nameStart
+                    );
+
+                if (nameEnd < 0)
+                    continue;
+
+                string encodedName =
+                    line.Substring(
+                        nameStart,
+                        nameEnd - nameStart
+                    );
+
+                string displayName =
+                    UnescapeJson(
+                        encodedName
+                    );
+
+                string key =
+                    NormalizeRankKey(
+                        displayName
+                    );
+
+                if (
+                    string.IsNullOrWhiteSpace(
+                        key
+                    )
+                )
+                {
+                    continue;
+                }
+
+                rank++;
+
+                if (!result.ContainsKey(key))
+                {
+                    result.Add(
+                        key,
+                        rank
+                    );
+                }
+            }
+        }
+        catch
+        {
+            // Jeśli stary JSON jest uszkodzony,
+            // po prostu potraktujemy wpisy jako NEW.
+        }
+
+        return result;
+    }
+
+    private int FindJsonStringEnd(
+        string text,
+        int start
+    )
+    {
+        bool escaped = false;
+
+        for (
+            int i = start;
+            i < text.Length;
+            i++
+        )
+        {
+            char c =
+                text[i];
+
+            if (escaped)
+            {
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\')
+            {
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"')
+                return i;
+        }
+
+        return -1;
+    }
+
+    private string NormalizeRankKey(
+        string value
+    )
+    {
+        if (
+            string.IsNullOrWhiteSpace(
+                value
+            )
+        )
+        {
+            return "";
+        }
+
+        return value
+            .Trim()
+            .ToLowerInvariant();
+    }
+
+    private bool IsExcluded(
+        string name
+    )
+    {
+        if (
+            string.IsNullOrWhiteSpace(
+                name
+            )
+        )
+        {
+            return false;
+        }
+
+        string normalized =
+            name.Trim()
+                .ToLowerInvariant()
+                .Replace(" ", "")
+                .Replace("-", "")
+                .Replace(".", "");
+
+        if (
+            normalized ==
+            "humihu"
+        )
+        {
+            return true;
+        }
+
+        if (
+            normalized.Contains(
+                "botrix"
+            )
+        )
+        {
+            return true;
+        }
+
+        return
+            normalized == "heiyeshi" ||
+            normalized == "yuranetwork" ||
+            normalized == "streamelements" ||
+            normalized == "nightbot" ||
+            normalized == "sery_bot" ||
+            normalized == "serybot" ||
+            normalized == "creatisbot" ||
+            normalized == "moobot" ||
+            normalized == "fossabot" ||
+            normalized == "streamlabs";
+    }
+
+    private string EscapeJson(
+        string value
+    )
+    {
+        if (value == null)
+            return "";
+
+        return value
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\r", "")
+            .Replace("\n", "");
+    }
+
+    private string UnescapeJson(
+        string value
+    )
+    {
+        if (value == null)
+            return "";
+
+        return value
+            .Replace("\\\"", "\"")
+            .Replace("\\\\", "\\");
+    }
+}

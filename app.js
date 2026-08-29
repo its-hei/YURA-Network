@@ -87,10 +87,22 @@ function render() {
         <tr class="command-row" ${isOpen ? "" : "hidden"}>
           <td>
             <div class="command-main">
-              <span class="command">${esc(command.command)}</span>
+              <button
+                class="command copy-command"
+                type="button"
+                data-copy="${esc(command.command)}"
+                title="Kliknij, aby skopiować"
+              >${esc(command.command)}</button>
               ${aliases.length ? `<span class="alias-count">+${aliases.length}</span>` : ""}
             </div>
-            ${aliases.length ? `<div class="aliases">${aliases.map(esc).join(" · ")}</div>` : ""}
+            ${aliases.length ? `<div class="aliases">${aliases.map(alias => `
+              <button
+                class="alias-copy copy-command"
+                type="button"
+                data-copy="${esc(alias)}"
+                title="Kliknij, aby skopiować"
+              >${esc(alias)}</button>
+            `).join('<span class="alias-separator"> · </span>')}</div>` : ""}
           </td>
           <td>
             <span class="badge ${badgeClass}">${esc(command.permission)}</span>
@@ -128,7 +140,63 @@ function render() {
   empty.hidden = filtered.length !== 0;
 }
 
+const copyToast = document.getElementById("copyToast");
+let copyToastTimer = null;
+
+async function copyText(value) {
+  const text = String(value || "").trim();
+  if (!text) return;
+
+  let copied = false;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    copied = true;
+  } catch (_) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      copied = document.execCommand("copy");
+    } catch (_) {
+      copied = false;
+    }
+
+    textarea.remove();
+  }
+
+  if (!copyToast) return;
+
+  copyToast.textContent = copied
+    ? `SKOPIOWANO // ${text}`
+    : "NIE UDAŁO SIĘ SKOPIOWAĆ";
+
+  copyToast.hidden = false;
+  copyToast.classList.toggle("is-error", !copied);
+
+  if (copyToastTimer) {
+    window.clearTimeout(copyToastTimer);
+  }
+
+  copyToastTimer = window.setTimeout(() => {
+    copyToast.hidden = true;
+    copyToast.classList.remove("is-error");
+  }, 1600);
+}
+
 body.addEventListener("click", event => {
+  const copyButton = event.target.closest(".copy-command");
+
+  if (copyButton) {
+    copyText(copyButton.dataset.copy);
+    return;
+  }
+
   const toggle = event.target.closest(".group-toggle");
   if (!toggle) return;
 
@@ -161,7 +229,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=19", { cache: "no-store" })
+fetch("./commands.json?v=20", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
@@ -196,6 +264,11 @@ const leaderboardPodium = document.getElementById("leaderboardPodium");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
 const leaderboardEmpty = document.getElementById("leaderboardEmpty");
+const vipCandidate = document.getElementById("vipCandidate");
+const vipCandidateName = document.getElementById("vipCandidateName");
+const vipCandidatePoints = document.getElementById("vipCandidatePoints");
+const changelogView = document.getElementById("changelogView");
+const changelogList = document.getElementById("changelogList");
 
 let activeView = "commands";
 let leaderboardTimer = null;
@@ -225,6 +298,24 @@ function rankMark(rank) {
   return String(rank).padStart(2, "0");
 }
 
+function movementMarkup(entry) {
+  if (entry.isNew === true) {
+    return '<span class="rank-movement movement-new">NEW</span>';
+  }
+
+  const delta = Number(entry.rankDelta) || 0;
+
+  if (delta > 0) {
+    return `<span class="rank-movement movement-up">↑${delta}</span>`;
+  }
+
+  if (delta < 0) {
+    return `<span class="rank-movement movement-down">↓${Math.abs(delta)}</span>`;
+  }
+
+  return '<span class="rank-movement movement-flat">—</span>';
+}
+
 function renderLeaderboard(data) {
   const sourceEntries = Array.isArray(data?.entries)
     ? data.entries
@@ -234,7 +325,9 @@ function renderLeaderboard(data) {
           ...item,
           points: Number(item.points) || 0,
           isVip: item.isVip === true,
-          isModerator: item.isModerator === true
+          isModerator: item.isModerator === true,
+          rankDelta: Number(item.rankDelta) || 0,
+          isNew: item.isNew === true
         }))
     : [];
 
@@ -270,6 +363,20 @@ function renderLeaderboard(data) {
     );
   }
 
+  if (vipCandidate) {
+    const candidate = state.leaderboardHidePrivileged
+      ? eligibleEntries[0]
+      : null;
+
+    if (candidate) {
+      vipCandidateName.textContent = candidate.name;
+      vipCandidatePoints.textContent = `${formatPoints(candidate.points)} PTS`;
+      vipCandidate.hidden = false;
+    } else {
+      vipCandidate.hidden = true;
+    }
+  }
+
   if (!entries.length) {
     leaderboardStatus.textContent = state.leaderboardHidePrivileged
       ? "BRAK KANDYDATÓW"
@@ -294,7 +401,10 @@ function renderLeaderboard(data) {
     return `
       <article class="podium-card rank-${rank} ${isMatch ? "is-match" : ""}" data-rank="${rank}" data-name="${esc(entry.name)}">
         <div class="podium-rank">${rankMark(rank)}</div>
-        <div class="podium-kicker">RANK ${String(rank).padStart(2, "0")}</div>
+        <div class="podium-kicker">
+          <span>RANK ${String(rank).padStart(2, "0")}</span>
+          ${movementMarkup(entry)}
+        </div>
         <strong class="podium-name">${esc(entry.name)}</strong>
         <div class="podium-points">${formatPoints(entry.points)}</div>
         <div class="podium-unit">Y.U.R.A. POINTS</div>
@@ -310,7 +420,10 @@ function renderLeaderboard(data) {
       return `
         <div class="leaderboard-row ${isMatch ? "is-match" : ""}" data-rank="${entry.rank}" data-name="${esc(entry.name)}">
           <span class="leaderboard-rank">${rankMark(entry.rank)}</span>
-          <strong class="leaderboard-name">${esc(entry.name)}</strong>
+          <strong class="leaderboard-name">
+            <span>${esc(entry.name)}</span>
+            ${movementMarkup(entry)}
+          </strong>
           <span class="leaderboard-points">${formatPoints(entry.points)}</span>
         </div>
       `;
@@ -386,6 +499,7 @@ function switchView(view) {
 
   commandsView.hidden = view !== "commands";
   leaderboardView.hidden = view !== "leaderboard";
+  changelogView.hidden = view !== "changelog";
 
   if (view === "leaderboard") {
     startLeaderboardPolling();
@@ -414,3 +528,55 @@ leaderboardSearchInput?.addEventListener("input", event => {
     entries: state.leaderboardEntries
   });
 });
+
+
+// ==============================
+// CHANGELOG
+// ==============================
+function renderChangelog(items) {
+  if (!changelogList) return;
+
+  if (!Array.isArray(items) || !items.length) {
+    changelogList.innerHTML = `
+      <div class="changelog-loading">Brak wpisów w dzienniku zmian.</div>
+    `;
+    return;
+  }
+
+  changelogList.innerHTML = items.map((entry, index) => `
+    <article class="changelog-card ${index === 0 ? "latest" : ""}">
+      <div class="changelog-rail">
+        <span class="changelog-node"></span>
+      </div>
+      <div class="changelog-content">
+        <div class="changelog-header">
+          <div>
+            <span class="changelog-version">${esc(entry.version || "")}</span>
+            ${index === 0 ? '<span class="changelog-latest">LATEST</span>' : ""}
+          </div>
+          <time>${esc(entry.date || "")}</time>
+        </div>
+        <h2>${esc(entry.title || "")}</h2>
+        <ul>
+          ${(entry.items || []).map(item => `<li>${esc(item)}</li>`).join("")}
+        </ul>
+      </div>
+    </article>
+  `).join("");
+}
+
+fetch("./changelog.json?v=20", { cache: "no-store" })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Nie udało się pobrać changelog.json");
+    }
+    return response.json();
+  })
+  .then(renderChangelog)
+  .catch(error => {
+    if (changelogList) {
+      changelogList.innerHTML = `
+        <div class="changelog-loading">Błąd ładowania changelogu: ${esc(error.message)}</div>
+      `;
+    }
+  });

@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0d10">
-  <title>Y.U.R.A. Network — Komendy i Ranking</title>
-  <link rel="stylesheet" href="styles.css?v=19">
+  <title>Y.U.R.A. Network — Komendy, Ranking i Changelog</title>
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <div class="ambient"></div>
@@ -36,7 +36,7 @@
     <aside class="sidebar">
       <div class="profile-grid">
         <div class="profile-panel avatar-card">
-          <img class="avatar" src="avatar.png?v=19" alt="Avatar Heiyeshi">
+          <img class="avatar" src="avatar.png?v=20" alt="Avatar Heiyeshi">
         </div>
 
         <section class="profile-panel profile-card">
@@ -71,6 +71,10 @@
           <button class="side-item" type="button" data-view="leaderboard">
             Ranking
             <span>TOP 10</span>
+          </button>
+          <button class="side-item" type="button" data-view="changelog">
+            Changelog
+            <span>v20</span>
           </button>
         </nav>
       </div>
@@ -159,6 +163,14 @@
         </div>
       </div>
 
+      <div class="vip-candidate" id="vipCandidate" hidden>
+        <div>
+          <span class="vip-candidate-label">NEXT VIP CANDIDATE //</span>
+          <strong id="vipCandidateName">—</strong>
+        </div>
+        <span class="vip-candidate-points" id="vipCandidatePoints">0 PTS</span>
+      </div>
+
       <div class="podium" id="leaderboardPodium" hidden></div>
 
       <div class="leaderboard-list" id="leaderboardList" hidden>
@@ -176,7 +188,25 @@
         <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
       </div>
     </section>
+    <section class="content view-panel" id="changelogView" hidden>
+      <div class="hero">
+        <div>
+          <div class="eyebrow">Y.U.R.A. SYSTEM LOG</div>
+          <h1>Changelog</h1>
+          <p>Najważniejsze zmiany w systemie Y.U.R.A. i publicznym terminalu.</p>
+        </div>
+        <div class="status-chip">SYSTEM HISTORY</div>
+      </div>
+
+      <div class="changelog-list" id="changelogList">
+        <div class="changelog-loading">Ładowanie dziennika zmian...</div>
+      </div>
+    </section>
   </main>
+
+  <div class="copy-toast" id="copyToast" role="status" aria-live="polite" hidden>
+    SKOPIOWANO ✓
+  </div>
 
   <footer>
     <span>Y.U.R.A. NETWORK</span>
@@ -185,10 +215,10 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=19"></script>
+  <script src="app.js?v=20"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
-  <script src="network-hits.js?v=19"></script>
+  <script src="network-hits.js?v=20"></script>
 
   <!-- GoatCounter pageview tracking -->
   <script
