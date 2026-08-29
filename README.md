@@ -73,3 +73,10 @@ Przykład:
 - Dodano aktualne aliasy i składnię komend.
 - Zachowano dotychczasowy layout v6 oraz domyślną zakładkę `Widzowie`.
 - Zaktualizowano cache-busting do `v=7`.
+
+## v8
+- Pogrupowano komendy w czytelne sekcje tematyczne.
+- Widzowie: Ogólne, Informacje, Punkty Y.U.R.A.
+- Moderatorzy: Alerty, Overlay, Donacje, TTS, Punkty — Admin.
+- Sekcje działają również z wyszukiwarką i filtrem Widzowie / Moderator / Wszystkie.
+- Zaktualizowano cache-busting do `v=8`.

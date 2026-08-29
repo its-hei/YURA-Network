@@ -41,33 +41,57 @@ function render() {
       ...(command.aliases || []),
       command.usage,
       command.description,
-      command.permission
+      command.permission,
+      command.category || ""
     ].join(" ").toLowerCase();
 
     return permissionMatches && (!query || searchSpace.includes(query));
   });
 
-  body.innerHTML = filtered.map(command => {
-    const aliases = command.aliases || [];
-    const badgeClass = command.permission.toLowerCase();
+  const groups = [];
+  filtered.forEach(command => {
+    const category = command.category || "INNE";
+    let group = groups.find(item => item.category === category);
+    if (!group) {
+      group = { category, commands: [] };
+      groups.push(group);
+    }
+    group.commands.push(command);
+  });
+
+  body.innerHTML = groups.map(group => {
+    const rows = group.commands.map(command => {
+      const aliases = command.aliases || [];
+      const badgeClass = command.permission.toLowerCase();
+
+      return `
+        <tr class="command-row">
+          <td>
+            <div class="command-main">
+              <span class="command">${esc(command.command)}</span>
+              ${aliases.length ? `<span class="alias-count">+${aliases.length}</span>` : ""}
+            </div>
+            ${aliases.length ? `<div class="aliases">${aliases.map(esc).join(" · ")}</div>` : ""}
+          </td>
+          <td>
+            <span class="badge ${badgeClass}">${esc(command.permission)}</span>
+          </td>
+          <td>
+            <div class="usage">${esc(command.usage)}</div>
+            <div class="description">${esc(command.description)}</div>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
     return `
-      <tr>
-        <td>
-          <div class="command-main">
-            <span class="command">${esc(command.command)}</span>
-            ${aliases.length ? `<span class="alias-count">+${aliases.length}</span>` : ""}
-          </div>
-          ${aliases.length ? `<div class="aliases">${aliases.map(esc).join(" · ")}</div>` : ""}
-        </td>
-        <td>
-          <span class="badge ${badgeClass}">${esc(command.permission)}</span>
-        </td>
-        <td>
-          <div class="usage">${esc(command.usage)}</div>
-          <div class="description">${esc(command.description)}</div>
+      <tr class="group-row">
+        <td colspan="3">
+          <span class="group-label">${esc(group.category)}</span>
+          <span class="group-count">${group.commands.length}</span>
         </td>
       </tr>
+      ${rows}
     `;
   }).join("");
 
@@ -88,7 +112,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json?v=7", { cache: "no-store" })
+fetch("commands.json?v=8", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
