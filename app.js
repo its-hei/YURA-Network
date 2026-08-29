@@ -1,7 +1,8 @@
 const state = {
   commands: [],
   filter: "Everyone",
-  query: ""
+  query: "",
+  openGroups: new Set()
 };
 
 const body = document.getElementById("commandsBody");
@@ -60,12 +61,16 @@ function render() {
   });
 
   body.innerHTML = groups.map(group => {
+    // Grupy są domyślnie zwinięte. Podczas wyszukiwania rozwijamy trafienia,
+    // żeby wynik nie był schowany za nagłówkiem sekcji.
+    const isOpen = query.length > 0 || state.openGroups.has(group.category);
+
     const rows = group.commands.map(command => {
       const aliases = command.aliases || [];
       const badgeClass = command.permission.toLowerCase();
 
       return `
-        <tr class="command-row">
+        <tr class="command-row" ${isOpen ? "" : "hidden"}>
           <td>
             <div class="command-main">
               <span class="command">${esc(command.command)}</span>
@@ -85,10 +90,21 @@ function render() {
     }).join("");
 
     return `
-      <tr class="group-row">
+      <tr class="group-row ${isOpen ? "open" : ""}">
         <td colspan="3">
-          <span class="group-label">${esc(group.category)}</span>
-          <span class="group-count">${group.commands.length}</span>
+          <button
+            class="group-toggle"
+            type="button"
+            data-category="${esc(group.category)}"
+            aria-expanded="${isOpen ? "true" : "false"}"
+          >
+            <span class="group-heading">
+              <span class="group-chevron" aria-hidden="true">›</span>
+              <span class="group-label">${esc(group.category)}</span>
+              <span class="group-count">${group.commands.length}</span>
+            </span>
+            <span class="group-state">${isOpen ? "ZWIŃ" : "ROZWIŃ"}</span>
+          </button>
         </td>
       </tr>
       ${rows}
@@ -98,11 +114,29 @@ function render() {
   empty.hidden = filtered.length !== 0;
 }
 
+body.addEventListener("click", event => {
+  const toggle = event.target.closest(".group-toggle");
+  if (!toggle) return;
+
+  const category = toggle.dataset.category;
+  if (!category) return;
+
+  if (state.openGroups.has(category)) {
+    state.openGroups.delete(category);
+  } else {
+    state.openGroups.add(category);
+  }
+
+  render();
+});
+
 tabs.forEach(tab => {
   tab.addEventListener("click", () => {
     tabs.forEach(item => item.classList.remove("active"));
     tab.classList.add("active");
     state.filter = tab.dataset.filter;
+    // Każdy filtr startuje z czytelnym, zwiniętym widokiem.
+    state.openGroups.clear();
     render();
   });
 });
@@ -112,7 +146,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("commands.json?v=8", { cache: "no-store" })
+fetch("commands.json?v=9", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");

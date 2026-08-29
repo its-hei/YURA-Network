@@ -2,10 +2,10 @@
   {
     "command": "!afk",
     "aliases": [],
-    "permission": "Everyone",
+    "permission": "Moderator",
     "usage": "!afk",
     "description": "Uruchamia funkcję AFK na overlayu.",
-    "category": "OGÓLNE"
+    "category": "OVERLAY"
   },
   {
     "command": "!dc",
@@ -203,7 +203,7 @@
   {
     "command": "!tits",
     "aliases": [],
-    "permission": "Moderator",
+    "permission": "Everyone",
     "usage": "!tits <tekst>",
     "description": "Odtwarza wiadomość TTS żeńskim głosem.",
     "category": "TTS"
@@ -211,7 +211,7 @@
   {
     "command": "!tts",
     "aliases": [],
-    "permission": "Moderator",
+    "permission": "Everyone",
     "usage": "!tts <tekst>",
     "description": "Odtwarza wiadomość TTS męskim głosem.",
     "category": "TTS"

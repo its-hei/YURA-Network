@@ -80,3 +80,11 @@ Przykład:
 - Moderatorzy: Alerty, Overlay, Donacje, TTS, Punkty — Admin.
 - Sekcje działają również z wyszukiwarką i filtrem Widzowie / Moderator / Wszystkie.
 - Zaktualizowano cache-busting do `v=8`.
+
+## v9
+- Sekcje komend są zwijalne i domyślnie zamknięte.
+- Kliknięcie nagłówka rozwija lub zwija wybraną kategorię.
+- Wyszukiwanie automatycznie rozwija sekcje z pasującymi wynikami.
+- `!afk` przeniesiono do komend moderatorskich / Overlay.
+- `!tts` i `!tits` są dostępne dla wszystkich widzów.
+- Zaktualizowano cache-busting do `v=9`.
