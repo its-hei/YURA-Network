@@ -58,3 +58,11 @@ Przykład:
 - Link Twitch i Discord w panelu profilu.
 - Y.U.R.A. CORE znajduje się pod panelem profilu, obok avatara.
 - Nawigacja Commands / Leaderboard pozostaje poniżej całego bloku profilu.
+
+
+## v6
+- Avatar panel is a true square.
+- Heiyeshi/Twitch/Discord panel is wider so links are fully visible.
+- Y.U.R.A. CORE moved below the avatar.
+- Commands/Leaderboard are the same width as the avatar panel.
+- Footer is fixed near the bottom-left on desktop and stays in place while scrolling.
