@@ -1,14 +1,14 @@
 {
-  "updatedAt": "2026-08-29T22:13:35.9519771+02:00",
+  "updatedAt": "2026-08-29T22:18:36.8709299+02:00",
   "entries": [
-    {"name":"humiihu","points":13508,"isVip":true,"isModerator":false},
-    {"name":"wielki_gekon_expiciel","points":9772,"isVip":false,"isModerator":false},
-    {"name":"yurasei","points":4056,"isVip":false,"isModerator":false},
+    {"name":"humiihu","points":13808,"isVip":true,"isModerator":false},
+    {"name":"wielki_gekon_expiciel","points":10023,"isVip":false,"isModerator":false},
+    {"name":"yurasei","points":4106,"isVip":false,"isModerator":false},
     {"name":"NeverBlameMe","points":3104,"isVip":false,"isModerator":true},
-    {"name":"hikari_katari","points":2150,"isVip":false,"isModerator":false},
+    {"name":"hikari_katari","points":2200,"isVip":false,"isModerator":false},
     {"name":"kajustrasz","points":2150,"isVip":false,"isModerator":false},
-    {"name":"Belgron","points":2000,"isVip":false,"isModerator":false},
-    {"name":"Zakonnica_DolyakOP","points":1454,"isVip":false,"isModerator":false},
-    {"name":"Senviasty","points":1101,"isVip":false,"isModerator":false}
+    {"name":"Belgron","points":2050,"isVip":false,"isModerator":false},
+    {"name":"Zakonnica_DolyakOP","points":1504,"isVip":false,"isModerator":false},
+    {"name":"Senviasty","points":1151,"isVip":false,"isModerator":false}
   ]
 }
