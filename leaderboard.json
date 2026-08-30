@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2026-08-30T18:13:23.2194692+02:00",
+  "updatedAt": "2026-08-30T18:14:24.0984574+02:00",
   "entries": [
     {"name":"humiihu","points":16809,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"wielki_gekon_expiciel","points":12931,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"yurasei","points":4668,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"NeverBlameMe","points":3224,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
+    {"name":"wielki_gekon_expiciel","points":12981,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"yurasei","points":4678,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"NeverBlameMe","points":3244,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
     {"name":"hikari_katari","points":2700,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Belgron","points":2552,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"kajustrasz","points":2150,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Zakonnica_DolyakOP","points":1905,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Senviasty","points":1652,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"EI_Migu","points":40,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"ttv_bullit","points":20,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":true},
-    {"name":"CZP_Irelianerfinc","points":10,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
-    {"name":"PandaSickO","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":true}
+    {"name":"ttv_bullit","points":40,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"PandaSickO","points":20,"isVip":false,"isModerator":false,"rankDelta":1,"isNew":false},
+    {"name":"CZP_Irelianerfinc","points":10,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false}
   ]
 }
