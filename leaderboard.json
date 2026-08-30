@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2026-08-30T18:17:26.8417161+02:00",
+  "updatedAt": "2026-08-30T18:18:27.7764793+02:00",
   "entries": [
     {"name":"humiihu","points":16809,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"wielki_gekon_expiciel","points":13131,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"yurasei","points":4709,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"NeverBlameMe","points":3304,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
+    {"name":"wielki_gekon_expiciel","points":13182,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"yurasei","points":4719,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"NeverBlameMe","points":3324,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
     {"name":"hikari_katari","points":2700,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Belgron","points":2552,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"kajustrasz","points":2150,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"Zakonnica_DolyakOP","points":1925,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"Zakonnica_DolyakOP","points":1936,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Senviasty","points":1652,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"ttv_bullit","points":100,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"PandaSickO","points":50,"isVip":false,"isModerator":false,"rankDelta":1,"isNew":false},
-    {"name":"EI_Migu","points":40,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
+    {"name":"ttv_bullit","points":120,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"PandaSickO","points":60,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"EI_Migu","points":40,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"CZP_Irelianerfinc","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false}
   ]
 }
