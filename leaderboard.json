@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2026-09-10T18:40:01.5486974+02:00",
+  "updatedAt": "2026-09-10T18:41:02.4446239+02:00",
   "entries": [
-    {"name":"humiihu","points":105385,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"humiihu","points":105445,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"wielki_gekon_expiciel","points":50427,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"yurasei","points":34844,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
-    {"name":"Zakonnica_DolyakOP","points":21990,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"ttv_bullit","points":21745,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"NeverBlameMe","points":17320,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
+    {"name":"yurasei","points":34865,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
+    {"name":"Zakonnica_DolyakOP","points":22041,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"ttv_bullit","points":21765,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"NeverBlameMe","points":17340,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
     {"name":"hikari_katari","points":7947,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"Senviasty","points":7372,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"Senviasty","points":7382,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"PandaSickO","points":6430,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Belgron","points":5250,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"kajustrasz","points":4304,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"Nelhael","points":2857,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
+    {"name":"Nelhael","points":2867,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Tapesofbattle","points":1735,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
     {"name":"youngpamperson","points":1446,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"Azehistikada","points":1368,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
@@ -30,9 +30,9 @@
     {"name":"qfcub03","points":121,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"smugglerthebambo","points":71,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"l1nkpl","points":20,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"Bak3neko","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"gagor2606","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"kuczikson","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"wildskar_","points":10,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":true}
+    {"name":"wildskar_","points":20,"isVip":false,"isModerator":false,"rankDelta":3,"isNew":false},
+    {"name":"Bak3neko","points":10,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
+    {"name":"gagor2606","points":10,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
+    {"name":"kuczikson","points":10,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false}
   ]
 }
