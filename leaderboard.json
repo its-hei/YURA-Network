@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-14T18:10:46.9075956+02:00",
+  "updatedAt": "2026-09-14T18:10:56.2113454+02:00",
   "entries": [
-    {"name":"humiihu","points":164737,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
-    {"name":"wielki_gekon_expiciel","points":117972,"isVip":false,"isModerator":false,"rankDelta":1,"isNew":false},
-    {"name":"Senviasty","points":117722,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
+    {"name":"Senviasty","points":235444,"isVip":false,"isModerator":false,"rankDelta":2,"isNew":false},
+    {"name":"humiihu","points":164737,"isVip":true,"isModerator":false,"rankDelta":-1,"isNew":false},
+    {"name":"wielki_gekon_expiciel","points":117972,"isVip":false,"isModerator":false,"rankDelta":-1,"isNew":false},
     {"name":"yurasei","points":54519,"isVip":false,"isModerator":true,"rankDelta":0,"isNew":false},
     {"name":"Zakonnica_DolyakOP","points":38766,"isVip":false,"isModerator":false,"rankDelta":0,"isNew":false},
     {"name":"ttv_bullit","points":37755,"isVip":true,"isModerator":false,"rankDelta":0,"isNew":false},
