@@ -1,21 +1,21 @@
 {
-  "updatedAt": "2026-09-17T20:18:55.9747731\u002B02:00",
+  "updatedAt": "2026-09-17T20:21:40.9807639\u002B02:00",
   "entries": [
     {
       "name": "wielki_gekon_expiciel",
-      "points": 4,
+      "points": 72,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "yurasei",
-      "points": 2,
+      "points": 29,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     }
   ]
 }
