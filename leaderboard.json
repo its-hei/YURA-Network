@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T19:12:09.6651425\u002B02:00",
+  "updatedAt": "2026-09-18T19:14:22.7271295\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 3484,
+      "points": 3509,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,7 +16,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 3155,
+      "points": 3200,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,7 +26,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2209,
+      "points": 2224,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -36,7 +36,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1406,
+      "points": 1416,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -46,7 +46,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1175,
+      "points": 1185,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -68,15 +68,15 @@
       "name": "NeverBlameMe",
       "points": 948,
       "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
+      "isModerator": true,
+      "isMonthlyVipExcluded": true,
+      "monthlyVipEligible": false,
       "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "Nelhael",
-      "points": 936,
+      "points": 946,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -86,7 +86,7 @@
     },
     {
       "name": "Belgron",
-      "points": 663,
+      "points": 673,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -136,7 +136,7 @@
     },
     {
       "name": "Kashiro121",
-      "points": 45,
+      "points": 55,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
