@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:28:37.4796323\u002B02:00",
+  "updatedAt": "2026-09-18T18:30:52.4906699\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 2494,
+      "points": 2550,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,7 +16,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 1955,
+      "points": 2022,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,7 +26,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 1605,
+      "points": 1639,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -46,7 +46,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1011,
+      "points": 1033,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -66,7 +66,7 @@
     },
     {
       "name": "kbagins",
-      "points": 719,
+      "points": 742,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -76,7 +76,7 @@
     },
     {
       "name": "Nelhael",
-      "points": 540,
+      "points": 563,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -115,13 +115,23 @@
       "isNew": false
     },
     {
+      "name": "kajustrasz",
+      "points": 42,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
+    },
+    {
       "name": "youngpamperson",
       "points": 14,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
