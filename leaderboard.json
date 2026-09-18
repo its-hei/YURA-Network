@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:33:07.5013752\u002B02:00",
+  "updatedAt": "2026-09-18T18:35:18.2192287\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 2606,
+      "points": 2637,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,7 +16,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 2077,
+      "points": 2118,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,7 +26,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 1672,
+      "points": 1691,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -46,7 +46,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1055,
+      "points": 1068,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -66,7 +66,7 @@
     },
     {
       "name": "kbagins",
-      "points": 764,
+      "points": 777,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -76,7 +76,7 @@
     },
     {
       "name": "Nelhael",
-      "points": 585,
+      "points": 597,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -116,7 +116,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 75,
+      "points": 107,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -126,13 +126,13 @@
     },
     {
       "name": "Pielgrzym",
-      "points": 22,
+      "points": 34,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "youngpamperson",
@@ -141,7 +141,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     }
   ]
