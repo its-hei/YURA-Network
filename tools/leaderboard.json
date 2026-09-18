@@ -1,20 +1,28 @@
 {
-  "updatedAt": "2026-09-18T16:50:20.1104400\u002B02:00",
+  "updatedAt": "2026-09-18T16:53:20.1671599\u002B02:00",
   "entries": [
     {
       "name": "ttv_bullit",
-      "points": 48,
+      "points": 93,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
       "isNew": false
     },
     {
-      "name": "yurasei",
-      "points": 33,
-      "isVip": false,
+      "name": "humiihu",
+      "points": 74,
+      "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
+      "isNew": true
+    },
+    {
+      "name": "yurasei",
+      "points": 63,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
