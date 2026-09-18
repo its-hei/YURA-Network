@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:04:22.1546231\u002B02:00",
+  "updatedAt": "2026-09-18T18:06:52.1753199\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 1880,
+      "points": 1942,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,22 +16,22 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 1231,
+      "points": 1293,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "ttv_bullit",
-      "points": 1212,
+      "points": 1249,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -46,7 +46,7 @@
     },
     {
       "name": "yurasei",
-      "points": 769,
+      "points": 794,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -56,17 +56,7 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 634,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "Belgron",
-      "points": 477,
+      "points": 671,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -76,17 +66,27 @@
     },
     {
       "name": "kbagins",
-      "points": 468,
+      "points": 502,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "name": "Belgron",
+      "points": 477,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": -1,
       "isNew": false
     },
     {
       "name": "Nelhael",
-      "points": 298,
+      "points": 323,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
