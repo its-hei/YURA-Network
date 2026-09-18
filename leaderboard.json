@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:44:52.5045246\u002B02:00",
+  "updatedAt": "2026-09-18T18:48:21.9900971\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
@@ -58,9 +58,9 @@
       "name": "NeverBlameMe",
       "points": 948,
       "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
+      "isModerator": true,
+      "isMonthlyVipExcluded": true,
+      "monthlyVipEligible": false,
       "rankDelta": 0,
       "isNew": false
     },
@@ -96,7 +96,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 262,
+      "points": 272,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
