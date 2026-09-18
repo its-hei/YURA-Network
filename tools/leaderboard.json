@@ -1,49 +1,49 @@
 {
-  "updatedAt": "2026-09-18T17:32:20.1498185\u002B02:00",
+  "updatedAt": "2026-09-18T17:34:50.1179252\u002B02:00",
   "entries": [
+    {
+      "name": "humiihu",
+      "points": 1105,
+      "isVip": true,
+      "isModerator": false,
+      "rankDelta": 1,
+      "isNew": false
+    },
     {
       "name": "Senviasty",
       "points": 1083,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "humiihu",
-      "points": 1042,
-      "isVip": true,
-      "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
       "name": "ttv_bullit",
-      "points": 674,
+      "points": 711,
       "isVip": true,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "yurasei",
-      "points": 450,
-      "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 434,
+      "points": 496,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "name": "yurasei",
+      "points": 475,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
       "isNew": false
     },
     {
       "name": "Belgron",
-      "points": 377,
+      "points": 402,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -51,18 +51,18 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 156,
+      "points": 193,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "kbagins",
-      "points": 149,
+      "points": 174,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -70,12 +70,20 @@
       "points": 114,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "Nelhael",
-      "points": 15,
+      "points": 40,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": 0,
+      "isNew": false
+    },
+    {
+      "name": "fdado75",
+      "points": 24,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
