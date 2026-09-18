@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-18T17:17:20.1275144\u002B02:00",
+  "updatedAt": "2026-09-18T17:20:20.1348672\u002B02:00",
   "entries": [
     {
       "name": "humiihu",
-      "points": 670,
+      "points": 745,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -11,7 +11,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 451,
+      "points": 495,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -19,7 +19,7 @@
     },
     {
       "name": "yurasei",
-      "points": 301,
+      "points": 331,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -27,7 +27,7 @@
     },
     {
       "name": "Belgron",
-      "points": 228,
+      "points": 258,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -35,15 +35,23 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 62,
+      "points": 136,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "PandaSickO",
-      "points": 20,
+      "points": 79,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": 0,
+      "isNew": false
+    },
+    {
+      "name": "kbagins",
+      "points": 30,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -54,7 +62,7 @@
       "points": 14,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -2,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
