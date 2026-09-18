@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-18T17:40:20.1156449\u002B02:00",
+  "updatedAt": "2026-09-18T17:42:20.1244560\u002B02:00",
   "entries": [
     {
       "name": "humiihu",
-      "points": 1241,
+      "points": 1291,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -19,7 +19,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 793,
+      "points": 823,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -27,7 +27,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 632,
+      "points": 682,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -35,7 +35,7 @@
     },
     {
       "name": "yurasei",
-      "points": 529,
+      "points": 549,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -43,7 +43,7 @@
     },
     {
       "name": "Belgron",
-      "points": 457,
+      "points": 477,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -51,7 +51,7 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 275,
+      "points": 305,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -59,15 +59,7 @@
     },
     {
       "name": "kbagins",
-      "points": 228,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "PandaSickO",
-      "points": 114,
+      "points": 248,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -75,15 +67,23 @@
     },
     {
       "name": "Nelhael",
-      "points": 94,
+      "points": 114,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "name": "PandaSickO",
+      "points": 114,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
       "isNew": false
     },
     {
       "name": "fdado75",
-      "points": 79,
+      "points": 99,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
