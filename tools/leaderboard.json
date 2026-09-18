@@ -1,33 +1,33 @@
 {
-  "updatedAt": "2026-09-18T17:22:39.2471963\u002B02:00",
+  "updatedAt": "2026-09-18T17:26:20.1178929\u002B02:00",
   "entries": [
     {
       "name": "Senviasty",
-      "points": 1000,
+      "points": 1038,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "humiihu",
-      "points": 798,
+      "points": 894,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "ttv_bullit",
-      "points": 527,
+      "points": 585,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "yurasei",
-      "points": 352,
+      "points": 390,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -35,7 +35,7 @@
     },
     {
       "name": "Belgron",
-      "points": 280,
+      "points": 318,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -43,7 +43,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 190,
+      "points": 285,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -59,15 +59,7 @@
     },
     {
       "name": "kbagins",
-      "points": 51,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "youngpamperson",
-      "points": 14,
+      "points": 89,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -75,10 +67,18 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 9,
+      "points": 67,
       "isVip": false,
-      "isModerator": true,
-      "rankDelta": 0,
+      "isModerator": false,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "name": "youngpamperson",
+      "points": 14,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
