@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-18T16:59:20.1172774\u002B02:00",
+  "updatedAt": "2026-09-18T17:01:50.1227608\u002B02:00",
   "entries": [
     {
       "name": "humiihu",
-      "points": 223,
+      "points": 285,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -11,7 +11,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 182,
+      "points": 219,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -19,7 +19,7 @@
     },
     {
       "name": "yurasei",
-      "points": 122,
+      "points": 147,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -27,7 +27,7 @@
     },
     {
       "name": "Belgron",
-      "points": 49,
+      "points": 74,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -39,7 +39,7 @@
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     }
   ]
 }
