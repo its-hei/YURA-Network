@@ -1,22 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:03:12.4251495\u002B02:00",
+  "updatedAt": "2026-09-18T18:04:22.1546231\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 1824,
-      "isVip": true,
-      "isModerator": false,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "ttv_bullit",
-      "points": 1179,
+      "points": 1880,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,12 +16,22 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 1175,
+      "points": 1231,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 0,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "name": "ttv_bullit",
+      "points": 1212,
+      "isVip": true,
+      "isModerator": false,
+      "isMonthlyVipExcluded": true,
+      "monthlyVipEligible": false,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -46,7 +46,7 @@
     },
     {
       "name": "yurasei",
-      "points": 746,
+      "points": 769,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -56,11 +56,11 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 601,
+      "points": 634,
       "isVip": false,
-      "isModerator": true,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
     },
@@ -76,7 +76,7 @@
     },
     {
       "name": "kbagins",
-      "points": 445,
+      "points": 468,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -86,7 +86,7 @@
     },
     {
       "name": "Nelhael",
-      "points": 276,
+      "points": 298,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
