@@ -1,12 +1,20 @@
 {
-  "updatedAt": "2026-09-18T17:22:30.1338816\u002B02:00",
+  "updatedAt": "2026-09-18T17:22:39.2471963\u002B02:00",
   "entries": [
+    {
+      "name": "Senviasty",
+      "points": 1000,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": 2,
+      "isNew": false
+    },
     {
       "name": "humiihu",
       "points": 798,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -14,23 +22,15 @@
       "points": 527,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
-    },
-    {
-      "name": "Senviasty",
-      "points": 500,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": true
     },
     {
       "name": "yurasei",
       "points": 352,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -38,7 +38,7 @@
       "points": 280,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -46,7 +46,7 @@
       "points": 190,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -54,7 +54,7 @@
       "points": 114,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -62,7 +62,7 @@
       "points": 51,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -70,16 +70,16 @@
       "points": 14,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "NeverBlameMe",
       "points": 9,
       "isVip": false,
-      "isModerator": false,
+      "isModerator": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     }
   ]
 }
