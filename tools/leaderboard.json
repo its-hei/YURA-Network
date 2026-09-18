@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-18T17:29:20.1238758\u002B02:00",
+  "updatedAt": "2026-09-18T17:32:20.1498185\u002B02:00",
   "entries": [
     {
       "name": "Senviasty",
-      "points": 1068,
+      "points": 1083,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -11,7 +11,7 @@
     },
     {
       "name": "humiihu",
-      "points": 968,
+      "points": 1042,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -19,7 +19,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 629,
+      "points": 674,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -27,7 +27,7 @@
     },
     {
       "name": "yurasei",
-      "points": 420,
+      "points": 450,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
@@ -35,26 +35,34 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 360,
+      "points": 434,
       "isVip": true,
       "isModerator": false,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
       "name": "Belgron",
-      "points": 348,
+      "points": 377,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
+      "isNew": false
+    },
+    {
+      "name": "NeverBlameMe",
+      "points": 156,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": 2,
       "isNew": false
     },
     {
       "name": "kbagins",
-      "points": 119,
+      "points": 149,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 1,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -66,19 +74,19 @@
       "isNew": false
     },
     {
-      "name": "NeverBlameMe",
-      "points": 111,
+      "name": "Nelhael",
+      "points": 15,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
-      "isNew": false
+      "isNew": true
     },
     {
       "name": "youngpamperson",
       "points": 14,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
