@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T19:07:33.5252431\u002B02:00",
+  "updatedAt": "2026-09-18T19:10:09.5192195\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 3346,
+      "points": 3434,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,7 +16,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 2937,
+      "points": 3075,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,7 +26,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2126,
+      "points": 2179,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -36,7 +36,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1351,
+      "points": 1386,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -46,7 +46,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1120,
+      "points": 1155,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -76,7 +76,7 @@
     },
     {
       "name": "Nelhael",
-      "points": 881,
+      "points": 916,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -86,7 +86,7 @@
     },
     {
       "name": "Belgron",
-      "points": 608,
+      "points": 643,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -96,7 +96,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 541,
+      "points": 576,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -135,13 +135,23 @@
       "isNew": false
     },
     {
+      "name": "Kashiro121",
+      "points": 25,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
+    },
+    {
       "name": "youngpamperson",
       "points": 14,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
