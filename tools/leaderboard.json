@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-09-18T17:20:20.1348672\u002B02:00",
+  "updatedAt": "2026-09-18T17:22:30.1338816\u002B02:00",
   "entries": [
     {
       "name": "humiihu",
-      "points": 745,
+      "points": 798,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
@@ -11,51 +11,59 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 495,
+      "points": 527,
       "isVip": true,
       "isModerator": false,
       "rankDelta": 0,
       "isNew": false
     },
     {
-      "name": "yurasei",
-      "points": 331,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "Belgron",
-      "points": 258,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "wielki_gekon_expiciel",
-      "points": 136,
-      "isVip": true,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "PandaSickO",
-      "points": 79,
-      "isVip": false,
-      "isModerator": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "kbagins",
-      "points": 30,
+      "name": "Senviasty",
+      "points": 500,
       "isVip": false,
       "isModerator": false,
       "rankDelta": 0,
       "isNew": true
+    },
+    {
+      "name": "yurasei",
+      "points": 352,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "name": "Belgron",
+      "points": 280,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "name": "wielki_gekon_expiciel",
+      "points": 190,
+      "isVip": true,
+      "isModerator": false,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "name": "PandaSickO",
+      "points": 114,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "name": "kbagins",
+      "points": 51,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": -1,
+      "isNew": false
     },
     {
       "name": "youngpamperson",
@@ -64,6 +72,14 @@
       "isModerator": false,
       "rankDelta": -1,
       "isNew": false
+    },
+    {
+      "name": "NeverBlameMe",
+      "points": 9,
+      "isVip": false,
+      "isModerator": false,
+      "rankDelta": 0,
+      "isNew": true
     }
   ]
 }
