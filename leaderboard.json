@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T18:58:24.4931298\u002B02:00",
+  "updatedAt": "2026-09-18T19:00:25.1346502\u002B02:00",
   "monthlyVipExclusions": [],
   "entries": [
     {
       "name": "humiihu",
-      "points": 3141,
+      "points": 3166,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -16,7 +16,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 2662,
+      "points": 2727,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -26,7 +26,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2003,
+      "points": 2018,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -36,7 +36,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1269,
+      "points": 1279,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -56,7 +56,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1038,
+      "points": 1048,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -76,7 +76,7 @@
     },
     {
       "name": "Nelhael",
-      "points": 799,
+      "points": 809,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -86,7 +86,7 @@
     },
     {
       "name": "Belgron",
-      "points": 526,
+      "points": 536,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -96,7 +96,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 419,
+      "points": 429,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
