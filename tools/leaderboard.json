@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-18T17:42:20.1244560\u002B02:00",
+  "updatedAt": "2026-09-18T17:42:55.3689725\u002B02:00",
   "entries": [
     {
       "name": "humiihu",
@@ -53,7 +53,7 @@
       "name": "NeverBlameMe",
       "points": 305,
       "isVip": false,
-      "isModerator": false,
+      "isModerator": true,
       "rankDelta": 0,
       "isNew": false
     },
@@ -70,7 +70,7 @@
       "points": 114,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -78,7 +78,7 @@
       "points": 114,
       "isVip": false,
       "isModerator": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
