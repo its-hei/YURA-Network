@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T22:37:57.4242795\u002B02:00",
+  "updatedAt": "2026-09-19T22:39:57.4714515\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 9126,
+      "points": 9176,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 8987,
+      "points": 9037,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 3952,
+      "points": 3972,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -68,7 +68,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 1146,
+      "points": 1166,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -98,7 +98,7 @@
     },
     {
       "name": "Senviasty",
-      "points": 655,
+      "points": 675,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -118,7 +118,7 @@
     },
     {
       "name": "hikari_katari",
-      "points": 458,
+      "points": 478,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -147,13 +147,23 @@
       "isNew": false
     },
     {
+      "name": "Zumbagi",
+      "points": 134,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 2,
+      "isNew": false
+    },
+    {
       "name": "czikiflopazer",
       "points": 126,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -163,17 +173,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "Zumbagi",
-      "points": 114,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
