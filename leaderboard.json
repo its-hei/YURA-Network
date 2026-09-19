@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T22:21:21.5263811\u002B02:00",
+  "updatedAt": "2026-09-19T22:23:42.9587532\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 8684,
+      "points": 8771,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 8506,
+      "points": 8593,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 3776,
+      "points": 3811,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -38,7 +38,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 3531,
+      "points": 3583,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -78,7 +78,7 @@
     },
     {
       "name": "kajustrasz",
-      "points": 880,
+      "points": 915,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -88,7 +88,7 @@
     },
     {
       "name": "Belgron",
-      "points": 673,
+      "points": 696,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -108,7 +108,7 @@
     },
     {
       "name": "Senviasty",
-      "points": 478,
+      "points": 513,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -118,7 +118,7 @@
     },
     {
       "name": "hikari_katari",
-      "points": 251,
+      "points": 286,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -197,13 +197,23 @@
       "isNew": false
     },
     {
+      "name": "Matcha_gf",
+      "points": 44,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 8,
+      "isNew": false
+    },
+    {
       "name": "Polita",
       "points": 34,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -213,7 +223,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -223,7 +233,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -233,7 +243,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -243,7 +253,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -253,7 +263,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -263,7 +273,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -273,18 +283,8 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
-    },
-    {
-      "name": "Matcha_gf",
-      "points": 10,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": true
     }
   ]
 }
