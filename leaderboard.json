@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T19:45:46.3767390\u002B02:00",
+  "updatedAt": "2026-09-19T19:58:23.3331259\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -40,9 +40,9 @@
       "name": "NeverBlameMe",
       "points": 2595,
       "isVip": false,
-      "isModerator": true,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
     },
@@ -108,7 +108,7 @@
     },
     {
       "name": "Zakonnica_DolyakOP",
-      "points": 482,
+      "points": 503,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
