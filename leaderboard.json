@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T22:52:27.4205803\u002B02:00",
+  "updatedAt": "2026-09-19T22:54:42.4113247\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 9486,
+      "points": 9542,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 9348,
+      "points": 9403,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 4097,
+      "points": 4119,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -88,7 +88,7 @@
     },
     {
       "name": "Belgron",
-      "points": 823,
+      "points": 845,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -98,7 +98,7 @@
     },
     {
       "name": "Senviasty",
-      "points": 799,
+      "points": 821,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -108,7 +108,7 @@
     },
     {
       "name": "hikari_katari",
-      "points": 602,
+      "points": 644,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
