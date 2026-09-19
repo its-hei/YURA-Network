@@ -1,19 +1,19 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T23:30:52.0926921\u002B02:00",
+  "updatedAt": "2026-09-19T23:31:15.7307154\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "wielki_gekon_expiciel",
-      "points": 10438,
+      "points": 10448,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -23,7 +23,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -60,9 +60,9 @@
       "name": "NeverBlameMe",
       "points": 3114,
       "isVip": false,
-      "isModerator": true,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
     },
