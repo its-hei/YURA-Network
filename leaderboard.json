@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T20:31:09.8901516\u002B02:00",
+  "updatedAt": "2026-09-19T20:33:53.4149062\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 7275,
+      "points": 7362,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 6686,
+      "points": 6803,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 3209,
+      "points": 3243,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -38,7 +38,7 @@
     },
     {
       "name": "kbagins",
-      "points": 2916,
+      "points": 2971,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -48,7 +48,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2648,
+      "points": 2700,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -127,13 +127,23 @@
       "isNew": false
     },
     {
+      "name": "PandaSickO",
+      "points": 134,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 2,
+      "isNew": false
+    },
+    {
       "name": "czikiflopazer",
       "points": 126,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -143,17 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "PandaSickO",
-      "points": 114,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
