@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T15:30:48.7103207\u002B02:00",
+  "updatedAt": "2026-09-19T15:32:48.7103647\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -38,7 +38,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1416,
+      "points": 1436,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1239,
+      "points": 1259,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -165,6 +165,16 @@
       "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
+    },
+    {
+      "name": "CZP_Irelianerfinc",
+      "points": 10,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
     }
   ]
 }
