@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T16:01:48.7344169\u002B02:00",
+  "updatedAt": "2026-09-19T16:04:18.7217059\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 3565,
+      "points": 3627,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -38,7 +38,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1725,
+      "points": 1749,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1548,
+      "points": 1572,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
