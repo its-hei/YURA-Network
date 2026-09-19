@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T23:06:12.4199082\u002B02:00",
+  "updatedAt": "2026-09-19T23:08:19.7327094\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 9828,
+      "points": 9859,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 9689,
+      "points": 9720,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 4233,
+      "points": 4246,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -78,7 +78,17 @@
     },
     {
       "name": "Belgron",
-      "points": 959,
+      "points": 972,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": false
+    },
+    {
+      "name": "Senviasty",
+      "points": 948,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -97,18 +107,8 @@
       "isNew": false
     },
     {
-      "name": "Senviasty",
-      "points": 936,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
       "name": "hikari_katari",
-      "points": 809,
+      "points": 821,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -137,13 +137,23 @@
       "isNew": false
     },
     {
+      "name": "Kashiro121",
+      "points": 139,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 4,
+      "isNew": false
+    },
+    {
       "name": "PandaSickO",
       "points": 134,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -153,7 +163,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -163,7 +173,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -173,17 +183,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "Kashiro121",
-      "points": 87,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -193,7 +193,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
