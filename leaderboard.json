@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T17:44:27.2425589\u002B02:00",
+  "updatedAt": "2026-09-19T17:46:36.6648159\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 6095,
+      "points": 6157,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 5456,
+      "points": 5517,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 2737,
+      "points": 2761,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -48,7 +48,7 @@
     },
     {
       "name": "NeverBlameMe",
-      "points": 2278,
+      "points": 2315,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -137,8 +137,28 @@
       "isNew": false
     },
     {
+      "name": "Zakonnica_DolyakOP",
+      "points": 109,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 3,
+      "isNew": false
+    },
+    {
       "name": "Pielgrzym",
       "points": 84,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "name": "Oktawiance",
+      "points": 82,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -153,28 +173,8 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -2,
       "isNew": false
-    },
-    {
-      "name": "Oktawiance",
-      "points": 40,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": true
-    },
-    {
-      "name": "Zakonnica_DolyakOP",
-      "points": 30,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": true
     },
     {
       "name": "youngpamperson",
@@ -183,7 +183,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -193,7 +193,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -203,7 +203,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     }
   ]
