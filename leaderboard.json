@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T21:06:33.9950991\u002B02:00",
+  "updatedAt": "2026-09-19T21:09:04.5008022\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 7774,
+      "points": 7836,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 7256,
+      "points": 7337,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 3412,
+      "points": 3436,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -38,7 +38,7 @@
     },
     {
       "name": "kbagins",
-      "points": 3189,
+      "points": 3214,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -48,7 +48,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2955,
+      "points": 2992,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -117,13 +117,23 @@
       "isNew": false
     },
     {
+      "name": "Senviasty",
+      "points": 139,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 3,
+      "isNew": false
+    },
+    {
       "name": "PandaSickO",
       "points": 134,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -133,7 +143,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -143,17 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "Senviasty",
-      "points": 114,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -163,7 +163,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -224,7 +224,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "acrvvv",
@@ -233,7 +233,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -243,7 +243,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     }
   ]
