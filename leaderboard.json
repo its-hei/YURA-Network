@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-18T19:43:15.7363803\u002B02:00",
+  "updatedAt": "2026-09-19T15:22:03.7231681\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -70,9 +70,9 @@
       "name": "NeverBlameMe",
       "points": 948,
       "isVip": false,
-      "isModerator": true,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
     },
@@ -155,6 +155,16 @@
       "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
+    },
+    {
+      "name": "AlmendraAmarga",
+      "points": 12,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
     }
   ]
 }
