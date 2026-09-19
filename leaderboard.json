@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T19:58:23.3331259\u002B02:00",
+  "updatedAt": "2026-09-19T20:00:53.3219641\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 2403,
+      "points": 2413,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -108,7 +108,7 @@
     },
     {
       "name": "Zakonnica_DolyakOP",
-      "points": 503,
+      "points": 553,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
