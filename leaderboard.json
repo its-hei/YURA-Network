@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T20:00:53.3219641\u002B02:00",
+  "updatedAt": "2026-09-19T20:03:08.3236370\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 2413,
+      "points": 2455,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -58,7 +58,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 2224,
+      "points": 2242,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -197,13 +197,23 @@
       "isNew": false
     },
     {
+      "name": "Polita",
+      "points": 12,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
+    },
+    {
       "name": "CZP_Irelianerfinc",
       "points": 10,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
