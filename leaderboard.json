@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T22:09:29.3151337\u002B02:00",
+  "updatedAt": "2026-09-19T22:11:52.2678126\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 8398,
+      "points": 8454,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -18,7 +18,7 @@
     },
     {
       "name": "wielki_gekon_expiciel",
-      "points": 8179,
+      "points": 8235,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "yurasei",
-      "points": 3661,
+      "points": 3684,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -38,7 +38,7 @@
     },
     {
       "name": "ttv_bullit",
-      "points": 3359,
+      "points": 3392,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -78,12 +78,12 @@
     },
     {
       "name": "kajustrasz",
-      "points": 705,
+      "points": 738,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -93,7 +93,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -108,7 +108,7 @@
     },
     {
       "name": "Senviasty",
-      "points": 364,
+      "points": 386,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -128,12 +128,12 @@
     },
     {
       "name": "hikari_katari",
-      "points": 137,
+      "points": 159,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -143,7 +143,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -153,7 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -163,7 +163,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -265,6 +265,16 @@
       "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
+    },
+    {
+      "name": "Zumbagi",
+      "points": 10,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
     }
   ]
 }
