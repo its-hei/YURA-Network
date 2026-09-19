@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T15:22:03.7231681\u002B02:00",
+  "updatedAt": "2026-09-19T15:27:21.5632374\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1185,
+      "points": 1195,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -164,7 +164,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     }
   ]
 }
