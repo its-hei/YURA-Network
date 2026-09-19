@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-19T15:50:18.7547781\u002B02:00",
+  "updatedAt": "2026-09-19T15:52:48.7398478\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -38,7 +38,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1610,
+      "points": 1635,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -48,7 +48,7 @@
     },
     {
       "name": "kbagins",
-      "points": 1433,
+      "points": 1458,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -127,23 +127,23 @@
       "isNew": false
     },
     {
+      "name": "czikiflopazer",
+      "points": 102,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
       "name": "Pielgrzym",
       "points": 84,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "name": "czikiflopazer",
-      "points": 67,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -153,7 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
