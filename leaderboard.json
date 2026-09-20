@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-20T22:38:23.2408549\u002B02:00",
+  "updatedAt": "2026-09-20T22:38:33.4331991\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -33,7 +33,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 6,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -43,7 +43,7 @@
       "isModerator": true,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -53,7 +53,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -63,7 +63,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -73,7 +73,7 @@
       "isModerator": true,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -83,7 +83,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -93,7 +93,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -103,7 +103,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -113,7 +113,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -134,7 +134,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "eivro78",
@@ -144,7 +144,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "fdado75",
@@ -153,7 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -163,7 +163,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -173,7 +173,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -183,7 +183,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -204,7 +204,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "Kashiro121",
@@ -213,7 +213,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -8,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -224,7 +224,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "ellieebees",
@@ -234,7 +234,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "Polita",
@@ -243,7 +243,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -254,7 +254,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "Renzerado",
@@ -264,7 +264,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "youngpamperson",
@@ -273,7 +273,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -283,7 +283,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -293,7 +293,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -304,7 +304,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "CZP_Irelianerfinc",
@@ -313,7 +313,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -324,7 +324,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "name": "lonor_0",
@@ -333,7 +333,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -10,
+      "rankDelta": 0,
       "isNew": false
     }
   ]
