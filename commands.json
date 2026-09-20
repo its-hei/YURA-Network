@@ -4,18 +4,8 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!afk",
-    "description": "Uruchamia funkcję AFK na overlayu.",
+    "description": "Uruchamia funkcj\u0119 AFK na overlayu.",
     "category": "OVERLAY"
-  },
-  {
-    "command": "!dc",
-    "aliases": [
-      "!discord"
-    ],
-    "permission": "Everyone",
-    "usage": "!dc",
-    "description": "Wyświetla link do Discorda społeczności.",
-    "category": "OGÓLNE"
   },
   {
     "command": "!nuke",
@@ -23,84 +13,7 @@
     "permission": "Everyone",
     "usage": "!nuke",
     "description": "Samodzielny 1-sekundowy timeout.",
-    "category": "OGÓLNE"
-  },
-  {
-    "command": "!ref",
-    "aliases": [
-      "!referal"
-    ],
-    "permission": "Everyone",
-    "usage": "!ref",
-    "description": "Wyświetla kod Recruit a Friend do Final Fantasy XIV.",
-    "category": "OGÓLNE"
-  },
-  {
-    "command": "!accountage",
-    "aliases": [
-      "!accage",
-      "!created"
-    ],
-    "permission": "Everyone",
-    "usage": "!accountage [@nick]",
-    "description": "Sprawdza wiek konta Twitch swojego lub wskazanego użytkownika.",
-    "category": "INFORMACJE"
-  },
-  {
-    "command": "!commands",
-    "aliases": [
-      "!polecenia"
-    ],
-    "permission": "Everyone",
-    "usage": "!commands",
-    "description": "Wyświetla link do publicznej bazy komend Y.U.R.A.",
-    "category": "INFORMACJE"
-  },
-  {
-    "command": "!followage",
-    "aliases": [],
-    "permission": "Everyone",
-    "usage": "!followage [@nick]",
-    "description": "Sprawdza, jak długo użytkownik obserwuje kanał.",
-    "category": "INFORMACJE"
-  },
-  {
-    "command": "!watchtime",
-    "aliases": [],
-    "permission": "Everyone",
-    "usage": "!watchtime [@nick]",
-    "description": "Pokazuje czas oglądania kanału zapisany przez Y.U.R.A.",
-    "category": "INFORMACJE"
-  },
-  {
-    "command": "!points",
-    "aliases": [
-      "!punkty"
-    ],
-    "permission": "Everyone",
-    "usage": "!points",
-    "description": "Sprawdza aktualne saldo punktów Y.U.R.A.",
-    "category": "PUNKTY Y.U.R.A."
-  },
-  {
-    "command": "!gamble",
-    "aliases": [
-      "!gamba"
-    ],
-    "permission": "Everyone",
-    "usage": "!gamble <kwota | procent% | all>",
-    "description": "Hazard punktami. Obsługuje kwotę, procent salda lub all; możliwy jest CRIT WIN.",
-    "category": "PUNKTY Y.U.R.A."
-  },
-  {
-    "command": "!top",
-    "aliases": [
-      "!ranking"
-    ],
-    "permission": "Everyone",
-    "usage": "!top",
-    "description": "Pokazuje TOP 5 rankingu punktów Y.U.R.A. bez streamera i botów.",
-    "category": "PUNKTY Y.U.R.A."
+    "category": "OG\u00D3LNE"
   },
   {
     "command": "!transfer",
@@ -108,8 +21,8 @@
       "!give"
     ],
     "permission": "Everyone",
-    "usage": "!transfer @nick <kwota | procent% | all>",
-    "description": "Przekazuje własne punkty innemu użytkownikowi.",
+    "usage": "!transfer @nick \u003Ckwota | procent% | all\u003E",
+    "description": "Przekazuje w\u0142asne punkty innemu u\u017Cytkownikowi.",
     "category": "PUNKTY Y.U.R.A."
   },
   {
@@ -119,7 +32,7 @@
     ],
     "permission": "Moderator",
     "usage": "!skip",
-    "description": "Natychmiast ukrywa aktualny alert dla widzów i pomija jego dźwięk na streamie.",
+    "description": "Natychmiast ukrywa aktualny alert dla widz\u00F3w i pomija jego d\u017Awi\u0119k na streamie.",
     "category": "ALERTY"
   },
   {
@@ -129,7 +42,7 @@
     ],
     "permission": "Moderator",
     "usage": "!alerts",
-    "description": "Sprawdza, czy kolejka alertów jest obecnie aktywna czy wstrzymana.",
+    "description": "Sprawdza, czy kolejka alert\u00F3w jest obecnie aktywna czy wstrzymana.",
     "category": "ALERTY"
   },
   {
@@ -137,7 +50,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!pause",
-    "description": "Wstrzymuje kolejkę alertów. Nowe alerty czekają do czasu wznowienia.",
+    "description": "Wstrzymuje kolejk\u0119 alert\u00F3w. Nowe alerty czekaj\u0105 do czasu wznowienia.",
     "category": "ALERTY"
   },
   {
@@ -145,7 +58,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!unpause",
-    "description": "Wznawia kolejkę alertów i uruchamia oczekujące alerty.",
+    "description": "Wznawia kolejk\u0119 alert\u00F3w i uruchamia oczekuj\u0105ce alerty.",
     "category": "ALERTY"
   },
   {
@@ -153,7 +66,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!mute",
-    "description": "Wycisza dźwięk alertów na streamie, pozostawiając warstwę wizualną aktywną.",
+    "description": "Wycisza d\u017Awi\u0119k alert\u00F3w na streamie, pozostawiaj\u0105c warstw\u0119 wizualn\u0105 aktywn\u0105.",
     "category": "ALERTY"
   },
   {
@@ -161,18 +74,8 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!unmute",
-    "description": "Ponownie włącza dźwięk alertów na streamie.",
+    "description": "Ponownie w\u0142\u0105cza d\u017Awi\u0119k alert\u00F3w na streamie.",
     "category": "ALERTY"
-  },
-  {
-    "command": "!dedge",
-    "aliases": [
-      "!deska"
-    ],
-    "permission": "Moderator",
-    "usage": "!dedge",
-    "description": "Aktualizuje licznik śmierci na overlayu.",
-    "category": "OVERLAY"
   },
   {
     "command": "!donation",
@@ -180,16 +83,16 @@
       "!dono"
     ],
     "permission": "Moderator",
-    "usage": "!donation <tytuł>",
-    "description": "Zmienia tytuł aktualnego celu donacji.",
+    "usage": "!donation \u003Ctytu\u0142\u003E",
+    "description": "Zmienia tytu\u0142 aktualnego celu donacji.",
     "category": "DONACJE"
   },
   {
     "command": "!donocel",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!donocel <kwota>",
-    "description": "Ustawia nową kwotę celu donacji.",
+    "usage": "!donocel \u003Ckwota\u003E",
+    "description": "Ustawia now\u0105 kwot\u0119 celu donacji.",
     "category": "DONACJE"
   },
   {
@@ -197,39 +100,175 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!donoreset",
-    "description": "Resetuje aktualnie uzbieraną kwotę celu donacji.",
+    "description": "Resetuje aktualnie uzbieran\u0105 kwot\u0119 celu donacji.",
     "category": "DONACJE"
   },
   {
     "command": "!tits",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!tits <tekst>",
-    "description": "Odtwarza wiadomość TTS żeńskim głosem.",
+    "usage": "!tits \u003Ctekst\u003E",
+    "description": "Odtwarza wiadomo\u015B\u0107 TTS \u017Ce\u0144skim g\u0142osem.",
     "category": "TTS"
   },
   {
     "command": "!tts",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!tts <tekst>",
-    "description": "Odtwarza wiadomość TTS męskim głosem.",
+    "usage": "!tts \u003Ctekst\u003E",
+    "description": "Odtwarza wiadomo\u015B\u0107 TTS m\u0119skim g\u0142osem.",
     "category": "TTS"
   },
   {
-    "command": "!addpoints",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!addpoints @nick <kwota>",
-    "description": "Dodaje punkty wybranemu użytkownikowi.",
-    "category": "PUNKTY — ADMIN"
+    "command": "!accountage",
+    "aliases": [
+      "!acc"
+    ],
+    "permission": "Everyone",
+    "usage": "!accountage [@nick]",
+    "description": "Sprawdza wiek konta Twitch swojego lub wskazanego u\u017Cytkownika.",
+    "category": "INFORMACJE",
+    "source": "YURA"
   },
   {
-    "command": "!removepoints",
+    "command": "!followage",
     "aliases": [],
+    "permission": "Everyone",
+    "usage": "!followage [@nick]",
+    "description": "Sprawdza, jak d\u0142ugo u\u017Cytkownik obserwuje kana\u0142.",
+    "category": "INFORMACJE",
+    "source": "YURA"
+  },
+  {
+    "command": "!uptime",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!uptime",
+    "description": "Pokazuje czas trwania aktualnego streama.",
+    "category": "INFORMACJE",
+    "source": "YURA"
+  },
+  {
+    "command": "!watchtime",
+    "aliases": [
+      "!czas"
+    ],
+    "permission": "Everyone",
+    "usage": "!watchtime [@nick]",
+    "description": "Pokazuje watchtime zapisany przez Y.U.R.A.",
+    "category": "INFORMACJE",
+    "source": "YURA"
+  },
+  {
+    "command": "!dedge",
+    "aliases": [
+      "!deska"
+    ],
+    "permission": "Everyone",
+    "usage": "!dedge",
+    "description": "Dodaje 1 do aktywnego licznika \u015Bmierci.",
+    "category": "OVERLAY",
+    "source": "YURA"
+  },
+  {
+    "command": "!dedges",
+    "aliases": [
+      "!deski"
+    ],
     "permission": "Moderator",
-    "usage": "!removepoints @nick <kwota>",
-    "description": "Odbiera punkty wybranemu użytkownikowi; saldo nie spada poniżej zera.",
-    "category": "PUNKTY — ADMIN"
+    "usage": "!dedge \u003Cliczba\u003E / !dedges \u003Cliczba\u003E",
+    "description": "Dodaje podan\u0105 liczb\u0119 do aktywnego licznika \u015Bmierci.",
+    "category": "OVERLAY",
+    "source": "YURA"
+  },
+  {
+    "command": "!points",
+    "aliases": [
+      "!pkt",
+      "!yura"
+    ],
+    "permission": "Everyone",
+    "usage": "!points",
+    "description": "Sprawdza aktualne saldo punkt\u00F3w Y.U.R.A.",
+    "category": "PUNKTY Y.U.R.A.",
+    "source": "YURA"
+  },
+  {
+    "command": "!gamble",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!gamble \u003Cliczba|all\u003E",
+    "description": "Hazard punktami Y.U.R.A.; mo\u017Cesz poda\u0107 kwot\u0119 albo all.",
+    "category": "PUNKTY Y.U.R.A.",
+    "source": "YURA"
+  },
+  {
+    "command": "!top",
+    "aliases": [
+      "!toppoints"
+    ],
+    "permission": "Everyone",
+    "usage": "!top",
+    "description": "Pokazuje TOP 5 rankingu punkt\u00F3w Y.U.R.A.",
+    "category": "PUNKTY Y.U.R.A.",
+    "source": "YURA"
+  },
+  {
+    "command": "!add",
+    "aliases": [
+      "!addpoints",
+      "!addpkt"
+    ],
+    "permission": "Moderator",
+    "usage": "!add @nick \u003Cliczba\u003E / !add all \u003Cliczba\u003E",
+    "description": "Dodaje punkty u\u017Cytkownikowi albo wszystkim aktualnie obecnym widzom.",
+    "category": "PUNKTY \u2014 ADMIN",
+    "source": "YURA"
+  },
+  {
+    "command": "!remove",
+    "aliases": [
+      "!removepoints",
+      "!removepkt"
+    ],
+    "permission": "Moderator",
+    "usage": "!remove @nick \u003Cliczba\u003E",
+    "description": "Odbiera punkty wybranemu u\u017Cytkownikowi.",
+    "category": "PUNKTY \u2014 ADMIN",
+    "source": "YURA"
+  },
+  {
+    "command": "!ref",
+    "aliases": [
+      "!raf"
+    ],
+    "permission": "Everyone",
+    "usage": "!ref",
+    "description": "Recruit a Friend: EP6YK5PJ \u2014 wpisz kod przed pierwsz\u0105 p\u0142atno\u015Bci\u0105 za subskrypcj\u0119, aby otrzyma\u0107 bonusowe nagrody! :blue_heart: https://na.finalfantasyxiv.com/lodestone/special/friend_recruit/",
+    "category": "OG\u00D3LNE",
+    "source": "YURA"
+  },
+  {
+    "command": "!dc",
+    "aliases": [
+      "!discord"
+    ],
+    "permission": "Everyone",
+    "usage": "!dc",
+    "description": "Link do discorda: https://discord.gg/8NHhFsRed5",
+    "category": "OG\u00D3LNE",
+    "source": "YURA"
+  },
+  {
+    "command": "!commands",
+    "aliases": [
+      "!cmd",
+      "!cmds"
+    ],
+    "permission": "Everyone",
+    "usage": "!commands",
+    "description": "\uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
+    "category": "OG\u00D3LNE",
+    "source": "YURA"
   }
 ]
