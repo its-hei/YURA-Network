@@ -207,7 +207,7 @@
     "aliases": [
       "!toppoints"
     ],
-    "permission": "Everyone",
+    "permission": "Moderator",
     "usage": "!top",
     "description": "Pokazuje TOP 5 rankingu punkt\u00F3w Y.U.R.A.",
     "category": "PUNKTY Y.U.R.A.",
