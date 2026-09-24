@@ -175,7 +175,7 @@
     "aliases": [
       "!deski"
     ],
-    "permission": "Moderator",
+    "permission": "Everyone",
     "usage": "!dedge \u003Cliczba\u003E / !dedges \u003Cliczba\u003E",
     "description": "Dodaje podan\u0105 liczb\u0119 do aktywnego licznika \u015Bmierci.",
     "category": "OVERLAY",
