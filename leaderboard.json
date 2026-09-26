@@ -1,14 +1,14 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-26T14:51:54.7095882\u002B02:00",
+  "updatedAt": "2026-09-26T14:56:55.1931417\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
       "name": "humiihu",
-      "points": 10617,
+      "points": 10666,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -28,7 +28,7 @@
     },
     {
       "name": "kbagins",
-      "points": 4877,
+      "points": 4927,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -68,7 +68,7 @@
     },
     {
       "name": "hikari_katari",
-      "points": 2679,
+      "points": 2748,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -78,7 +78,7 @@
     },
     {
       "name": "yurasei",
-      "points": 1128,
+      "points": 1177,
       "isVip": false,
       "isModerator": true,
       "isMonthlyVipExcluded": true,
@@ -118,7 +118,7 @@
     },
     {
       "name": "Senviasty",
-      "points": 389,
+      "points": 439,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -237,13 +237,23 @@
       "isNew": false
     },
     {
-      "name": "ellieebees",
+      "name": "1yujin_",
       "points": 39,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
+      "isNew": true
+    },
+    {
+      "name": "ellieebees",
+      "points": 39,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -253,7 +263,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -263,7 +273,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -273,7 +283,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -283,7 +293,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -293,7 +303,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -303,7 +313,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -313,7 +323,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -323,7 +333,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -333,7 +343,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     },
     {
@@ -343,7 +353,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -1,
       "isNew": false
     }
   ]
