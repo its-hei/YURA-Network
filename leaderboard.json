@@ -1,14 +1,15 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-26T17:26:40.7613468\u002B02:00",
+  "updatedAt": "2026-09-26T17:43:13.0580340\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
+      "login": "humiihu",
       "name": "humiihu",
-      "points": 11500,
+      "points": 11619,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -17,6 +18,7 @@
       "isNew": false
     },
     {
+      "login": "wielki_gekon_expiciel",
       "name": "wielki_gekon_expiciel",
       "points": 9838,
       "isVip": true,
@@ -27,8 +29,9 @@
       "isNew": false
     },
     {
+      "login": "kbagins",
       "name": "kbagins",
-      "points": 6041,
+      "points": 6060,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -37,6 +40,7 @@
       "isNew": false
     },
     {
+      "login": "neverblameme",
       "name": "NeverBlameMe",
       "points": 4284,
       "isVip": false,
@@ -47,6 +51,7 @@
       "isNew": false
     },
     {
+      "login": "ttv_bullit",
       "name": "ttv_bullit",
       "points": 4096,
       "isVip": true,
@@ -57,8 +62,9 @@
       "isNew": false
     },
     {
+      "login": "hikari_katari",
       "name": "hikari_katari",
-      "points": 3772,
+      "points": 3891,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -67,6 +73,7 @@
       "isNew": false
     },
     {
+      "login": "nelhael",
       "name": "Nelhael",
       "points": 3110,
       "isVip": false,
@@ -77,6 +84,7 @@
       "isNew": false
     },
     {
+      "login": "yurasei",
       "name": "yurasei",
       "points": 2011,
       "isVip": false,
@@ -87,6 +95,7 @@
       "isNew": false
     },
     {
+      "login": "senviasty",
       "name": "Senviasty",
       "points": 1273,
       "isVip": false,
@@ -97,6 +106,7 @@
       "isNew": false
     },
     {
+      "login": "kajustrasz",
       "name": "kajustrasz",
       "points": 732,
       "isVip": false,
@@ -107,8 +117,9 @@
       "isNew": false
     },
     {
+      "login": "belgron",
       "name": "Belgron",
-      "points": 673,
+      "points": 712,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -117,6 +128,7 @@
       "isNew": false
     },
     {
+      "login": "zakonnica_dolyakop",
       "name": "Zakonnica_DolyakOP",
       "points": 553,
       "isVip": false,
@@ -127,6 +139,7 @@
       "isNew": false
     },
     {
+      "login": "aversio_",
       "name": "Aversio_",
       "points": 337,
       "isVip": false,
@@ -137,6 +150,7 @@
       "isNew": false
     },
     {
+      "login": "eivro78",
       "name": "eivro78",
       "points": 208,
       "isVip": false,
@@ -147,6 +161,7 @@
       "isNew": false
     },
     {
+      "login": "fdado75",
       "name": "fdado75",
       "points": 159,
       "isVip": false,
@@ -157,6 +172,7 @@
       "isNew": false
     },
     {
+      "login": "ellieebees",
       "name": "ellieebees",
       "points": 138,
       "isVip": false,
@@ -167,6 +183,7 @@
       "isNew": false
     },
     {
+      "login": "czikiflopazer",
       "name": "czikiflopazer",
       "points": 126,
       "isVip": false,
@@ -177,6 +194,7 @@
       "isNew": false
     },
     {
+      "login": "oktawiance",
       "name": "Oktawiance",
       "points": 119,
       "isVip": false,
@@ -187,6 +205,7 @@
       "isNew": false
     },
     {
+      "login": "pandasicko",
       "name": "PandaSickO",
       "points": 114,
       "isVip": false,
@@ -197,6 +216,7 @@
       "isNew": false
     },
     {
+      "login": "ezlgc41",
       "name": "ezlgc41",
       "points": 89,
       "isVip": false,
@@ -207,6 +227,7 @@
       "isNew": false
     },
     {
+      "login": "mrquinzeeel",
       "name": "mrquinzeeel",
       "points": 89,
       "isVip": false,
@@ -217,6 +238,7 @@
       "isNew": false
     },
     {
+      "login": "pielgrzym",
       "name": "Pielgrzym",
       "points": 84,
       "isVip": false,
@@ -227,6 +249,7 @@
       "isNew": false
     },
     {
+      "login": "wvzuc76",
       "name": "wvzuc76",
       "points": 79,
       "isVip": false,
@@ -237,6 +260,7 @@
       "isNew": false
     },
     {
+      "login": "kashiro121",
       "name": "Kashiro121",
       "points": 55,
       "isVip": false,
@@ -247,6 +271,7 @@
       "isNew": false
     },
     {
+      "login": "nightmaregirlyy",
       "name": "Nightmaregirlyy",
       "points": 49,
       "isVip": false,
@@ -257,6 +282,7 @@
       "isNew": false
     },
     {
+      "login": "1yujin_",
       "name": "1yujin_",
       "points": 39,
       "isVip": false,
@@ -267,6 +293,7 @@
       "isNew": false
     },
     {
+      "login": "polita",
       "name": "Polita",
       "points": 34,
       "isVip": false,
@@ -277,6 +304,7 @@
       "isNew": false
     },
     {
+      "login": "pscem67",
       "name": "pscem67",
       "points": 29,
       "isVip": false,
@@ -287,6 +315,7 @@
       "isNew": false
     },
     {
+      "login": "ellinav",
       "name": "ellinav",
       "points": 20,
       "isVip": false,
@@ -297,6 +326,7 @@
       "isNew": false
     },
     {
+      "login": "renzerado",
       "name": "Renzerado",
       "points": 19,
       "isVip": false,
@@ -307,6 +337,7 @@
       "isNew": false
     },
     {
+      "login": "youngpamperson",
       "name": "youngpamperson",
       "points": 14,
       "isVip": false,
@@ -317,6 +348,7 @@
       "isNew": false
     },
     {
+      "login": "almendraamarga",
       "name": "AlmendraAmarga",
       "points": 12,
       "isVip": false,
@@ -327,6 +359,7 @@
       "isNew": false
     },
     {
+      "login": "acrvvv",
       "name": "acrvvv",
       "points": 10,
       "isVip": false,
@@ -337,6 +370,7 @@
       "isNew": false
     },
     {
+      "login": "cod_letssgoo",
       "name": "cod_letssgoo",
       "points": 10,
       "isVip": false,
@@ -347,6 +381,7 @@
       "isNew": false
     },
     {
+      "login": "czp_irelianerfinc",
       "name": "CZP_Irelianerfinc",
       "points": 10,
       "isVip": false,
@@ -357,6 +392,7 @@
       "isNew": false
     },
     {
+      "login": "hubkaw",
       "name": "hubkaw",
       "points": 10,
       "isVip": false,
@@ -367,6 +403,7 @@
       "isNew": false
     },
     {
+      "login": "lonor_0",
       "name": "lonor_0",
       "points": 9,
       "isVip": false,
