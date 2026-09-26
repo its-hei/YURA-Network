@@ -197,8 +197,8 @@
     "command": "!gamble",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!gamble \u003Cliczba|all\u003E",
-    "description": "Hazard punktami Y.U.R.A.; mo\u017Cesz poda\u0107 kwot\u0119 albo all.",
+    "usage": "!gamble \u003Ckwota|procent%|all\u003E",
+    "description": "Hazard punktami Y.U.R.A.; mo\u017Cesz poda\u0107 kwot\u0119, procent (np. 25%) albo all.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
