@@ -182,6 +182,33 @@
     "source": "YURA"
   },
   {
+    "command": "!raffle",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!raffle [pula] [sekundy]",
+    "description": "Uruchamia multi-raffle z nagrod\u0105 w YURA Points; widzowie do\u0142\u0105czaj\u0105 przez !join.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!sraffle",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!sraffle [nagroda] [sekundy]",
+    "description": "Uruchamia raffle z jednym zwyci\u0119zc\u0105 i nagrod\u0105 w YURA Points; widzowie do\u0142\u0105czaj\u0105 przez !join.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!cancelraffle",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!cancelraffle",
+    "description": "Anuluje aktywne raffle YURY.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
     "command": "!points",
     "aliases": [
       "!pkt",
