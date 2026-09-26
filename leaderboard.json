@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-26T14:09:05.6590206\u002B02:00",
+  "updatedAt": "2026-09-26T14:14:06.0278586\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -18,7 +18,7 @@
     },
     {
       "name": "humiihu",
-      "points": 9698,
+      "points": 9748,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -78,7 +78,7 @@
     },
     {
       "name": "hikari_katari",
-      "points": 1629,
+      "points": 1659,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
@@ -128,12 +128,12 @@
     },
     {
       "name": "yurasei",
-      "points": 209,
+      "points": 259,
       "isVip": false,
       "isModerator": true,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -143,7 +143,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -153,7 +153,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
