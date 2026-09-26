@@ -479,14 +479,39 @@ function applyClientRankMovement(data) {
   };
 }
 
+
+
+
+
+// YURA_CLOUD_FALLBACK_V57
 const YURA_CLOUD_BASE = "https://yura-cloud.heiyeshi.workers.dev";
 const LEADERBOARD_POLL_MS = 5 * 60 * 1000;
+const LEADERBOARD_LAST_SYNC_KEY = "yura.leaderboard.lastSync.v57";
 let leaderboardRevision = "";
 let leaderboardMetadataLoaded = false;
 let leaderboardMetadataByName = new Map();
+let leaderboardFallbackData = null;
+
+function formatLastSyncLabel(data) {
+  const raw = String(data?.updatedAt || data?.generated_at_utc || "").trim();
+  if (!raw) return "LAST SYNC";
+  const stamp = new Date(raw);
+  if (Number.isNaN(stamp.getTime())) return "LAST SYNC";
+  return `LAST SYNC â€˘ ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
+}
 
 async function loadLeaderboardMetadata() {
   if (leaderboardMetadataLoaded) return;
+
+  // Browser cache is a third safety net. The GitHub live-data snapshot remains the
+  // cross-device fallback used when Cloud/D1 is unavailable.
+  if (!leaderboardFallbackData) {
+    try {
+      const cached = window.localStorage.getItem(LEADERBOARD_LAST_SYNC_KEY);
+      if (cached) leaderboardFallbackData = JSON.parse(cached);
+    } catch {}
+  }
+
   try {
     const response = await fetch(
       `https://raw.githubusercontent.com/its-hei/YURA-Network/live-data/leaderboard.json?t=${Date.now()}`,
@@ -494,6 +519,8 @@ async function loadLeaderboardMetadata() {
     );
     if (!response.ok) return;
     const data = await response.json();
+    leaderboardFallbackData = data;
+    try { window.localStorage.setItem(LEADERBOARD_LAST_SYNC_KEY, JSON.stringify(data)); } catch {}
     const entries = Array.isArray(data?.entries) ? data.entries : [];
     const metadata = new Map();
     for (const item of entries) {
@@ -555,11 +582,30 @@ async function loadLeaderboard(force = false) {
     if (!response.ok) throw new Error(`leaderboard HTTP ${response.status}`);
     const cloudData = await response.json();
     const data = mergeLeaderboardMetadata(cloudData);
-    leaderboardRevision = String(data?.revision || revision || "");
-    renderLeaderboard(data);
+    if ((!Array.isArray(data?.entries) || data.entries.length === 0) &&
+        leaderboardFallbackData && Array.isArray(leaderboardFallbackData.entries) && leaderboardFallbackData.entries.length > 0) {
+      leaderboardRevision = "";
+      renderLeaderboard(leaderboardFallbackData);
+      leaderboardStatus.textContent = formatLastSyncLabel(leaderboardFallbackData);
+      leaderboardStatus.classList.remove("is-live");
+    } else {
+      leaderboardRevision = String(data?.revision || revision || "");
+      renderLeaderboard(data);
+    }
   } catch (error) {
-    leaderboardStatus.textContent = "SYNC ERROR";
-    leaderboardStatus.classList.remove("is-live");
+    // Cloud can be temporarily unavailable or quota-limited. Refresh the GitHub snapshot
+    // here so SYNC NOW becomes visible without requiring a full page reload.
+    leaderboardMetadataLoaded = false;
+    await loadLeaderboardMetadata();
+    if (leaderboardFallbackData && Array.isArray(leaderboardFallbackData.entries)) {
+      leaderboardRevision = "";
+      renderLeaderboard(leaderboardFallbackData);
+      leaderboardStatus.textContent = formatLastSyncLabel(leaderboardFallbackData);
+      leaderboardStatus.classList.remove("is-live");
+    } else {
+      leaderboardStatus.textContent = "SYNC ERROR";
+      leaderboardStatus.classList.remove("is-live");
+    }
     console.error("Leaderboard cloud sync failed:", error);
   } finally {
     leaderboardBusy = false;
