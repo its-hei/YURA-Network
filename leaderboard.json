@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-26T17:52:55.9051885\u002B02:00",
+  "updatedAt": "2026-09-26T17:57:55.8972990\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -20,7 +20,7 @@
     {
       "login": "wielki_gekon_expiciel",
       "name": "wielki_gekon_expiciel",
-      "points": 10088,
+      "points": 10208,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
@@ -113,7 +113,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -124,7 +124,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
