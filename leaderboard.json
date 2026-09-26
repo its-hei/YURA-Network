@@ -1,130 +1,130 @@
 {
   "schemaVersion": 3,
   "source": "YURA Desktop",
-  "updatedAt": "2026-09-26T17:57:55.8972990\u002B02:00",
+  "updatedAt": "2026-09-27T00:13:05.9680689\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
   "entries": [
     {
-      "login": "humiihu",
-      "name": "humiihu",
-      "points": 11718,
-      "isVip": true,
-      "isModerator": false,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
       "login": "wielki_gekon_expiciel",
       "name": "wielki_gekon_expiciel",
-      "points": 10208,
+      "points": 10871,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 0,
+      "rankDelta": 1,
       "isNew": false
     },
     {
-      "login": "kbagins",
-      "name": "kbagins",
-      "points": 6160,
-      "isVip": false,
+      "login": "humiihu",
+      "name": "humiihu",
+      "points": 10710,
+      "isVip": true,
       "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "isMonthlyVipExcluded": true,
+      "monthlyVipEligible": false,
+      "rankDelta": -1,
       "isNew": false
     },
     {
-      "login": "neverblameme",
-      "name": "NeverBlameMe",
-      "points": 4284,
+      "login": "yurasei",
+      "name": "yurasei",
+      "points": 4586,
       "isVip": false,
       "isModerator": true,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 0,
+      "rankDelta": 5,
       "isNew": false
     },
     {
       "login": "ttv_bullit",
       "name": "ttv_bullit",
-      "points": 4096,
+      "points": 3624,
       "isVip": true,
       "isModerator": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
+      "rankDelta": 1,
+      "isNew": false
+    },
+    {
+      "login": "neverblameme",
+      "name": "NeverBlameMe",
+      "points": 3298,
+      "isVip": false,
+      "isModerator": true,
+      "isMonthlyVipExcluded": true,
+      "monthlyVipEligible": false,
+      "rankDelta": -1,
+      "isNew": false
+    },
+    {
+      "login": "kbagins",
+      "name": "kbagins",
+      "points": 3236,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": -3,
+      "isNew": false
+    },
+    {
+      "login": "kajustrasz",
+      "name": "kajustrasz",
+      "points": 1335,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 4,
+      "isNew": false
+    },
+    {
+      "login": "belgron",
+      "name": "Belgron",
+      "points": 1312,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 2,
+      "isNew": false
+    },
+    {
+      "login": "senviasty",
+      "name": "Senviasty",
+      "points": 1288,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
       "rankDelta": 0,
       "isNew": false
     },
     {
       "login": "hikari_katari",
       "name": "hikari_katari",
-      "points": 3990,
+      "points": 1241,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -4,
       "isNew": false
     },
     {
       "login": "nelhael",
       "name": "Nelhael",
-      "points": 3110,
+      "points": 946,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "yurasei",
-      "name": "yurasei",
-      "points": 2041,
-      "isVip": false,
-      "isModerator": true,
-      "isMonthlyVipExcluded": true,
-      "monthlyVipEligible": false,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "senviasty",
-      "name": "Senviasty",
-      "points": 1273,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "belgron",
-      "name": "Belgron",
-      "points": 811,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "kajustrasz",
-      "name": "kajustrasz",
-      "points": 732,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": -4,
       "isNew": false
     },
     {
@@ -139,25 +139,14 @@
       "isNew": false
     },
     {
-      "login": "aversio_",
-      "name": "Aversio_",
-      "points": 337,
+      "login": "kashiro121",
+      "name": "Kashiro121",
+      "points": 540,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "eivro78",
-      "name": "eivro78",
-      "points": 208,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 11,
       "isNew": false
     },
     {
@@ -168,19 +157,30 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 1,
       "isNew": false
     },
     {
-      "login": "ellieebees",
-      "name": "ellieebees",
-      "points": 138,
+      "login": "pandasicko",
+      "name": "PandaSickO",
+      "points": 134,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 4,
+      "isNew": false
+    },
+    {
+      "login": "zumbagi",
+      "name": "Zumbagi",
+      "points": 134,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": false
+      "isNew": true
     },
     {
       "login": "czikiflopazer",
@@ -205,39 +205,6 @@
       "isNew": false
     },
     {
-      "login": "pandasicko",
-      "name": "PandaSickO",
-      "points": 114,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "ezlgc41",
-      "name": "ezlgc41",
-      "points": 89,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "mrquinzeeel",
-      "name": "mrquinzeeel",
-      "points": 89,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
       "login": "pielgrzym",
       "name": "Pielgrzym",
       "points": 84,
@@ -245,52 +212,19 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 3,
       "isNew": false
     },
     {
-      "login": "wvzuc76",
-      "name": "wvzuc76",
-      "points": 79,
+      "login": "matcha_gf",
+      "name": "Matcha_gf",
+      "points": 44,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "kashiro121",
-      "name": "Kashiro121",
-      "points": 55,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "nightmaregirlyy",
-      "name": "Nightmaregirlyy",
-      "points": 49,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "1yujin_",
-      "name": "1yujin_",
-      "points": 39,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
+      "isNew": true
     },
     {
       "login": "polita",
@@ -300,40 +234,29 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 6,
       "isNew": false
     },
     {
-      "login": "pscem67",
-      "name": "pscem67",
-      "points": 29,
+      "login": "casperconkol",
+      "name": "CasperConkol",
+      "points": 28,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": false
+      "isNew": true
     },
     {
-      "login": "ellinav",
-      "name": "ellinav",
-      "points": 20,
+      "login": "lonor_0",
+      "name": "lonor_0",
+      "points": 21,
       "isVip": false,
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "renzerado",
-      "name": "Renzerado",
-      "points": 19,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 14,
       "isNew": false
     },
     {
@@ -344,7 +267,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 7,
       "isNew": false
     },
     {
@@ -355,8 +278,19 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 7,
       "isNew": false
+    },
+    {
+      "login": "banzailus",
+      "name": "Banzailus",
+      "points": 12,
+      "isVip": false,
+      "isModerator": false,
+      "isMonthlyVipExcluded": false,
+      "monthlyVipEligible": true,
+      "rankDelta": 0,
+      "isNew": true
     },
     {
       "login": "acrvvv",
@@ -366,18 +300,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "cod_letssgoo",
-      "name": "cod_letssgoo",
-      "points": 10,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 6,
       "isNew": false
     },
     {
@@ -388,29 +311,7 @@
       "isModerator": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "hubkaw",
-      "name": "hubkaw",
-      "points": 10,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
-      "isNew": false
-    },
-    {
-      "login": "lonor_0",
-      "name": "lonor_0",
-      "points": 9,
-      "isVip": false,
-      "isModerator": false,
-      "isMonthlyVipExcluded": false,
-      "monthlyVipEligible": true,
-      "rankDelta": 0,
+      "rankDelta": 7,
       "isNew": false
     }
   ]
