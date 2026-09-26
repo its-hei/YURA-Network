@@ -273,7 +273,6 @@ const changelogList = document.getElementById("changelogList");
 let activeView = "commands";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
-
 function formatPoints(value) {
   const number = Number(value) || 0;
   return new Intl.NumberFormat("pl-PL").format(number);
@@ -326,6 +325,7 @@ function renderLeaderboard(data) {
           points: Number(item.points) || 0,
           isVip: item.isVip === true,
           isModerator: item.isModerator === true,
+          isMonthlyVipExcluded: item.isMonthlyVipExcluded === true,
           rankDelta: Number(item.rankDelta) || 0,
           isNew: item.isNew === true
         }))
@@ -336,7 +336,7 @@ function renderLeaderboard(data) {
   leaderboardUpdated.textContent = formatSync(state.leaderboardUpdatedAt);
 
   const eligibleEntries = state.leaderboardHidePrivileged
-    ? sourceEntries.filter(entry => !entry.isVip && !entry.isModerator)
+    ? sourceEntries.filter(entry => !entry.isMonthlyVipExcluded)
     : sourceEntries;
 
   const entries = eligibleEntries
@@ -453,37 +453,141 @@ function renderLeaderboard(data) {
   }
 }
 
-async function loadLeaderboard() {
-  if (leaderboardBusy) return;
-  leaderboardBusy = true;
+function applyClientRankMovement(data) {
+  const previousRanks = new Map(
+    state.leaderboardEntries.map((entry, index) => [
+      String(entry.login || entry.name || "").toLowerCase(),
+      index + 1
+    ])
+  );
+  const hadPrevious = state.leaderboardEntries.length > 0;
+  const entries = Array.isArray(data?.entries) ? [...data.entries] : [];
+  entries.sort((a, b) => Number(b.points || 0) - Number(a.points || 0));
 
+  return {
+    ...data,
+    entries: entries.map((entry, index) => {
+      const key = String(entry.login || entry.name || "").toLowerCase();
+      const previousRank = previousRanks.get(key);
+      const currentRank = index + 1;
+      return {
+        ...entry,
+        rankDelta: previousRank ? previousRank - currentRank : 0,
+        isNew: hadPrevious && !previousRank
+      };
+    })
+  };
+}
+
+const YURA_CLOUD_BASE = "https://yura-cloud.heiyeshi.workers.dev";
+const LEADERBOARD_POLL_MS = 5 * 60 * 1000;
+let leaderboardRevision = "";
+let leaderboardMetadataLoaded = false;
+let leaderboardMetadataByName = new Map();
+
+async function loadLeaderboardMetadata() {
+  if (leaderboardMetadataLoaded) return;
   try {
     const response = await fetch(
       `https://raw.githubusercontent.com/its-hei/YURA-Network/live-data/leaderboard.json?t=${Date.now()}`,
       { cache: "no-store" }
     );
+    if (!response.ok) return;
+    const data = await response.json();
+    const entries = Array.isArray(data?.entries) ? data.entries : [];
+    const metadata = new Map();
+    for (const item of entries) {
+      const value = {
+        isVip: item?.isVip === true,
+        isModerator: item?.isModerator === true,
+        isMonthlyVipExcluded: item?.isMonthlyVipExcluded === true
+      };
+      const nameKey = String(item?.name || "").trim().toLowerCase();
+      const loginKey = String(item?.login || "").trim().toLowerCase();
+      if (nameKey) metadata.set(nameKey, value);
+      if (loginKey) metadata.set(loginKey, value);
+    }
+    leaderboardMetadataByName = metadata;
+    leaderboardMetadataLoaded = true;
+  } catch (error) {
+    console.warn("Leaderboard metadata fallback unavailable:", error);
+  }
+}
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+function mergeLeaderboardMetadata(data) {
+  const entries = Array.isArray(data?.entries) ? data.entries : [];
+  return {
+    ...data,
+    entries: entries.map(item => {
+      const nameKey = String(item?.name || "").trim().toLowerCase();
+      const loginKey = String(item?.login || "").trim().toLowerCase();
+      const meta = leaderboardMetadataByName.get(loginKey) || leaderboardMetadataByName.get(nameKey) || {};
+      return {
+        ...item,
+        isVip: item?.isVip === true || meta.isVip === true,
+        isModerator: item?.isModerator === true || meta.isModerator === true,
+        isMonthlyVipExcluded: item?.isMonthlyVipExcluded === true || meta.isMonthlyVipExcluded === true
+      };
+    })
+  };
+}
+
+async function getLeaderboardRevision() {
+  const response = await fetch(`${YURA_CLOUD_BASE}/api/leaderboard-revision`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`revision HTTP ${response.status}`);
+  const data = await response.json();
+  return String(data?.revision || "");
+}
+async function loadLeaderboard(force = false) {
+  if (leaderboardBusy || document.hidden || activeView !== "leaderboard") return;
+  leaderboardBusy = true;
+
+  try {
+    await loadLeaderboardMetadata();
+    const revision = await getLeaderboardRevision();
+    if (!force && leaderboardRevision && revision === leaderboardRevision) {
+      leaderboardStatus.textContent = "LIVE DATA";
+      leaderboardStatus.classList.add("is-live");
+      return;
     }
 
-    const data = await response.json();
+    const response = await fetch(`${YURA_CLOUD_BASE}/api/leaderboard`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`leaderboard HTTP ${response.status}`);
+    const cloudData = await response.json();
+    const data = mergeLeaderboardMetadata(cloudData);
+    leaderboardRevision = String(data?.revision || revision || "");
     renderLeaderboard(data);
   } catch (error) {
     leaderboardStatus.textContent = "SYNC ERROR";
     leaderboardStatus.classList.remove("is-live");
-    state.leaderboardUpdatedAt = null;
-    leaderboardUpdated.textContent = "—";
-    console.error("Leaderboard sync failed:", error);
+    console.error("Leaderboard cloud sync failed:", error);
   } finally {
     leaderboardBusy = false;
   }
 }
 
+function ensureLeaderboardRefreshButton() {
+  if (!leaderboardStatus || document.getElementById("leaderboard-cloud-refresh")) return;
+  const host = leaderboardStatus.parentElement;
+  if (!host) return;
+
+  const button = document.createElement("button");
+  button.id = "leaderboard-cloud-refresh";
+  button.type = "button";
+  button.textContent = "ODĹšWIEĹ»";
+  button.title = "Pobierz aktualny ranking z YURA Cloud teraz";
+  button.style.marginLeft = "10px";
+  button.style.padding = "5px 9px";
+  button.style.fontSize = "10px";
+  button.style.cursor = "pointer";
+  button.addEventListener("click", () => loadLeaderboard(true));
+  host.appendChild(button);
+}
+
 function startLeaderboardPolling() {
   stopLeaderboardPolling();
-  loadLeaderboard();
-  leaderboardTimer = window.setInterval(loadLeaderboard, 15000);
+  loadLeaderboard(false);
+  leaderboardTimer = window.setInterval(() => loadLeaderboard(false), LEADERBOARD_POLL_MS);
 }
 
 function stopLeaderboardPolling() {
@@ -493,6 +597,22 @@ function stopLeaderboardPolling() {
   }
 }
 
+// YURA_CLOUD_VISIBILITY_RESUME
+// Hidden tabs do not poll Cloud. Returning to the ranking performs one tiny revision check.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && activeView === "leaderboard") {
+    loadLeaderboard(false);
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (activeView !== "leaderboard") return;
+  if (document.hidden) {
+    stopLeaderboardPolling();
+  } else {
+    startLeaderboardPolling();
+  }
+});
 function switchView(view) {
   activeView = view;
 
