@@ -565,6 +565,24 @@ async function getLeaderboardRevision() {
   const data = await response.json();
   return String(data?.revision || "");
 }
+// YURA_PUBLIC_BOT_FILTER_HELPER_V69
+const PUBLIC_LEADERBOARD_BOT_LOGINS = new Set([
+  "yuranetwork", "yuranetworkttv", "streamelements", "nightbot",
+  "sery_bot", "serybot", "streamlabs", "moobot", "fossabot",
+  "creatisbot", "botrix"
+]);
+function isPublicLeaderboardBot(item) {
+  const login = String(item?.login || "").trim().replace(/^@/, "").toLowerCase();
+  const name = String(item?.name || item?.display_name || "").trim().replace(/^@/, "").toLowerCase();
+  return PUBLIC_LEADERBOARD_BOT_LOGINS.has(login) ||
+    PUBLIC_LEADERBOARD_BOT_LOGINS.has(name) ||
+    login.includes("botrix") || name.includes("botrix");
+}
+function filterPublicLeaderboardData(data) {
+  const entries = Array.isArray(data?.entries) ? data.entries.filter(item => !isPublicLeaderboardBot(item)) : [];
+  return { ...data, entries };
+}
+
 async function loadLeaderboard(force = false) {
   if (leaderboardBusy || document.hidden || activeView !== "leaderboard") return;
   leaderboardBusy = true;
@@ -581,11 +599,11 @@ async function loadLeaderboard(force = false) {
     const response = await fetch(`${YURA_CLOUD_BASE}/api/leaderboard`, { cache: "no-store" });
     if (!response.ok) throw new Error(`leaderboard HTTP ${response.status}`);
     const cloudData = await response.json();
-    const data = mergeLeaderboardMetadata(cloudData);
+    const data = filterPublicLeaderboardData(mergeLeaderboardMetadata(cloudData));
     if ((!Array.isArray(data?.entries) || data.entries.length === 0) &&
         leaderboardFallbackData && Array.isArray(leaderboardFallbackData.entries) && leaderboardFallbackData.entries.length > 0) {
       leaderboardRevision = "";
-      renderLeaderboard(leaderboardFallbackData);
+      renderLeaderboard(filterPublicLeaderboardData(leaderboardFallbackData));
       leaderboardStatus.textContent = formatLastSyncLabel(leaderboardFallbackData);
       leaderboardStatus.classList.remove("is-live");
     } else {
@@ -599,7 +617,7 @@ async function loadLeaderboard(force = false) {
     await loadLeaderboardMetadata();
     if (leaderboardFallbackData && Array.isArray(leaderboardFallbackData.entries)) {
       leaderboardRevision = "";
-      renderLeaderboard(leaderboardFallbackData);
+      renderLeaderboard(filterPublicLeaderboardData(leaderboardFallbackData));
       leaderboardStatus.textContent = formatLastSyncLabel(leaderboardFallbackData);
       leaderboardStatus.classList.remove("is-live");
     } else {
@@ -1053,3 +1071,4 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
+// YURA_PUBLIC_BOT_FILTER_V69
