@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27T15:41:57.7740697\u002B02:00",
+  "updatedAt": "2026-09-27T15:42:51.1544527\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -47,5 +47,15 @@
     "RPG": "",
     "VARIETY": ""
   },
-  "overrides": {}
+  "overrides": {
+    "2026-09-29": {
+      "enabled": false,
+      "start": "",
+      "end": "",
+      "category": "",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    }
+  }
 }
