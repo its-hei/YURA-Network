@@ -752,71 +752,175 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V62
+// YURA_LIVE_SCHEDULE_V63
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
-const YURA_SCHEDULE_ANCHOR_UTC = Date.UTC(2026, 8, 28); // Monday 2026-09-28 = RANO
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const YURA_SCHEDULE_SHIFTS = ["RANO", "NOCKA", "POPO"];
+const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_NAMES = ["PON", "WT", "ŚR", "CZW", "PT", "SOB", "ND"];
-let yuraScheduleWeekOffset = 0;
+const YURA_SCHEDULE_DEFAULT_CONFIG = {
+  schemaVersion: 1,
+  timeZone: "Europe/Warsaw",
+  anchorMonday: "2026-09-28",
+  anchorShift: "RANO",
+  shiftCycle: ["RANO", "NOCKA", "POPO"],
+  defaultCategory: "FFXIV",
+  weeklyRules: {
+    "0": { enabled: true, category: "FFXIV" },
+    "1": { enabled: true, category: "FFXIV" },
+    "2": { enabled: true, category: "FFXIV" },
+    "3": { enabled: false, category: "FFXIV" },
+    "4": { enabled: true, category: "FFXIV" },
+    "5": { enabled: true, category: "FFXIV" },
+    "6": { enabled: true, category: "FFXIV" }
+  },
+  categoryArts: { FFXIV: "", TIBIA: "", MMO: "", RPG: "", VARIETY: "" },
+  overrides: {}
+};
+let yuraScheduleConfig = YURA_SCHEDULE_DEFAULT_CONFIG;
 let yuraScheduleTimer = null;
 
 function yuraSchedulePositiveMod(value, modulo) {
   return ((value % modulo) + modulo) % modulo;
 }
 
-function yuraScheduleDateKeyFromUtcMs(utcMs) {
-  const d = new Date(utcMs);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+function yuraScheduleEscape(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function yuraScheduleNormalizeConfig(raw) {
+  const base = YURA_SCHEDULE_DEFAULT_CONFIG;
+  const cfg = raw && typeof raw === "object" ? raw : {};
+  return {
+    ...base,
+    ...cfg,
+    shiftCycle: Array.isArray(cfg.shiftCycle) && cfg.shiftCycle.length ? cfg.shiftCycle : base.shiftCycle,
+    weeklyRules: { ...base.weeklyRules, ...(cfg.weeklyRules || {}) },
+    categoryArts: { ...base.categoryArts, ...(cfg.categoryArts || {}) },
+    overrides: cfg.overrides && typeof cfg.overrides === "object" ? cfg.overrides : {}
+  };
+}
+
+async function yuraScheduleLoadConfig() {
+  try {
+    const response = await fetch(`network-config.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    yuraScheduleConfig = yuraScheduleNormalizeConfig(await response.json());
+  } catch (error) {
+    yuraScheduleConfig = yuraScheduleNormalizeConfig(yuraScheduleConfig);
+    console.warn("YURA Network schedule config unavailable; using local defaults.", error);
+  }
+  renderYuraLiveSchedule();
 }
 
 function yuraScheduleWarsawNowParts() {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: YURA_SCHEDULE_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23"
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23"
   }).formatToParts(new Date());
   const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
   return {
-    year: Number(map.year),
-    month: Number(map.month),
-    day: Number(map.day),
-    hour: Number(map.hour),
-    minute: Number(map.minute),
+    year: Number(map.year), month: Number(map.month), day: Number(map.day),
+    hour: Number(map.hour), minute: Number(map.minute),
     dateKey: `${map.year}-${map.month}-${map.day}`
   };
 }
 
+function yuraScheduleDateKey(utcMs) {
+  const d = new Date(utcMs);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
 function yuraScheduleMondayUtc(year, month, day) {
   const utc = Date.UTC(year, month - 1, day);
-  const weekday = new Date(utc).getUTCDay(); // Sun=0 ... Sat=6
-  const mondayDistance = (weekday + 6) % 7;
-  return utc - mondayDistance * 24 * 60 * 60 * 1000;
+  const weekday = new Date(utc).getUTCDay();
+  return utc - ((weekday + 6) % 7) * YURA_SCHEDULE_DAY_MS;
+}
+
+function yuraScheduleAnchorUtc() {
+  const raw = String(yuraScheduleConfig.anchorMonday || "2026-09-28");
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  return match ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : Date.UTC(2026, 8, 28);
 }
 
 function yuraScheduleShiftForMonday(mondayUtc) {
-  const weekIndex = Math.round((mondayUtc - YURA_SCHEDULE_ANCHOR_UTC) / YURA_SCHEDULE_WEEK_MS);
-  return YURA_SCHEDULE_SHIFTS[yuraSchedulePositiveMod(weekIndex, YURA_SCHEDULE_SHIFTS.length)];
+  const cycle = Array.isArray(yuraScheduleConfig.shiftCycle) && yuraScheduleConfig.shiftCycle.length
+    ? yuraScheduleConfig.shiftCycle.map(x => String(x).toUpperCase())
+    : ["RANO", "NOCKA", "POPO"];
+  const weeks = Math.round((mondayUtc - yuraScheduleAnchorUtc()) / YURA_SCHEDULE_WEEK_MS);
+  return cycle[yuraSchedulePositiveMod(weeks, cycle.length)];
 }
 
-function yuraScheduleWindowForDay(dayIndex, shift) {
-  if (dayIndex === 3) {
-    return { start: null, end: null, label: "OFF", note: "CZWARTEK • BEZ STREAMA", isOff: true };
+function yuraScheduleMinutes(text) {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(text || "").trim());
+  if (!match) return null;
+  const h = Number(match[1]);
+  const m = Number(match[2]);
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+}
+
+function yuraScheduleFormatMinutes(total) {
+  if (total == null) return "";
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function yuraScheduleAutomaticWindow(dayIndex, shift, allowThursday = false) {
+  if (dayIndex === 3 && !allowThursday) return { start: null, end: null, label: "OFF", isOff: true };
+  if (dayIndex === 5) return { start: 16 * 60, end: 22 * 60, label: "16:00–22:00", isOff: false };
+  if (dayIndex === 6) return { start: 16 * 60, end: 20 * 60, label: "16:00–20:00", isOff: false };
+  if (shift === "POPO") return { start: 9 * 60, end: 12 * 60, label: "09:00–12:00", isOff: false };
+  return { start: 17 * 60, end: 20 * 60, label: "17:00–20:00", isOff: false };
+}
+
+function yuraScheduleArtForCategory(category) {
+  const wanted = String(category || "").trim().toLowerCase();
+  const entries = Object.entries(yuraScheduleConfig.categoryArts || {});
+  const match = entries.find(([key]) => String(key).trim().toLowerCase() === wanted);
+  return match ? String(match[1] || "").trim() : "";
+}
+
+function yuraScheduleResolveDay(dayUtc, dayIndex, shift) {
+  const key = yuraScheduleDateKey(dayUtc);
+  const weekly = yuraScheduleConfig.weeklyRules?.[String(dayIndex)] || { enabled: dayIndex !== 3, category: yuraScheduleConfig.defaultCategory || "STREAM" };
+  const override = yuraScheduleConfig.overrides?.[key] || {};
+  let enabled = weekly.enabled !== false;
+  let window = yuraScheduleAutomaticWindow(dayIndex, shift, dayIndex === 3 && enabled);
+  if (window.isOff) enabled = false;
+
+  if (override.enabled === true) {
+    enabled = true;
+    if (window.isOff) window = yuraScheduleAutomaticWindow(dayIndex, shift, true);
+  } else if (override.enabled === false) {
+    enabled = false;
   }
-  if (dayIndex === 5) {
-    return { start: 16 * 60, end: 22 * 60, label: "16:00–22:00", note: "SOBOTA • LONG SESSION", isWeekend: true };
+
+  let start = yuraScheduleMinutes(override.start);
+  let end = yuraScheduleMinutes(override.end);
+  if (start == null) start = window.start;
+  if (end == null) end = window.end;
+  if (!enabled || start == null || end == null || end <= start) {
+    enabled = false;
+    start = null;
+    end = null;
   }
-  if (dayIndex === 6) {
-    return { start: 16 * 60, end: 20 * 60, label: "16:00–20:00", note: "NIEDZIELA • STREAM", isWeekend: true };
-  }
-  if (shift === "POPO") {
-    return { start: 9 * 60, end: 12 * 60, label: "09:00–12:00", note: "POPO • STREAM" };
-  }
-  return { start: 17 * 60, end: 20 * 60, label: "17:00–20:00", note: `${shift} • STREAM` };
+
+  const category = String(override.category || weekly.category || yuraScheduleConfig.defaultCategory || "STREAM").trim() || "STREAM";
+  const artUrl = String(override.artUrl || yuraScheduleArtForCategory(category) || "").trim();
+  return {
+    key, enabled, start, end,
+    label: enabled ? `${yuraScheduleFormatMinutes(start)}–${yuraScheduleFormatMinutes(end)}` : "OFF",
+    category,
+    artUrl,
+    special: override.special === true,
+    note: String(override.note || "").trim(),
+    overridden: Object.keys(override).length > 0
+  };
 }
 
 function yuraScheduleFormatShortDate(utcMs) {
@@ -829,179 +933,102 @@ function yuraScheduleFormatLongDate(utcMs) {
   return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.${d.getUTCFullYear()}`;
 }
 
-function yuraScheduleNextStream(nowParts) {
-  const todayUtc = Date.UTC(nowParts.year, nowParts.month - 1, nowParts.day);
-  const currentMinutes = nowParts.hour * 60 + nowParts.minute;
-
-  for (let offset = 0; offset < 21; offset++) {
-    const dayUtc = todayUtc + offset * 24 * 60 * 60 * 1000;
-    const day = new Date(dayUtc);
-    const jsDay = day.getUTCDay();
+function yuraScheduleBuildDays(now) {
+  const todayUtc = Date.UTC(now.year, now.month - 1, now.day);
+  const days = [];
+  for (let offset = 0; offset < 28; offset++) {
+    const dayUtc = todayUtc + offset * YURA_SCHEDULE_DAY_MS;
+    const jsDay = new Date(dayUtc).getUTCDay();
     const dayIndex = (jsDay + 6) % 7;
-    const mondayUtc = dayUtc - dayIndex * 24 * 60 * 60 * 1000;
+    const mondayUtc = dayUtc - dayIndex * YURA_SCHEDULE_DAY_MS;
     const shift = yuraScheduleShiftForMonday(mondayUtc);
-    const window = yuraScheduleWindowForDay(dayIndex, shift);
-    if (window.isOff) continue;
-    if (offset === 0 && currentMinutes >= window.end) continue;
-    return { dayUtc, dayIndex, shift, window, isToday: offset === 0 };
+    days.push({ dayUtc, dayIndex, shift, offset, ...yuraScheduleResolveDay(dayUtc, dayIndex, shift) });
   }
-  return null;
+  return days;
 }
 
 function yuraScheduleEnsureStyles() {
-  if (document.getElementById("yura-live-schedule-styles")) return;
+  if (document.getElementById("yura-live-schedule-styles-v63")) return;
   const style = document.createElement("style");
-  style.id = "yura-live-schedule-styles";
+  style.id = "yura-live-schedule-styles-v63";
   style.textContent = `
-    .schedule-live-toolbar{margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow)}
-    .schedule-live-title{display:grid;gap:3px}.schedule-live-title span{color:#687381;font-size:8px;font-weight:900;letter-spacing:.13em}.schedule-live-title strong{color:#e7edf4;font-family:Consolas,Monaco,monospace;font-size:12px}
-    .schedule-live-actions{display:flex;gap:6px}.schedule-live-actions button{min-width:34px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#0d1116;color:#9ba6b4;cursor:pointer;font:inherit;font-size:10px;font-weight:800}.schedule-live-actions button:hover{border-color:rgba(242,140,24,.35);color:#fff}.schedule-live-actions button[data-schedule-today]{min-width:auto;color:var(--accent)}
-    .day-card.today{border-color:rgba(73,215,154,.55);box-shadow:0 0 0 1px rgba(73,215,154,.14),var(--shadow);background:linear-gradient(180deg,rgba(73,215,154,.07),transparent 75%),var(--panel)}
-    .day-card.off{opacity:.58;background:#0c0f13;border-style:dashed}.day-card.off strong{color:#727c88}.day-card.is-live-now{border-color:rgba(73,215,154,.72);background:linear-gradient(180deg,rgba(73,215,154,.12),transparent 80%),var(--panel)}
-    .day-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.day-date{color:#626d7a;font-family:Consolas,Monaco,monospace;font-size:8px}.day-card.today .day-date{color:var(--green)}
-    .schedule-live-now{color:var(--green)!important}.schedule-live-next{color:var(--accent)!important}
-    .schedule-window-card.current-shift{border-color:rgba(183,161,255,.26);background:radial-gradient(circle at 86% 12%,rgba(183,161,255,.08),transparent 36%),var(--panel)}
-    @media(max-width:720px){.schedule-live-toolbar{align-items:flex-start;flex-direction:column}.schedule-live-actions{width:100%}.schedule-live-actions button{flex:1}}
+    .schedule-month-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:18px 0 10px}.schedule-month-head span{color:#687381;font-size:8px;font-weight:900;letter-spacing:.14em}.schedule-month-head strong{display:block;color:#e7edf4;font-size:13px;margin-top:4px}.schedule-config-stamp{color:#687381!important;font:8px Consolas,monospace!important;text-align:right}
+    .schedule-featured-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.schedule-featured-card{position:relative;min-height:222px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0d1116;box-shadow:var(--shadow);isolation:isolate}.schedule-featured-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.10) 0%,rgba(6,8,11,.54) 48%,rgba(6,8,11,.96) 100%);z-index:-1}.schedule-featured-card.has-art{background-size:cover;background-position:center}.schedule-featured-card.off{opacity:.52;filter:saturate(.45)}.schedule-featured-card.today{border-color:rgba(73,215,154,.62);box-shadow:0 0 0 1px rgba(73,215,154,.12),var(--shadow)}.schedule-featured-card.live-now{border-color:rgba(73,215,154,.85)}
+    .schedule-featured-inner{height:100%;min-height:198px;padding:12px;display:flex;flex-direction:column;justify-content:space-between}.schedule-card-top{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}.schedule-card-day{font-size:11px;font-weight:900;letter-spacing:.08em;color:#fff}.schedule-card-date{font:8px Consolas,monospace;color:#c0c7d0}.schedule-card-bottom{display:grid;gap:5px}.schedule-card-category{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000}.schedule-card-time{font:12px Consolas,monospace;font-weight:800;color:var(--accent)}.schedule-card-meta{font-size:8px;color:#aab3be;letter-spacing:.08em}.schedule-card-note{font-size:9px;color:#d8dee7;line-height:1.35}.schedule-badge{display:inline-flex;width:max-content;padding:4px 6px;border:1px solid rgba(242,140,24,.32);border-radius:6px;background:rgba(8,10,13,.72);color:var(--accent);font-size:7px;font-weight:900;letter-spacing:.08em}.schedule-badge.live{color:var(--green);border-color:rgba(73,215,154,.4)}
+    .schedule-compact-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.schedule-compact-card{position:relative;min-height:104px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#0d1116;padding:9px;display:grid;align-content:space-between;gap:7px}.schedule-compact-card.has-art{background-size:cover;background-position:center}.schedule-compact-card.has-art::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.40),rgba(6,8,11,.94));z-index:0}.schedule-compact-card>*{position:relative;z-index:1}.schedule-compact-card.off{opacity:.5}.schedule-compact-day{display:flex;justify-content:space-between;gap:5px;font-size:8px;font-weight:800}.schedule-compact-day span:last-child{color:#7d8895;font:7px Consolas,monospace}.schedule-compact-category{font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-compact-time{font:9px Consolas,monospace;color:var(--accent)}
+    .schedule-live-now{color:var(--green)!important}.schedule-month-summary{margin-top:14px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);display:flex;justify-content:space-between;gap:14px;align-items:center}.schedule-month-summary strong{font-size:12px}.schedule-month-summary p{margin:3px 0 0;color:#788391;font-size:9px}.schedule-month-summary .status-chip{white-space:nowrap}
+    @media(max-width:1100px){.schedule-featured-grid,.schedule-compact-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:720px){.schedule-featured-grid,.schedule-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-month-head,.schedule-month-summary{align-items:flex-start;flex-direction:column}}
   `;
   document.head.appendChild(style);
+}
+
+function yuraScheduleApplyArts(host) {
+  host.querySelectorAll("[data-schedule-art]").forEach(card => {
+    const art = card.getAttribute("data-schedule-art") || "";
+    if (!art) return;
+    const safe = art.replaceAll('"', '\\"');
+    card.style.backgroundImage = `url("${safe}")`;
+    card.classList.add("has-art");
+  });
+}
+
+function yuraScheduleCardHtml(day, now, featured) {
+  const isToday = day.key === now.dateKey;
+  const minutes = now.hour * 60 + now.minute;
+  const liveNow = isToday && day.enabled && minutes >= day.start && minutes < day.end;
+  const classes = [featured ? "schedule-featured-card" : "schedule-compact-card"];
+  if (!day.enabled) classes.push("off");
+  if (isToday) classes.push("today");
+  if (liveNow) classes.push("live-now");
+  const artAttr = yuraScheduleEscape(day.artUrl);
+  const category = yuraScheduleEscape(day.category);
+  const note = yuraScheduleEscape(day.note);
+  const status = liveNow ? "LIVE NOW" : day.special ? "SPECIAL" : day.overridden ? "OVERRIDE" : day.shift;
+  if (featured) {
+    return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-featured-inner"><div class="schedule-card-top"><span class="schedule-card-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-card-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-card-bottom"><span class="schedule-badge ${liveNow ? "live" : ""}">${status}</span><strong class="schedule-card-category">${category}</strong><span class="schedule-card-time ${liveNow ? "schedule-live-now" : ""}">${day.label}</span><span class="schedule-card-meta">${day.enabled ? day.shift + " • STREAM" : "NO STREAM"}</span>${note ? `<span class="schedule-card-note">${note}</span>` : ""}</div></div></article>`;
+  }
+  return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-compact-day"><span>${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span>${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div><div class="schedule-compact-category">${category}</div><div class="schedule-compact-time">${day.label}</div></div></article>`;
 }
 
 function renderYuraLiveSchedule() {
   const host = document.getElementById("scheduleView");
   if (!host) return;
   yuraScheduleEnsureStyles();
-
   const now = yuraScheduleWarsawNowParts();
+  const days = yuraScheduleBuildDays(now);
+  const featured = days.slice(0, 7);
+  const later = days.slice(7);
+  const next = days.find(day => day.enabled && (day.offset > 0 || now.hour * 60 + now.minute < day.end));
   const currentMondayUtc = yuraScheduleMondayUtc(now.year, now.month, now.day);
-  const shownMondayUtc = currentMondayUtc + yuraScheduleWeekOffset * YURA_SCHEDULE_WEEK_MS;
-  const shownShift = yuraScheduleShiftForMonday(shownMondayUtc);
-  const nextShift = yuraScheduleShiftForMonday(shownMondayUtc + YURA_SCHEDULE_WEEK_MS);
-  const followingShift = yuraScheduleShiftForMonday(shownMondayUtc + 2 * YURA_SCHEDULE_WEEK_MS);
-  const nextStream = yuraScheduleNextStream(now);
-  const shownWeekIsCurrent = yuraScheduleWeekOffset === 0;
-
-  let isLiveNow = false;
-  if (nextStream?.isToday && !nextStream.window.isOff) {
-    const minutes = now.hour * 60 + now.minute;
-    isLiveNow = minutes >= nextStream.window.start && minutes < nextStream.window.end;
+  const currentShift = yuraScheduleShiftForMonday(currentMondayUtc);
+  const nextLabel = next ? `${next.offset === 0 ? "DZIŚ" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} ${yuraScheduleFormatShortDate(next.dayUtc)} • ${next.label} • ${next.category}` : "—";
+  const updated = String(yuraScheduleConfig.updatedAt || "").trim();
+  let updatedLabel = "AUTO CONFIG";
+  if (updated) {
+    const stamp = new Date(updated);
+    if (!Number.isNaN(stamp.getTime())) updatedLabel = `CONFIG • ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
   }
 
-  const nextStreamLabel = nextStream
-    ? `${nextStream.isToday ? "DZIŚ" : YURA_SCHEDULE_DAY_NAMES[nextStream.dayIndex]} ${yuraScheduleFormatShortDate(nextStream.dayUtc)} • ${nextStream.window.label}`
-    : "—";
-
-  const weekdayWindow = shownShift === "POPO" ? "09:00–12:00" : "17:00–20:00";
-  const daysHtml = YURA_SCHEDULE_DAY_NAMES.map((dayName, dayIndex) => {
-    const dayUtc = shownMondayUtc + dayIndex * 24 * 60 * 60 * 1000;
-    const dateKey = yuraScheduleDateKeyFromUtcMs(dayUtc);
-    const window = yuraScheduleWindowForDay(dayIndex, shownShift);
-    const isToday = dateKey === now.dateKey;
-    const minutes = now.hour * 60 + now.minute;
-    const liveToday = isToday && !window.isOff && minutes >= window.start && minutes < window.end;
-    const classes = ["day-card"];
-    if (window.isWeekend) classes.push("weekend");
-    if (window.isOff) classes.push("off");
-    if (isToday) classes.push("today");
-    if (liveToday) classes.push("is-live-now");
-    return `
-      <article class="${classes.join(" ")}">
-        <div class="day-top">
-          <span class="day-name">${dayName}</span>
-          <span class="day-date">${yuraScheduleFormatShortDate(dayUtc)}</span>
-        </div>
-        <strong>${window.label}</strong>
-        <span class="day-note ${liveToday ? "schedule-live-now" : ""}">${liveToday ? "LIVE WINDOW" : window.note}</span>
-      </article>`;
-  }).join("");
-
   host.innerHTML = `
-    <div class="hero">
-      <div>
-        <div class="eyebrow">STREAM CALENDAR // AUTO</div>
-        <h1>Harmonogram</h1>
-        <p>Automatyczny kalendarz liczony z cyklu RANO → NOCKA → POPO. Strefa czasu: Polska.</p>
-      </div>
-      <div class="status-chip ${isLiveNow ? "schedule-live-now" : ""}">${isLiveNow ? "LIVE WINDOW" : `AUTO • ${yuraScheduleShiftForMonday(currentMondayUtc)}`}</div>
-    </div>
-
-    <div class="schedule-summary">
-      <article class="schedule-window-card current-shift">
-        <div class="schedule-window-top">
-          <span class="schedule-code">${shownWeekIsCurrent ? "TEN TYDZIEŃ" : "WYBRANY TYDZIEŃ"}</span>
-          <span class="schedule-state">${shownShift}</span>
-        </div>
-        <strong>${yuraScheduleFormatShortDate(shownMondayUtc)} — ${yuraScheduleFormatShortDate(shownMondayUtc + 6 * 24 * 60 * 60 * 1000)}</strong>
-        <p>${shownShift} • PN/WT/ŚR/PT ${weekdayWindow} • CZW OFF</p>
-      </article>
-      <article class="schedule-window-card weekend">
-        <div class="schedule-window-top">
-          <span class="schedule-code">NAJBLIŻSZY STREAM</span>
-          <span class="schedule-state">${isLiveNow ? "TERAZ" : "NEXT"}</span>
-        </div>
-        <strong class="${isLiveNow ? "schedule-live-now" : "schedule-live-next"}">${nextStreamLabel}</strong>
-        <p>Sobota 16:00–22:00 • Niedziela 16:00–20:00.</p>
-      </article>
-    </div>
-
-    <div class="schedule-live-toolbar">
-      <div class="schedule-live-title">
-        <span>KALENDARZ TYGODNIOWY //</span>
-        <strong>${yuraScheduleFormatLongDate(shownMondayUtc)} — ${yuraScheduleFormatLongDate(shownMondayUtc + 6 * 24 * 60 * 60 * 1000)} • ${shownShift}</strong>
-      </div>
-      <div class="schedule-live-actions">
-        <button type="button" data-schedule-prev title="Poprzedni tydzień">←</button>
-        <button type="button" data-schedule-today>DZIŚ</button>
-        <button type="button" data-schedule-next title="Następny tydzień">→</button>
-      </div>
-    </div>
-
-    <div class="schedule-week">${daysHtml}</div>
-
-    <div class="schedule-notices">
-      <article class="schedule-notice work-cycle">
-        <div class="notice-icon">03</div>
-        <div>
-          <span class="notice-label">CYKL PRACY //</span>
-          <strong>${shownShift} → ${nextShift} → ${followingShift}</strong>
-          <p>Tydzień 28.09.2026 jest zakotwiczony jako RANO. Dalej harmonogram przelicza się automatycznie co poniedziałek bez ręcznej aktualizacji.</p>
-        </div>
-      </article>
-      <article class="schedule-notice discord-notice">
-        <div class="notice-icon">i</div>
-        <div>
-          <span class="notice-label">STAŁE ZASADY //</span>
-          <strong>Czwartek zawsze bez streama</strong>
-          <p>Dodatkowe wolne dni, urlopy i spontaniczne zmiany nadal pojawiają się na Discordzie.</p>
-          <a href="https://discord.gg/8NHhFsRed5" target="_blank" rel="noreferrer">discord.gg/8NHhFsRed5</a>
-        </div>
-      </article>
-    </div>`;
+    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>Najbliższe 7 dni w pełnym widoku, kolejne 21 kompaktowo. Rotacja pracy liczy się automatycznie; ręczne wyjątki publikuje YURA → Network.</p></div><div class="status-chip">AUTO • ${currentShift}</div></div>
+    <div class="schedule-month-summary"><div><strong>Najbliższy stream: <span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong><p>Czwartki domyślnie OFF • sobota 16:00–22:00 • niedziela 16:00–20:00 • strefa Europe/Warsaw</p></div><div class="status-chip">${yuraScheduleEscape(updatedLabel)}</div></div>
+    <div class="schedule-month-head"><div><span>NAJBLIŻSZE 7 DNI //</span><strong>${yuraScheduleFormatLongDate(featured[0].dayUtc)} — ${yuraScheduleFormatLongDate(featured[6].dayUtc)}</strong></div><span class="schedule-config-stamp">DUŻE KARTY • CATEGORY ART</span></div>
+    <div class="schedule-featured-grid">${featured.map(day => yuraScheduleCardHtml(day, now, true)).join("")}</div>
+    <div class="schedule-month-head"><div><span>KOLEJNE 21 DNI //</span><strong>${yuraScheduleFormatLongDate(later[0].dayUtc)} — ${yuraScheduleFormatLongDate(later[later.length - 1].dayUtc)}</strong></div><span class="schedule-config-stamp">3 TYGODNIE • COMPACT</span></div>
+    <div class="schedule-compact-grid">${later.map(day => yuraScheduleCardHtml(day, now, false)).join("")}</div>`;
+  yuraScheduleApplyArts(host);
 }
 
 function yuraScheduleStartAutoRefresh() {
   if (yuraScheduleTimer) window.clearInterval(yuraScheduleTimer);
-  renderYuraLiveSchedule();
+  yuraScheduleLoadConfig();
   yuraScheduleTimer = window.setInterval(() => {
-    if (!document.hidden) renderYuraLiveSchedule();
+    if (!document.hidden) yuraScheduleLoadConfig();
   }, 60 * 1000);
 }
 
-document.addEventListener("click", event => {
-  if (!event.target.closest("#scheduleView")) return;
-  if (event.target.closest("[data-schedule-prev]")) {
-    yuraScheduleWeekOffset -= 1;
-    renderYuraLiveSchedule();
-  } else if (event.target.closest("[data-schedule-next]")) {
-    yuraScheduleWeekOffset += 1;
-    renderYuraLiveSchedule();
-  } else if (event.target.closest("[data-schedule-today]")) {
-    yuraScheduleWeekOffset = 0;
-    renderYuraLiveSchedule();
-  }
-});
-
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) renderYuraLiveSchedule();
+  if (!document.hidden) yuraScheduleLoadConfig();
 });
 
 yuraScheduleStartAutoRefresh();
