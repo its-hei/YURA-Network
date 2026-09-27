@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-27T15:41:57.7740697\u002B02:00",
+  "timeZone": "Europe/Warsaw",
+  "anchorMonday": "2026-09-28",
+  "anchorShift": "RANO",
+  "shiftCycle": [
+    "RANO",
+    "NOCKA",
+    "POPO"
+  ],
+  "defaultCategory": "FFXIV",
+  "weeklyRules": {
+    "0": {
+      "enabled": true,
+      "category": "FFXIV"
+    },
+    "1": {
+      "enabled": true,
+      "category": "FFXIV"
+    },
+    "2": {
+      "enabled": true,
+      "category": "FFXIV"
+    },
+    "3": {
+      "enabled": false,
+      "category": "FFXIV"
+    },
+    "4": {
+      "enabled": true,
+      "category": "FFXIV"
+    },
+    "5": {
+      "enabled": true,
+      "category": "FFXIV"
+    },
+    "6": {
+      "enabled": true,
+      "category": "FFXIV"
+    }
+  },
+  "categoryArts": {
+    "FFXIV": "https://static-cdn.jtvnw.net/ttv-boxart/24241_IGDB-144x192.jpg",
+    "TIBIA": "",
+    "MMO": "",
+    "RPG": "",
+    "VARIETY": ""
+  },
+  "overrides": {}
+}
