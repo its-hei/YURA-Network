@@ -752,7 +752,7 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V63
+// YURA_LIVE_SCHEDULE_V64
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -911,7 +911,7 @@ function yuraScheduleResolveDay(dayUtc, dayIndex, shift) {
   }
 
   const category = String(override.category || weekly.category || yuraScheduleConfig.defaultCategory || "STREAM").trim() || "STREAM";
-  const artUrl = String(override.artUrl || yuraScheduleArtForCategory(category) || "").trim();
+  const artUrl = enabled ? String(override.artUrl || yuraScheduleArtForCategory(category) || "").trim() : "";
   return {
     key, enabled, start, end,
     label: enabled ? `${yuraScheduleFormatMinutes(start)}–${yuraScheduleFormatMinutes(end)}` : "OFF",
@@ -948,16 +948,17 @@ function yuraScheduleBuildDays(now) {
 }
 
 function yuraScheduleEnsureStyles() {
-  if (document.getElementById("yura-live-schedule-styles-v63")) return;
+  if (document.getElementById("yura-live-schedule-styles-v64")) return;
   const style = document.createElement("style");
-  style.id = "yura-live-schedule-styles-v63";
+  style.id = "yura-live-schedule-styles-v64";
   style.textContent = `
     .schedule-month-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:18px 0 10px}.schedule-month-head span{color:#687381;font-size:8px;font-weight:900;letter-spacing:.14em}.schedule-month-head strong{display:block;color:#e7edf4;font-size:13px;margin-top:4px}.schedule-config-stamp{color:#687381!important;font:8px Consolas,monospace!important;text-align:right}
-    .schedule-featured-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.schedule-featured-card{position:relative;min-height:222px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0d1116;box-shadow:var(--shadow);isolation:isolate}.schedule-featured-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.10) 0%,rgba(6,8,11,.54) 48%,rgba(6,8,11,.96) 100%);z-index:-1}.schedule-featured-card.has-art{background-size:cover;background-position:center}.schedule-featured-card.off{opacity:.52;filter:saturate(.45)}.schedule-featured-card.today{border-color:rgba(73,215,154,.62);box-shadow:0 0 0 1px rgba(73,215,154,.12),var(--shadow)}.schedule-featured-card.live-now{border-color:rgba(73,215,154,.85)}
+    .schedule-scroll-shell{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) 34px;gap:7px;align-items:stretch}.schedule-scroll-nav{border:1px solid var(--line);border-radius:9px;background:#0d1116;color:#9aa5b2;font-size:20px;cursor:pointer;transition:.15s}.schedule-scroll-nav:hover{color:#fff;border-color:rgba(242,140,24,.42);background:#12171d}.schedule-scroll-viewport{overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#39414a #0a0d11;padding-bottom:5px}.schedule-scroll-track{display:flex;gap:8px;width:max-content;min-width:100%;align-items:stretch}.schedule-scroll-track::after{content:"";width:2px;flex:0 0 2px}
+    .schedule-featured-card{position:relative;flex:0 0 132px;width:132px;min-height:222px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0d1116;box-shadow:var(--shadow);isolation:isolate}.schedule-featured-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.10) 0%,rgba(6,8,11,.54) 48%,rgba(6,8,11,.96) 100%);z-index:-1}.schedule-featured-card.has-art{background-size:cover;background-position:center}.schedule-featured-card.off{background:#0b0e12;opacity:.78;filter:none}.schedule-featured-card.today{border-color:rgba(73,215,154,.62);box-shadow:0 0 0 1px rgba(73,215,154,.12),var(--shadow)}.schedule-featured-card.live-now{border-color:rgba(73,215,154,.85)}
     .schedule-featured-inner{height:100%;min-height:198px;padding:12px;display:flex;flex-direction:column;justify-content:space-between}.schedule-card-top{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}.schedule-card-day{font-size:11px;font-weight:900;letter-spacing:.08em;color:#fff}.schedule-card-date{font:8px Consolas,monospace;color:#c0c7d0}.schedule-card-bottom{display:grid;gap:5px}.schedule-card-category{font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 5px #000}.schedule-card-time{font:12px Consolas,monospace;font-weight:800;color:var(--accent)}.schedule-card-meta{font-size:8px;color:#aab3be;letter-spacing:.08em}.schedule-card-note{font-size:9px;color:#d8dee7;line-height:1.35}.schedule-badge{display:inline-flex;width:max-content;padding:4px 6px;border:1px solid rgba(242,140,24,.32);border-radius:6px;background:rgba(8,10,13,.72);color:var(--accent);font-size:7px;font-weight:900;letter-spacing:.08em}.schedule-badge.live{color:var(--green);border-color:rgba(73,215,154,.4)}
-    .schedule-compact-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.schedule-compact-card{position:relative;min-height:104px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#0d1116;padding:9px;display:grid;align-content:space-between;gap:7px}.schedule-compact-card.has-art{background-size:cover;background-position:center}.schedule-compact-card.has-art::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.40),rgba(6,8,11,.94));z-index:0}.schedule-compact-card>*{position:relative;z-index:1}.schedule-compact-card.off{opacity:.5}.schedule-compact-day{display:flex;justify-content:space-between;gap:5px;font-size:8px;font-weight:800}.schedule-compact-day span:last-child{color:#7d8895;font:7px Consolas,monospace}.schedule-compact-category{font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-compact-time{font:9px Consolas,monospace;color:var(--accent)}
+    .schedule-compact-card{position:relative;flex:0 0 112px;width:112px;min-height:118px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#0d1116;padding:9px;display:grid;align-content:space-between;gap:7px}.schedule-compact-card.first-compact{margin-left:10px}.schedule-compact-card.has-art{background-size:cover;background-position:center}.schedule-compact-card.has-art::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,11,.40),rgba(6,8,11,.94));z-index:0}.schedule-compact-card>*{position:relative;z-index:1}.schedule-compact-card.off{background:#0b0e12;opacity:.72}.schedule-compact-day{display:flex;justify-content:space-between;gap:5px;font-size:8px;font-weight:800}.schedule-compact-day span:last-child{color:#7d8895;font:7px Consolas,monospace}.schedule-compact-category{font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-compact-time{font:9px Consolas,monospace;color:var(--accent)}
     .schedule-live-now{color:var(--green)!important}.schedule-month-summary{margin-top:14px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);display:flex;justify-content:space-between;gap:14px;align-items:center}.schedule-month-summary strong{font-size:12px}.schedule-month-summary p{margin:3px 0 0;color:#788391;font-size:9px}.schedule-month-summary .status-chip{white-space:nowrap}
-    @media(max-width:1100px){.schedule-featured-grid,.schedule-compact-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:720px){.schedule-featured-grid,.schedule-compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-month-head,.schedule-month-summary{align-items:flex-start;flex-direction:column}}
+    @media(max-width:720px){.schedule-scroll-shell{grid-template-columns:28px minmax(0,1fr) 28px}.schedule-featured-card{flex-basis:124px;width:124px}.schedule-month-head,.schedule-month-summary{align-items:flex-start;flex-direction:column}}
   `;
   document.head.appendChild(style);
 }
@@ -980,14 +981,35 @@ function yuraScheduleCardHtml(day, now, featured) {
   if (!day.enabled) classes.push("off");
   if (isToday) classes.push("today");
   if (liveNow) classes.push("live-now");
-  const artAttr = yuraScheduleEscape(day.artUrl);
-  const category = yuraScheduleEscape(day.category);
+  if (!featured && day.offset === 7) classes.push("first-compact");
+  const artAttr = day.enabled ? yuraScheduleEscape(day.artUrl) : "";
+  const category = day.enabled ? yuraScheduleEscape(day.category) : "OFF";
   const note = yuraScheduleEscape(day.note);
-  const status = liveNow ? "LIVE NOW" : day.special ? "SPECIAL" : day.overridden ? "OVERRIDE" : day.shift;
+  const weekend = day.dayIndex === 5 || day.dayIndex === 6;
+  const status = liveNow ? "LIVE NOW" : !day.enabled ? "OFF" : day.special ? "SPECIAL" : day.overridden ? "OVERRIDE" : weekend ? "WEEKEND" : day.shift;
+  const meta = !day.enabled ? "NO STREAM" : weekend ? "STREAM" : `${day.shift} • STREAM`;
   if (featured) {
-    return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-featured-inner"><div class="schedule-card-top"><span class="schedule-card-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-card-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-card-bottom"><span class="schedule-badge ${liveNow ? "live" : ""}">${status}</span><strong class="schedule-card-category">${category}</strong><span class="schedule-card-time ${liveNow ? "schedule-live-now" : ""}">${day.label}</span><span class="schedule-card-meta">${day.enabled ? day.shift + " • STREAM" : "NO STREAM"}</span>${note ? `<span class="schedule-card-note">${note}</span>` : ""}</div></div></article>`;
+    return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-featured-inner"><div class="schedule-card-top"><span class="schedule-card-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-card-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-card-bottom"><span class="schedule-badge ${liveNow ? "live" : ""}">${status}</span><strong class="schedule-card-category">${category}</strong><span class="schedule-card-time ${liveNow ? "schedule-live-now" : ""}">${day.label}</span><span class="schedule-card-meta">${meta}</span>${note ? `<span class="schedule-card-note">${note}</span>` : ""}</div></div></article>`;
   }
   return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-compact-day"><span>${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span>${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div><div class="schedule-compact-category">${category}</div><div class="schedule-compact-time">${day.label}</div></div></article>`;
+}
+
+function yuraScheduleScroll(direction) {
+  const viewport = document.getElementById("scheduleScrollViewport");
+  if (!viewport) return;
+  const amount = Math.max(420, Math.floor(viewport.clientWidth * 0.82));
+  viewport.scrollBy({ left: direction * amount, behavior: "smooth" });
+}
+
+function yuraScheduleEnableWheelScroll() {
+  const viewport = document.getElementById("scheduleScrollViewport");
+  if (!viewport || viewport.dataset.wheelBound === "1") return;
+  viewport.dataset.wheelBound = "1";
+  viewport.addEventListener("wheel", event => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    viewport.scrollLeft += event.deltaY;
+    event.preventDefault();
+  }, { passive: false });
 }
 
 function renderYuraLiveSchedule() {
@@ -996,8 +1018,6 @@ function renderYuraLiveSchedule() {
   yuraScheduleEnsureStyles();
   const now = yuraScheduleWarsawNowParts();
   const days = yuraScheduleBuildDays(now);
-  const featured = days.slice(0, 7);
-  const later = days.slice(7);
   const next = days.find(day => day.enabled && (day.offset > 0 || now.hour * 60 + now.minute < day.end));
   const currentMondayUtc = yuraScheduleMondayUtc(now.year, now.month, now.day);
   const currentShift = yuraScheduleShiftForMonday(currentMondayUtc);
@@ -1010,13 +1030,16 @@ function renderYuraLiveSchedule() {
   }
 
   host.innerHTML = `
-    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>Najbliższe 7 dni w pełnym widoku, kolejne 21 kompaktowo. Rotacja pracy liczy się automatycznie; ręczne wyjątki publikuje YURA → Network.</p></div><div class="status-chip">AUTO • ${currentShift}</div></div>
+    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>28 kolejnych dni w jednym ciągu. Najbliższy tydzień ma większe karty, reszta jest kompaktowa — przewijaj poziomo.</p></div><div class="status-chip">AUTO • ${currentShift}</div></div>
     <div class="schedule-month-summary"><div><strong>Najbliższy stream: <span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong><p>Czwartki domyślnie OFF • sobota 16:00–22:00 • niedziela 16:00–20:00 • strefa Europe/Warsaw</p></div><div class="status-chip">${yuraScheduleEscape(updatedLabel)}</div></div>
-    <div class="schedule-month-head"><div><span>NAJBLIŻSZE 7 DNI //</span><strong>${yuraScheduleFormatLongDate(featured[0].dayUtc)} — ${yuraScheduleFormatLongDate(featured[6].dayUtc)}</strong></div><span class="schedule-config-stamp">DUŻE KARTY • CATEGORY ART</span></div>
-    <div class="schedule-featured-grid">${featured.map(day => yuraScheduleCardHtml(day, now, true)).join("")}</div>
-    <div class="schedule-month-head"><div><span>KOLEJNE 21 DNI //</span><strong>${yuraScheduleFormatLongDate(later[0].dayUtc)} — ${yuraScheduleFormatLongDate(later[later.length - 1].dayUtc)}</strong></div><span class="schedule-config-stamp">3 TYGODNIE • COMPACT</span></div>
-    <div class="schedule-compact-grid">${later.map(day => yuraScheduleCardHtml(day, now, false)).join("")}</div>`;
+    <div class="schedule-month-head"><div><span>NAJBLIŻSZE 28 DNI //</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} — ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><span class="schedule-config-stamp">7 DUŻYCH + 21 COMPACT • SCROLL →</span></div>
+    <div class="schedule-scroll-shell">
+      <button class="schedule-scroll-nav" type="button" aria-label="Poprzednie dni" onclick="yuraScheduleScroll(-1)">‹</button>
+      <div id="scheduleScrollViewport" class="schedule-scroll-viewport"><div class="schedule-scroll-track">${days.map((day, index) => yuraScheduleCardHtml(day, now, index < 7)).join("")}</div></div>
+      <button class="schedule-scroll-nav" type="button" aria-label="Następne dni" onclick="yuraScheduleScroll(1)">›</button>
+    </div>`;
   yuraScheduleApplyArts(host);
+  yuraScheduleEnableWheelScroll();
 }
 
 function yuraScheduleStartAutoRefresh() {
