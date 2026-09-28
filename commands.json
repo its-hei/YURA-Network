@@ -36,16 +36,6 @@
     "category": "ALERTY"
   },
   {
-    "command": "!alerts",
-    "aliases": [
-      "!alert"
-    ],
-    "permission": "Moderator",
-    "usage": "!alerts",
-    "description": "Sprawdza, czy kolejka alert\u00F3w jest obecnie aktywna czy wstrzymana.",
-    "category": "ALERTY"
-  },
-  {
     "command": "!pause",
     "aliases": [],
     "permission": "Moderator",
@@ -195,6 +185,24 @@
     "usage": "!cancelraffle",
     "description": "Anuluje aktywne raffle YURY.",
     "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!autoraffle",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!autoraffle [liczba]",
+    "description": "Losuje domy\u015Blnie 3 zwyci\u0119zc\u00F3w spo\u015Br\u00F3d aktualnie obecnych widz\u00F3w; boty s\u0105 pomijane.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!alert",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alert \u003Cpause|resume|mute|unmute|skip|next\u003E",
+    "description": "Steruje lokaln\u0105 kolejk\u0105 alert\u00F3w YURY / Streamer.bot.",
+    "category": "MODERATOR",
     "source": "YURA"
   },
   {
