@@ -770,7 +770,7 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V67
+// YURA_LIVE_SCHEDULE_V68
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -1011,12 +1011,14 @@ function yuraScheduleCardHtml(day, now) {
     return `<article class="${classes.join(" ")}"><div class="schedule-calendar-card-inner"><div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-off-center"><strong>OFF</strong><span>Brak streama</span></div></div></article>`;
   }
 
-  let status = weekend ? "WEEKEND" : day.shift;
+  // Work-shift labels (RANO / POPO / NOCKA) are internal operator data and must never
+  // leak onto the public schedule. Keep only viewer-facing state badges.
+  let status = weekend ? "WEEKEND" : "";
   let badgeClass = weekend ? " weekend" : "";
   if (day.overridden) status = "OVERRIDE";
   if (day.special) status = "SPECIAL";
   if (liveNow) { status = "LIVE NOW"; badgeClass = " live"; }
-  const badge = `<span class="schedule-calendar-badge${badgeClass}">${yuraScheduleEscape(status)}</span>`;
+  const badge = status ? `<span class="schedule-calendar-badge${badgeClass}">${yuraScheduleEscape(status)}</span>` : "";
   return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-calendar-card-inner"><div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-card-bottom">${badge}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong><span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}">${day.label}</span>${note ? `<span class="schedule-calendar-note">${note}</span>` : ""}</div></div></article>`;
 }
 
@@ -1038,8 +1040,6 @@ function renderYuraLiveSchedule() {
   const now = yuraScheduleWarsawNowParts();
   const days = yuraScheduleBuildDays(now);
   const next = days.find(day => day.enabled && (day.offset > 0 || now.hour * 60 + now.minute < day.end));
-  const currentMondayUtc = yuraScheduleMondayUtc(now.year, now.month, now.day);
-  const currentShift = yuraScheduleShiftForMonday(currentMondayUtc);
   const nextLabel = next ? `${next.offset === 0 ? "DZIŚ" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} • ${next.label} • ${next.category}` : "—";
   const updated = String(yuraScheduleConfig.updatedAt || "").trim();
   let updatedLabel = "AUTO CONFIG";
@@ -1050,11 +1050,11 @@ function renderYuraLiveSchedule() {
   const weeks = Array.from({ length: 4 }, (_, index) => days.slice(index * 7, index * 7 + 7));
 
   host.innerHTML = `
-    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>Najbliższe 28 dni w układzie tygodniowym. Pierwszy tydzień jest otwarty, kolejne rozwijasz z góry w dół.</p></div><div class="status-chip">AUTO • ${currentShift}</div></div>
+    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>Najbliższe 28 dni w układzie tygodniowym. Pierwszy tydzień jest otwarty, kolejne rozwijasz z góry w dół.</p></div><div class="status-chip">AUTO • 28 DNI</div></div>
     <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>Najbliższy stream:<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
     <div class="schedule-calendar-head"><div><span>NAJBLIŻSZE 28 DNI //</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} — ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">4 TYGODNIE • 1 OTWARTY + 3 ZWIJANE</div></div>
     <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleWeekHtml(weekDays, now, index)).join("")}</div>
-    <div class="schedule-calendar-range">Pierwszy tydzień jest <strong>zawsze otwarty</strong>. Dni OFF nie używają artu; weekend nie pokazuje zmiany.</div>`;
+    <div class="schedule-calendar-range">Pierwszy tydzień jest <strong>zawsze otwarty</strong>. Dni OFF nie używają artu.</div>`;
   yuraScheduleApplyArts(host);
 }
 
