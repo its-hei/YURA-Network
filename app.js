@@ -527,7 +527,9 @@ async function loadLeaderboardMetadata() {
       const value = {
         isVip: item?.isVip === true,
         isModerator: item?.isModerator === true,
-        isMonthlyVipExcluded: item?.isMonthlyVipExcluded === true
+        isManagedMonthlyVip: item?.isManagedMonthlyVip === true,
+        isMonthlyVipExcluded: typeof item?.isMonthlyVipExcluded === "boolean" ? item.isMonthlyVipExcluded : null,
+        monthlyVipEligible: typeof item?.monthlyVipEligible === "boolean" ? item.monthlyVipEligible : null
       };
       const nameKey = String(item?.name || "").trim().toLowerCase();
       const loginKey = String(item?.login || "").trim().toLowerCase();
@@ -553,7 +555,9 @@ function mergeLeaderboardMetadata(data) {
         ...item,
         isVip: item?.isVip === true || meta.isVip === true,
         isModerator: item?.isModerator === true || meta.isModerator === true,
-        isMonthlyVipExcluded: item?.isMonthlyVipExcluded === true || meta.isMonthlyVipExcluded === true
+        isManagedMonthlyVip: meta.isManagedMonthlyVip === true || item?.isManagedMonthlyVip === true,
+        isMonthlyVipExcluded: typeof meta.isMonthlyVipExcluded === "boolean" ? meta.isMonthlyVipExcluded : item?.isMonthlyVipExcluded === true,
+        monthlyVipEligible: typeof meta.monthlyVipEligible === "boolean" ? meta.monthlyVipEligible : item?.monthlyVipEligible === true
       };
     })
   };
@@ -1071,4 +1075,3 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_PUBLIC_BOT_FILTER_V69
