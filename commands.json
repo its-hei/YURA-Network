@@ -294,5 +294,14 @@
     "description": "\uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
     "category": "OG\u00D3LNE",
     "source": "YURA"
+  },
+  {
+    "command": "!strona",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!strona",
+    "description": "\uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
+    "category": "OG\u00D3LNE",
+    "source": "YURA"
   }
 ]
