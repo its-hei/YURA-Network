@@ -1075,3 +1075,4 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
+// YURA_PUBLIC_BOT_FILTER_V69
