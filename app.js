@@ -770,11 +770,11 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V68
+// YURA_LIVE_SCHEDULE_V69
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
-const YURA_SCHEDULE_DAY_NAMES = ["PON", "WT", "ŚR", "CZW", "PT", "SOB", "ND"];
+const YURA_SCHEDULE_DAY_NAMES = ["PON", "WT", "ĹšR", "CZW", "PT", "SOB", "ND"];
 const YURA_SCHEDULE_DEFAULT_CONFIG = {
   schemaVersion: 1,
   timeZone: "Europe/Warsaw",
@@ -890,10 +890,10 @@ function yuraScheduleFormatMinutes(total) {
 
 function yuraScheduleAutomaticWindow(dayIndex, shift, allowThursday = false) {
   if (dayIndex === 3 && !allowThursday) return { start: null, end: null, label: "OFF", isOff: true };
-  if (dayIndex === 5) return { start: 16 * 60, end: 22 * 60, label: "16:00–22:00", isOff: false };
-  if (dayIndex === 6) return { start: 16 * 60, end: 20 * 60, label: "16:00–20:00", isOff: false };
-  if (shift === "POPO") return { start: 9 * 60, end: 12 * 60, label: "09:00–12:00", isOff: false };
-  return { start: 17 * 60, end: 20 * 60, label: "17:00–20:00", isOff: false };
+  if (dayIndex === 5) return { start: 16 * 60, end: 22 * 60, label: "16:00â€“22:00", isOff: false };
+  if (dayIndex === 6) return { start: 16 * 60, end: 20 * 60, label: "16:00â€“20:00", isOff: false };
+  if (shift === "POPO") return { start: 9 * 60, end: 12 * 60, label: "09:00â€“12:00", isOff: false };
+  return { start: 17 * 60, end: 20 * 60, label: "17:00â€“20:00", isOff: false };
 }
 
 function yuraScheduleArtForCategory(category) {
@@ -932,7 +932,7 @@ function yuraScheduleResolveDay(dayUtc, dayIndex, shift) {
   const artUrl = enabled ? String(override.artUrl || yuraScheduleArtForCategory(category) || "").trim() : "";
   return {
     key, enabled, start, end,
-    label: enabled ? `${yuraScheduleFormatMinutes(start)}–${yuraScheduleFormatMinutes(end)}` : "OFF",
+    label: enabled ? `${yuraScheduleFormatMinutes(start)}â€“${yuraScheduleFormatMinutes(end)}` : "OFF",
     category,
     artUrl,
     special: override.special === true,
@@ -974,7 +974,7 @@ function yuraScheduleEnsureStyles() {
     .schedule-calendar-summary-main{padding:13px 15px;display:flex;align-items:center;gap:12px;min-width:0}.schedule-calendar-summary-dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(73,215,154,.55);flex:0 0 auto}.schedule-calendar-summary strong{font-size:12px;color:#e9eef5}.schedule-calendar-summary .schedule-live-next{font-size:14px;margin-left:8px}.schedule-calendar-config{display:flex;align-items:center;padding:0 15px;border-left:1px solid var(--line);color:#7f8b98;font:8px Consolas,monospace;white-space:nowrap}
     .schedule-calendar-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:18px 0 9px}.schedule-calendar-head span{color:#697583;font-size:8px;font-weight:900;letter-spacing:.14em}.schedule-calendar-head strong{display:block;color:#e7edf4;font-size:13px;margin-top:4px}.schedule-calendar-head .schedule-calendar-hint{text-align:right;font:8px Consolas,monospace;color:#596675}
     .schedule-calendar-weeks{display:grid;gap:12px}.schedule-calendar-week{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#0b1016,#090d12);box-shadow:var(--shadow);overflow:hidden}.schedule-calendar-week summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px}.schedule-calendar-week summary::-webkit-details-marker{display:none}.schedule-calendar-week summary:hover{background:rgba(255,255,255,.02)}.schedule-calendar-week[open] summary{border-bottom:1px solid var(--line)}
-    .schedule-calendar-week-title{display:grid;gap:3px;min-width:0}.schedule-calendar-week-title span{color:#697583;font-size:8px;font-weight:900;letter-spacing:.14em}.schedule-calendar-week-title strong{display:block;color:#edf2f7;font-size:13px}.schedule-calendar-week-title em{font-style:normal;color:#92a0ae;font-size:9px}.schedule-calendar-week-toggle{display:inline-flex;align-items:center;gap:9px;color:#9ba8b5;font:8px Consolas,monospace;text-transform:uppercase;letter-spacing:.08em}.schedule-calendar-week-toggle::before{content:"▸";font-size:11px;line-height:1;transition:transform .15s ease}.schedule-calendar-week[open] .schedule-calendar-week-toggle::before{transform:rotate(90deg)}
+    .schedule-calendar-week-title{display:grid;gap:3px;min-width:0}.schedule-calendar-week-title span{color:#697583;font-size:8px;font-weight:900;letter-spacing:.14em}.schedule-calendar-week-title strong{display:block;color:#edf2f7;font-size:13px}.schedule-calendar-week-title em{font-style:normal;color:#92a0ae;font-size:9px}.schedule-calendar-week-toggle{display:inline-flex;align-items:center;gap:9px;color:#9ba8b5;font:8px Consolas,monospace;text-transform:uppercase;letter-spacing:.08em}.schedule-calendar-week-toggle::before{content:"â–¸";font-size:11px;line-height:1;transition:transform .15s ease}.schedule-calendar-week[open] .schedule-calendar-week-toggle::before{transform:rotate(90deg)}
     .schedule-calendar-week-body{padding:12px 14px 14px}.schedule-calendar-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-bottom:7px}.schedule-calendar-weekday{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#0b0f14;text-align:center;color:#aab3bd;font-size:9px;font-weight:900;letter-spacing:.08em}.schedule-calendar-weekday:first-child{color:#f1f4f8}.schedule-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
     .schedule-calendar-card{position:relative;min-height:166px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0d1116;isolation:isolate;box-shadow:0 5px 18px rgba(0,0,0,.13);transition:transform .14s,border-color .14s,box-shadow .14s}.schedule-calendar-card:hover{transform:translateY(-1px);border-color:#394553}.schedule-calendar-card.has-art{background-size:cover;background-position:center}.schedule-calendar-card.has-art::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,12,.08) 5%,rgba(5,8,12,.18) 37%,rgba(5,8,12,.90) 78%,rgba(5,8,12,.98) 100%);z-index:0}.schedule-calendar-card.off{background:radial-gradient(circle at 50% 35%,rgba(48,58,70,.10),transparent 38%),#090c10}.schedule-calendar-card.today{border-color:rgba(73,215,154,.76);box-shadow:0 0 0 1px rgba(73,215,154,.11),0 8px 24px rgba(0,0,0,.20)}.schedule-calendar-card.live-now{border-color:rgba(73,215,154,.95);box-shadow:0 0 18px rgba(73,215,154,.12),0 8px 24px rgba(0,0,0,.22)}.schedule-calendar-card.near{border-top-color:rgba(242,140,24,.48)}
     .schedule-calendar-card-inner{position:relative;z-index:1;height:100%;min-height:166px;padding:10px 11px;display:flex;flex-direction:column}.schedule-calendar-card-top{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}.schedule-calendar-day{font-size:12px;font-weight:900;letter-spacing:.05em;color:#f0f4f8;text-shadow:0 1px 5px #000}.schedule-calendar-date{font:8px Consolas,monospace;color:#c0c8d1;text-shadow:0 1px 4px #000}.schedule-calendar-card-bottom{margin-top:auto;display:grid;gap:4px}.schedule-calendar-category{font-size:16px;font-weight:850;color:#fff;text-shadow:0 1px 5px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-calendar-time{font:11px Consolas,monospace;font-weight:850;color:var(--accent)}.schedule-calendar-note{font-size:8px;line-height:1.28;color:#cbd3dd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-calendar-badge{display:inline-flex;width:max-content;max-width:100%;padding:3px 6px;border:1px solid rgba(242,140,24,.42);border-radius:999px;background:rgba(7,10,14,.76);color:var(--accent);font-size:7px;font-weight:900;letter-spacing:.07em}.schedule-calendar-badge.live{color:var(--green);border-color:rgba(73,215,154,.55)}.schedule-calendar-badge.weekend{color:#b9c3cf;border-color:#45515f}.schedule-calendar-off-center{margin:auto;display:grid;justify-items:center;gap:6px;text-align:center}.schedule-calendar-off-center strong{font-size:23px;color:#98a3b0;letter-spacing:.03em}.schedule-calendar-off-center span{font-size:9px;color:#687584}
@@ -1028,9 +1028,9 @@ function yuraScheduleWeekHtml(weekDays, now, weekIndex) {
   const open = weekIndex === 0 ? " open" : "";
   const enabledCount = weekDays.filter(day => day.enabled).length;
   const offCount = weekDays.length - enabledCount;
-  const subtitle = weekIndex === 0 ? "Najbliższy tydzień widoczny od razu" : "Kliknij, aby rozwinąć tydzień";
+  const subtitle = weekIndex === 0 ? "NajbliĹĽszy tydzieĹ„ widoczny od razu" : "Kliknij, aby rozwinÄ…Ä‡ tydzieĹ„";
   const weekdayHeaders = weekDays.map(day => `<div class="schedule-calendar-weekday">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</div>`).join("");
-  return `<details class="schedule-calendar-week"${open}><summary><div class="schedule-calendar-week-title"><span>TYDZIEŃ ${weekIndex + 1} //</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} — ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${enabledCount} streamów • ${offCount} OFF • ${subtitle}</em></div><div class="schedule-calendar-week-toggle">${weekIndex === 0 ? "otwarty domyślnie" : "rozwiń / zwiń"}</div></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-weekdays">${weekdayHeaders}</div><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleCardHtml(day, now)).join("")}</div></div></details>`;
+  return `<details class="schedule-calendar-week"${open}><summary><div class="schedule-calendar-week-title"><span>TYDZIEĹ ${weekIndex + 1} //</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} â€” ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${enabledCount} streamĂłw â€˘ ${offCount} OFF â€˘ ${subtitle}</em></div><div class="schedule-calendar-week-toggle">${weekIndex === 0 ? "otwarty domyĹ›lnie" : "rozwiĹ„ / zwiĹ„"}</div></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-weekdays">${weekdayHeaders}</div><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleCardHtml(day, now)).join("")}</div></div></details>`;
 }
 
 function renderYuraLiveSchedule() {
@@ -1040,21 +1040,21 @@ function renderYuraLiveSchedule() {
   const now = yuraScheduleWarsawNowParts();
   const days = yuraScheduleBuildDays(now);
   const next = days.find(day => day.enabled && (day.offset > 0 || now.hour * 60 + now.minute < day.end));
-  const nextLabel = next ? `${next.offset === 0 ? "DZIŚ" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} • ${next.label} • ${next.category}` : "—";
+  const nextLabel = next ? `${next.offset === 0 ? "DZIĹš" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} â€˘ ${next.label} â€˘ ${next.category}` : "â€”";
   const updated = String(yuraScheduleConfig.updatedAt || "").trim();
   let updatedLabel = "AUTO CONFIG";
   if (updated) {
     const stamp = new Date(updated);
-    if (!Number.isNaN(stamp.getTime())) updatedLabel = `CONFIG • ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
+    if (!Number.isNaN(stamp.getTime())) updatedLabel = `CONFIG â€˘ ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
   }
   const weeks = Array.from({ length: 4 }, (_, index) => days.slice(index * 7, index * 7 + 7));
 
   host.innerHTML = `
-    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>Najbliższe 28 dni w układzie tygodniowym. Pierwszy tydzień jest otwarty, kolejne rozwijasz z góry w dół.</p></div><div class="status-chip">AUTO • 28 DNI</div></div>
-    <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>Najbliższy stream:<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
-    <div class="schedule-calendar-head"><div><span>NAJBLIŻSZE 28 DNI //</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} — ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">4 TYGODNIE • 1 OTWARTY + 3 ZWIJANE</div></div>
+    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 28 DAYS</div><h1>Harmonogram</h1><p>NajbliĹĽsze 28 dni w ukĹ‚adzie tygodniowym. Pierwszy tydzieĹ„ jest otwarty, kolejne rozwijasz z gĂłry w dĂłĹ‚.</p></div><div class="status-chip">28 DNI</div></div>
+    <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>NajbliĹĽszy stream:<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
+    <div class="schedule-calendar-head"><div><span>NAJBLIĹ»SZE 28 DNI //</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} â€” ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">4 TYGODNIE â€˘ 1 OTWARTY + 3 ZWIJANE</div></div>
     <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleWeekHtml(weekDays, now, index)).join("")}</div>
-    <div class="schedule-calendar-range">Pierwszy tydzień jest <strong>zawsze otwarty</strong>. Dni OFF nie używają artu.</div>`;
+    <div class="schedule-calendar-range">Pierwszy tydzieĹ„ jest <strong>zawsze otwarty</strong>. Dni OFF nie uĹĽywajÄ… artu.</div>`;
   yuraScheduleApplyArts(host);
 }
 
