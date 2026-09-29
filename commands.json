@@ -197,11 +197,56 @@
     "source": "YURA"
   },
   {
-    "command": "!alert",
+    "command": "!alertpause",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!alert \u003Cpause|resume|mute|unmute|skip|next\u003E",
-    "description": "Steruje lokaln\u0105 kolejk\u0105 alert\u00F3w YURY / Streamer.bot.",
+    "usage": "!alertpause",
+    "description": "Wstrzymuje kolejk\u0119 alert\u00F3w YURY / Streamer.bot.",
+    "category": "MODERATOR",
+    "source": "YURA"
+  },
+  {
+    "command": "!alertresume",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alertresume",
+    "description": "Wznawia kolejk\u0119 alert\u00F3w YURY / Streamer.bot.",
+    "category": "MODERATOR",
+    "source": "YURA"
+  },
+  {
+    "command": "!alertmute",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alertmute",
+    "description": "Wycisza kolejk\u0119 alert\u00F3w YURY / Streamer.bot.",
+    "category": "MODERATOR",
+    "source": "YURA"
+  },
+  {
+    "command": "!alertunmute",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alertunmute",
+    "description": "Przywraca d\u017Awi\u0119k alert\u00F3w YURY / Streamer.bot.",
+    "category": "MODERATOR",
+    "source": "YURA"
+  },
+  {
+    "command": "!alertskip",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alertskip",
+    "description": "Pomija aktualny / nast\u0119pny alert.",
+    "category": "MODERATOR",
+    "source": "YURA"
+  },
+  {
+    "command": "!alertnext",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alertnext",
+    "description": "Odtwarza nast\u0119pny oczekuj\u0105cy alert.",
     "category": "MODERATOR",
     "source": "YURA"
   },
