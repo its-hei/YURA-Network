@@ -774,7 +774,7 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V73
+// YURA_LIVE_SCHEDULE_V74
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -973,10 +973,10 @@ function yuraScheduleBuildDays(now) {
 
 function yuraScheduleEnsureStyles(layout) {
   const selected = layout === "CLASSIC" ? "CLASSIC" : "MODERN";
-  let style = document.getElementById("yura-live-schedule-styles-v73");
+  let style = document.getElementById("yura-live-schedule-styles-v74");
   if (!style) {
     style = document.createElement("style");
-    style.id = "yura-live-schedule-styles-v73";
+    style.id = "yura-live-schedule-styles-v74";
     document.head.appendChild(style);
   }
   if (style.dataset.layout === selected) return;
@@ -1004,14 +1004,14 @@ function yuraScheduleEnsureStyles(layout) {
     .schedule-calendar-weeks{display:grid;gap:12px}.schedule-calendar-week{border:1px solid rgba(69,101,133,.24);border-radius:14px;background:linear-gradient(180deg,rgba(10,15,21,.99),rgba(7,11,16,.995));box-shadow:0 12px 30px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.018);overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease}.schedule-calendar-week:hover{border-color:rgba(74,135,195,.38)}.schedule-calendar-week.featured{border-color:rgba(66,137,205,.38);box-shadow:0 16px 42px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.024)}
     .schedule-calendar-week summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px}.schedule-calendar-week summary::-webkit-details-marker{display:none}.schedule-calendar-week summary:hover{background:rgba(61,148,239,.025)}.schedule-calendar-week[open] summary{border-bottom:1px solid rgba(76,106,136,.20)}
     .schedule-calendar-week-title{display:grid;gap:3px;min-width:0}.schedule-calendar-week-title span{color:#6e86a0;font-size:8px;font-weight:900;letter-spacing:.16em}.schedule-calendar-week-title strong{display:block;color:#f0f5fb;font-size:13px}.schedule-calendar-week-title em{font-style:normal;color:#8597a8;font-size:9px}.schedule-calendar-week-toggle{display:inline-flex;align-items:center;gap:9px;color:#7ea8d1;font:8px Consolas,monospace;text-transform:uppercase;letter-spacing:.09em}.schedule-calendar-week-toggle::before{content:"\\25B8";font-size:11px;line-height:1;transition:transform .15s ease}.schedule-calendar-week[open] .schedule-calendar-week-toggle::before{transform:rotate(90deg)}
-    .schedule-calendar-week-body{padding:14px 16px 16px}.schedule-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
-    .schedule-calendar-card{--cat:#4f9cff;position:relative;min-width:0;border:1px solid rgba(69,91,116,.40);border-radius:12px;background:linear-gradient(180deg,#0e141c,#090e14);padding:8px;display:grid;grid-template-rows:auto 92px minmax(92px,auto);gap:8px;box-shadow:0 8px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.022);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;overflow:hidden}.schedule-calendar-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,rgba(57,151,255,.85),rgba(57,151,255,.10) 42%,rgba(242,140,24,.12) 58%,rgba(242,140,24,.9));opacity:.35}.schedule-calendar-card:hover{transform:translateY(-2px);border-color:rgba(79,151,222,.58);box-shadow:0 13px 30px rgba(0,0,0,.27),0 0 18px rgba(52,145,237,.05)}.schedule-calendar-card.near{border-top-color:rgba(242,140,24,.55)}
-    .schedule-calendar-card.today{border-color:rgba(75,163,255,.92);box-shadow:0 0 0 1px rgba(75,163,255,.12),-8px 0 24px rgba(54,148,255,.10),8px 0 24px rgba(242,140,24,.09),0 13px 30px rgba(0,0,0,.25)}.schedule-calendar-card.today::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#3b9cff 0 48%,#f28c18 52% 100%);z-index:3}.schedule-calendar-card.today::after{opacity:.9}.schedule-calendar-card.live-now{border-color:#f28c18;box-shadow:0 0 0 1px rgba(242,140,24,.16),0 0 26px rgba(242,140,24,.12),0 0 18px rgba(57,151,255,.08),0 13px 30px rgba(0,0,0,.27)}.schedule-calendar-card.off{grid-template-rows:auto 1fr;background:radial-gradient(circle at 50% 45%,rgba(64,90,117,.08),transparent 38%),linear-gradient(180deg,#0b1118,#080c11);border-color:rgba(58,76,96,.34)}
+    .schedule-calendar-week-body{padding:16px 18px 18px}.schedule-calendar-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+    .schedule-calendar-card{--cat:#4f9cff;position:relative;min-width:0;border:1px solid rgba(242,140,24,.36);border-radius:13px;background:linear-gradient(180deg,#0e141c,#090e14);padding:10px;display:grid;grid-template-rows:auto 118px minmax(98px,auto);gap:9px;box-shadow:0 10px 26px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.024);transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;overflow:hidden}.schedule-calendar-card::before{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:13px;background:linear-gradient(#f28c18,#f28c18) left top/28px 2px no-repeat,linear-gradient(#f28c18,#f28c18) right top/28px 2px no-repeat,linear-gradient(#f28c18,#f28c18) left bottom/28px 2px no-repeat,linear-gradient(#f28c18,#f28c18) right bottom/28px 2px no-repeat,linear-gradient(#f28c18,#f28c18) left top/2px 22px no-repeat,linear-gradient(#f28c18,#f28c18) right top/2px 22px no-repeat,linear-gradient(#f28c18,#f28c18) left bottom/2px 22px no-repeat,linear-gradient(#f28c18,#f28c18) right bottom/2px 22px no-repeat;opacity:.70}.schedule-calendar-card::after{content:"";position:absolute;left:28px;right:28px;bottom:0;height:2px;background:linear-gradient(90deg,rgba(242,140,24,.12),rgba(242,140,24,.78) 50%,rgba(242,140,24,.12));opacity:.55}.schedule-calendar-card:hover{transform:translateY(-2px);border-color:rgba(242,140,24,.66);box-shadow:0 14px 34px rgba(0,0,0,.28),0 0 20px rgba(242,140,24,.07)}.schedule-calendar-card.near{border-top-color:rgba(242,140,24,.58)}
+    .schedule-calendar-card.today{border-color:rgba(62,157,255,.82);box-shadow:0 0 0 1px rgba(62,157,255,.11),-8px 0 24px rgba(54,148,255,.10),8px 0 24px rgba(242,140,24,.08),0 14px 32px rgba(0,0,0,.27)}.schedule-calendar-card.today::after{background:linear-gradient(90deg,rgba(55,151,255,.28),#3b9cff 46%,#f28c18 54%,rgba(242,140,24,.28));opacity:.95}.schedule-calendar-card.live-now{border:2px solid #42a6ff;box-shadow:0 0 0 1px rgba(66,166,255,.20),0 0 30px rgba(57,151,255,.20),0 0 18px rgba(242,140,24,.10),0 15px 34px rgba(0,0,0,.30)}.schedule-calendar-card.live-now::before{opacity:1}.schedule-calendar-live-frame{position:absolute;z-index:6;top:0;left:50%;transform:translateX(-50%);padding:3px 12px 4px;border:1px solid #42a6ff;border-top:0;border-radius:0 0 8px 8px;background:linear-gradient(180deg,#12365a,#0c2238);color:#91caff;font:8px Consolas,monospace;font-weight:950;letter-spacing:.14em;box-shadow:0 5px 16px rgba(57,151,255,.20)}.schedule-calendar-card.off{grid-template-rows:auto 1fr;background:radial-gradient(circle at 50% 45%,rgba(64,90,117,.08),transparent 38%),linear-gradient(180deg,#0b1118,#080c11);border-color:rgba(242,140,24,.22)}
     .schedule-calendar-card-top{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;min-height:32px}.schedule-calendar-day{font-size:12px;font-weight:900;letter-spacing:.06em;color:#f4f7fb}.schedule-calendar-date{font:8px Consolas,monospace;color:#8797a8}.schedule-calendar-art{position:relative;border:1px solid rgba(75,103,132,.34);border-radius:8px;background:linear-gradient(135deg,#141d27,#0b1118);background-size:cover;background-position:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.012)}.schedule-calendar-art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,7,10,.01),rgba(4,7,10,.08) 55%,rgba(4,7,10,.36));pointer-events:none}
     .schedule-calendar-card-bottom{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;min-width:0;text-align:center}.schedule-calendar-time{display:grid;justify-items:center;gap:0;font-family:Consolas,monospace;color:#eaf2fb;line-height:1}.schedule-calendar-time strong{font-size:15px;font-weight:950;color:#fff}.schedule-calendar-time span{margin-top:4px;font-size:10px;font-weight:800;color:#91a0af}.schedule-calendar-category{display:inline-flex;max-width:100%;padding:5px 10px;border:1px solid color-mix(in srgb,var(--cat) 70%,#fff 0%);border-radius:7px;background:linear-gradient(180deg,color-mix(in srgb,var(--cat) 92%,#fff 2%),color-mix(in srgb,var(--cat) 78%,#05080c 22%));color:#06101a;font-size:8px;font-weight:950;line-height:1;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 5px 14px color-mix(in srgb,var(--cat) 18%,transparent)}.schedule-calendar-note{font-size:8px;line-height:1.25;color:#8495a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.schedule-calendar-badge{display:inline-flex;width:max-content;max-width:100%;padding:3px 7px;border:1px solid rgba(242,140,24,.52);border-radius:999px;background:rgba(30,17,5,.72);color:#ffab49;font-size:7px;font-weight:950;letter-spacing:.08em}.schedule-calendar-badge.live{color:#76baff;border-color:rgba(62,157,255,.62);background:rgba(9,34,61,.72)}.schedule-calendar-badge.weekend{color:#9eacba;border-color:#46586c;background:rgba(13,18,25,.78)}
     .schedule-calendar-off-center{margin:auto;display:grid;justify-items:center;gap:5px;text-align:center}.schedule-calendar-off-center::before{content:"\\263E";font-size:28px;color:#617488;line-height:1}.schedule-calendar-off-center strong{font-size:22px;color:#96a4b2;letter-spacing:.03em}.schedule-calendar-off-center span{font-size:9px;color:#627182}.schedule-live-now{color:#f6a33c!important}
     .schedule-calendar-range{color:#60758a;font-size:8px;margin-top:10px;text-align:right}.schedule-calendar-range strong{color:#91a8be}
-    @media(max-width:1120px){.schedule-calendar-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    @media(max-width:1120px){.schedule-calendar-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:900px){.schedule-showcase{padding:16px;border-radius:15px}.schedule-calendar-summary{grid-template-columns:1fr}.schedule-calendar-config{border-left:0;border-top:1px solid rgba(75,103,132,.24);padding:9px 15px}.schedule-calendar-head{align-items:flex-start;flex-direction:column}.schedule-calendar-head .schedule-calendar-hint{text-align:left}.schedule-calendar-week summary{align-items:flex-start}.schedule-calendar-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:620px){.schedule-showcase{padding:12px}.schedule-calendar-grid{display:grid;grid-template-columns:1fr;gap:8px}.schedule-calendar-card{grid-template-columns:62px 76px minmax(0,1fr);grid-template-rows:auto;align-items:center;min-height:86px;padding:8px;gap:9px}.schedule-calendar-card-top{display:grid;justify-items:start;align-content:center;gap:2px;min-height:0}.schedule-calendar-art{height:62px}.schedule-calendar-card-bottom{align-items:flex-start;justify-content:center;text-align:left;gap:4px}.schedule-calendar-time{justify-items:start}.schedule-calendar-time strong{font-size:13px}.schedule-calendar-card.off{grid-template-columns:62px minmax(0,1fr);grid-template-rows:auto;min-height:80px}.schedule-calendar-card.off .schedule-calendar-off-center{grid-auto-flow:column;align-items:center;justify-content:start;margin:0;gap:8px}.schedule-calendar-card.off .schedule-calendar-off-center::before{font-size:20px}.schedule-calendar-card.off .schedule-calendar-off-center strong{font-size:16px}.schedule-calendar-week-body{padding:10px}.schedule-calendar-category{font-size:8px}.schedule-calendar-week-title em{display:none}}
   `;
@@ -1048,9 +1048,9 @@ function yuraScheduleClassicCardHtml(day, now) {
   // leak onto the public schedule. Keep only viewer-facing state badges.
   let status = weekend ? "WEEKEND" : "";
   let badgeClass = weekend ? " weekend" : "";
-  if (day.overridden) status = "OVERRIDE";
+  if (day.overridden) status = "BONUS";
   if (day.special) status = "SPECIAL";
-  if (liveNow) { status = "LIVE NOW"; badgeClass = " live"; }
+  if (liveNow) { status = "LIVE"; badgeClass = " live"; }
   const badge = status ? `<span class="schedule-calendar-badge${badgeClass}">${yuraScheduleEscape(status)}</span>` : "";
   return `<article class="${classes.join(" ")}" data-schedule-art="${artAttr}"><div class="schedule-calendar-card-inner"><div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-card-bottom">${badge}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong><span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}">${day.label}</span>${note ? `<span class="schedule-calendar-note">${note}</span>` : ""}</div></div></article>`;
 }
@@ -1133,16 +1133,16 @@ function yuraScheduleModernCardHtml(day, now) {
   let status = weekend ? "WEEKEND" : "";
   let badgeClass = weekend ? " weekend" : "";
   if (isToday) { status = "DZISIAJ"; badgeClass = " live"; }
-  if (day.overridden) status = "OVERRIDE";
+  if (day.overridden) status = "BONUS";
   if (day.special) status = "SPECIAL";
-  if (liveNow) { status = "LIVE NOW"; badgeClass = " live"; }
+  if (liveNow) { status = "LIVE"; badgeClass = " live"; }
   const badge = status ? `<span class="schedule-calendar-badge${badgeClass}">${yuraScheduleEscape(status)}</span>` : "";
   const color = yuraScheduleCategoryColor(day.category);
   const timeParts = String(day.label || "").split(/[\u2013\u2014-]/).map(x => x.trim()).filter(Boolean);
   const timeHtml = timeParts.length >= 2
     ? `<span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}"><strong>${yuraScheduleEscape(timeParts[0])}</strong><span>â€” ${yuraScheduleEscape(timeParts[1])}</span></span>`
     : `<span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}"><strong>${yuraScheduleEscape(day.label)}</strong></span>`;
-  return `<article class="${classes.join(" ")}" style="--cat:${color}"><div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-art" data-schedule-art="${artAttr}"></div><div class="schedule-calendar-card-bottom">${timeHtml}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong>${badge}${note ? `<span class="schedule-calendar-note">${note}</span>` : ""}</div></article>`;
+  return `<article class="${classes.join(" ")}" style="--cat:${color}">${liveNow ? `<span class="schedule-calendar-live-frame">LIVE</span>` : ""}<div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-art" data-schedule-art="${artAttr}"></div><div class="schedule-calendar-card-bottom">${timeHtml}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong>${badge}${note ? `<span class="schedule-calendar-note">${note}</span>` : ""}</div></article>`;
 }
 
 function yuraScheduleModernWeekHtml(weekDays, now, weekIndex) {
@@ -1152,8 +1152,8 @@ function yuraScheduleModernWeekHtml(weekDays, now, weekIndex) {
   const featured = weekIndex === 0 ? " featured" : "";
   const enabledCount = weekDays.filter(day => day.enabled).length;
   const offCount = weekDays.length - enabledCount;
-  const subtitle = weekIndex === 0 ? "Najbli\u017Cszy tydzie\u0144 widoczny od razu" : "Kliknij, aby rozwin\u0105\u0107 tydzie\u0144";
-  return `<details class="schedule-calendar-week${featured}"${open}><summary><div class="schedule-calendar-week-title"><span>TYDZIE\u0143 ${weekIndex + 1} //</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} \u2014 ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${enabledCount} stream\u00F3w \u2022 ${offCount} OFF \u2022 ${subtitle}</em></div><div class="schedule-calendar-week-toggle">${weekIndex === 0 ? "otwarty domy\u015Blnie" : "rozwi\u0144 / zwi\u0144"}</div></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleModernCardHtml(day, now)).join("")}</div></div></details>`;
+  const subtitle = weekIndex === 0 ? "Najbli\u017Csze 5 dni widoczne od razu" : "Kliknij, aby rozwin\u0105\u0107 kolejne dni";
+  return `<details class="schedule-calendar-week${featured}"${open}><summary><div class="schedule-calendar-week-title"><span>BLOK ${weekIndex + 1} // ${weekDays.length} DNI</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} \u2014 ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${enabledCount} stream\u00F3w \u2022 ${offCount} OFF \u2022 ${subtitle}</em></div><div class="schedule-calendar-week-toggle">${weekIndex === 0 ? "otwarty domy\u015Blnie" : "rozwi\u0144 / zwi\u0144"}</div></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleModernCardHtml(day, now)).join("")}</div></div></details>`;
 }
 
 function renderYuraLiveScheduleModern() {
@@ -1170,15 +1170,15 @@ function renderYuraLiveScheduleModern() {
     const stamp = new Date(updated);
     if (!Number.isNaN(stamp.getTime())) updatedLabel = `CONFIG \u2022 ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
   }
-  const weeks = Array.from({ length: 4 }, (_, index) => days.slice(index * 7, index * 7 + 7));
+  const weeks = Array.from({ length: Math.ceil(days.length / 5) }, (_, index) => days.slice(index * 5, index * 5 + 5));
 
   host.innerHTML = `
     <section class="schedule-showcase">
-      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK // LIVE SCHEDULE</div><h1>Harmonogram</h1><p>Najbli\u017Csze 28 dni w nowym, czytelniejszym uk\u0142adzie. Pierwszy tydzie\u0144 jest pokazany od razu, kolejne mo\u017Cesz rozwin\u0105\u0107.</p></div><div class="status-chip">LIVE SCHEDULE</div></div>
+      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK // LIVE SCHEDULE</div><h1>Harmonogram</h1><p>Najbli\u017Csze 28 dni w wi\u0119kszych kartach po 5 dni na panel. Pierwszy blok jest pokazany od razu, kolejne mo\u017Cesz rozwin\u0105\u0107.</p></div><div class="status-chip">LIVE SCHEDULE</div></div>
       <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>NAJBLI\u017BSZY STREAM<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
       <div class="schedule-calendar-head"><div><span>STREAM CALENDAR // 28 DAYS</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} \u2014 ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">AUTO-UPDATE \u2022 EUROPE/WARSAW</div></div>
       <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleModernWeekHtml(weekDays, now, index)).join("")}</div>
-      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>Dni OFF pozostaj\u0105 bez grafiki.</strong></div>
+      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>MODERN pokazuje 5 wi\u0119kszych kart na panel; dni OFF pozostaj\u0105 bez grafiki.</strong></div>
     </section>`;
   yuraScheduleApplyModernArts(host);
 }
