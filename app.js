@@ -774,7 +774,9 @@ fetch("./changelog.json?v=24", { cache: "no-store" })
     }
   });
 
-// YURA_LIVE_SCHEDULE_V74
+// YURA_PUBLIC_BOT_FILTER_V69
+
+// YURA_LIVE_SCHEDULE_V75
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const YURA_SCHEDULE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -973,10 +975,10 @@ function yuraScheduleBuildDays(now) {
 
 function yuraScheduleEnsureStyles(layout) {
   const selected = layout === "CLASSIC" ? "CLASSIC" : "MODERN";
-  let style = document.getElementById("yura-live-schedule-styles-v74");
+  let style = document.getElementById("yura-live-schedule-styles-v75");
   if (!style) {
     style = document.createElement("style");
-    style.id = "yura-live-schedule-styles-v74";
+    style.id = "yura-live-schedule-styles-v75";
     document.head.appendChild(style);
   }
   if (style.dataset.layout === selected) return;
@@ -1203,4 +1205,3 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_PUBLIC_BOT_FILTER_V69
