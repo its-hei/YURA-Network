@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-09-30T16:04:37.5839081\u002B02:00",
+  "updatedAt": "2026-09-30T16:06:24.9201693\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -10,7 +10,7 @@
     "POPO"
   ],
   "defaultCategory": "FFXIV",
-  "publicLayout": "CLASSIC",
+  "publicLayout": "MODERN",
   "weeklyRules": {
     "0": {
       "enabled": true,
