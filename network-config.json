@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-09-30T16:26:23.6335257\u002B02:00",
+  "updatedAt": "2026-09-30T16:28:12.0090756\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -51,6 +51,15 @@
   "overrides": {
     "2026-09-29": {
       "enabled": false,
+      "start": "",
+      "end": "",
+      "category": "",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-01": {
+      "enabled": true,
       "start": "",
       "end": "",
       "category": "",
