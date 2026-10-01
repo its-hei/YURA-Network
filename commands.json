@@ -278,10 +278,10 @@
     "source": "YURA"
   },
   {
-    "command": "!strona",
+    "command": "!web",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!strona",
+    "usage": "!web",
     "description": "Zapraszam na moj\u0105 stron\u0119 internetow\u0105: https://its-hei.github.io/YURA-Network/",
     "category": "OG\u00D3LNE",
     "source": "YURA"
