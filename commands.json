@@ -280,7 +280,8 @@
   {
     "command": "!web",
     "aliases": [
-      "!webpage"
+      "!webpage",
+      "!strona"
     ],
     "permission": "Everyone",
     "usage": "!web",
