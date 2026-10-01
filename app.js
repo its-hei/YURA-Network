@@ -924,6 +924,43 @@ if (!yuraInstallLevelsNavLink()) {
   window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
 }
 
+// YURA_LEVELS_NAV_V77
+function yuraInstallLevelsNavLink() {
+  if (document.querySelector("[data-yura-levels-nav='1']")) return true;
+  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
+  const ranking = candidates.find(el => {
+    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
+    return /^Ranking\b/i.test(text) || /\bRanking\s+TOP\s*10\b/i.test(text);
+  });
+  if (!ranking) return false;
+
+  const clone = ranking.cloneNode(true);
+  clone.setAttribute("data-yura-levels-nav","1");
+  clone.removeAttribute("data-view");
+  clone.removeAttribute("aria-current");
+  clone.classList.remove("active","is-active","selected");
+  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=337");
+  clone.innerHTML = clone.innerHTML
+    .replace(/Ranking/g,"Levels")
+    .replace(/TOP\s*10/gi,"EXP");
+
+  clone.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = "levels.html?v=337";
+  }, true);
+
+  ranking.insertAdjacentElement("afterend", clone);
+  return true;
+}
+if (!yuraInstallLevelsNavLink()) {
+  const yuraLevelsNavObserver = new MutationObserver(() => {
+    if (yuraInstallLevelsNavLink()) yuraLevelsNavObserver.disconnect();
+  });
+  yuraLevelsNavObserver.observe(document.documentElement,{childList:true,subtree:true});
+  window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
+}
+
 // YURA_LIVE_SCHEDULE_V78
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1389,7 +1426,7 @@ function yuraInstallLevelsNavLink() {
   clone.removeAttribute("data-view");
   clone.removeAttribute("aria-current");
   clone.classList.remove("active","is-active","selected");
-  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=337");
+  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=339");
   clone.innerHTML = clone.innerHTML
     .replace(/Ranking/g,"Levels")
     .replace(/TOP\s*10/gi,"EXP");
@@ -1397,7 +1434,7 @@ function yuraInstallLevelsNavLink() {
   clone.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = "levels.html?v=337";
+    window.location.href = "levels.html?v=339";
   }, true);
 
   ranking.insertAdjacentElement("afterend", clone);
