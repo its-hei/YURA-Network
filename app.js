@@ -961,6 +961,43 @@ if (!yuraInstallLevelsNavLink()) {
   window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
 }
 
+// YURA_LEVELS_NAV_V77
+function yuraInstallLevelsNavLink() {
+  if (document.querySelector("[data-yura-levels-nav='1']")) return true;
+  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
+  const ranking = candidates.find(el => {
+    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
+    return /^Ranking\b/i.test(text) || /\bRanking\s+TOP\s*10\b/i.test(text);
+  });
+  if (!ranking) return false;
+
+  const clone = ranking.cloneNode(true);
+  clone.setAttribute("data-yura-levels-nav","1");
+  clone.removeAttribute("data-view");
+  clone.removeAttribute("aria-current");
+  clone.classList.remove("active","is-active","selected");
+  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=339");
+  clone.innerHTML = clone.innerHTML
+    .replace(/Ranking/g,"Levels")
+    .replace(/TOP\s*10/gi,"EXP");
+
+  clone.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = "levels.html?v=339";
+  }, true);
+
+  ranking.insertAdjacentElement("afterend", clone);
+  return true;
+}
+if (!yuraInstallLevelsNavLink()) {
+  const yuraLevelsNavObserver = new MutationObserver(() => {
+    if (yuraInstallLevelsNavLink()) yuraLevelsNavObserver.disconnect();
+  });
+  yuraLevelsNavObserver.observe(document.documentElement,{childList:true,subtree:true});
+  window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
+}
+
 // YURA_LIVE_SCHEDULE_V78
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1205,19 +1242,19 @@ function yuraScheduleEnsureStyles(layout) {
   `;
   if (selected === "SLIM") {
     style.textContent += `
-      .schedule-calendar-week-body{padding:17px 24px 20px}
-      .schedule-calendar-grid{grid-template-columns:repeat(5,minmax(136px,160px));justify-content:space-between;gap:14px}
-      .schedule-calendar-card{min-height:326px;padding:9px;grid-template-rows:auto 156px minmax(108px,1fr);gap:9px;border-radius:14px}
-      .schedule-calendar-card.off{min-height:326px;grid-template-rows:auto 1fr}
-      .schedule-calendar-card-top{min-height:38px}
+      .schedule-calendar-week-body{padding:16px 22px 18px}
+      .schedule-calendar-grid{grid-template-columns:repeat(5,minmax(132px,154px));justify-content:space-between;gap:13px}
+      .schedule-calendar-card{min-height:310px;padding:8px;grid-template-rows:auto 170px minmax(72px,auto);gap:7px;border-radius:14px}
+      .schedule-calendar-card.off{min-height:310px;grid-template-rows:auto 1fr}
+      .schedule-calendar-card-top{min-height:36px}
       .schedule-calendar-day{font-size:13px}.schedule-calendar-date{font-size:8px}
       .schedule-calendar-art{border-radius:9px}
-      .schedule-calendar-card-bottom{gap:7px;justify-content:flex-start}
+      .schedule-calendar-card-bottom{gap:6px;justify-content:flex-start}
       .schedule-calendar-time strong{font-size:14px;gap:4px}
       .schedule-calendar-category{max-width:92%;padding:5px 8px}
-      .schedule-calendar-badge{margin-top:1px}
-      @media(max-width:1120px){.schedule-calendar-grid{grid-template-columns:repeat(3,minmax(138px,162px));justify-content:center;gap:16px}}
-      @media(max-width:900px){.schedule-calendar-grid{grid-template-columns:repeat(2,minmax(142px,166px));justify-content:center}}
+      .schedule-calendar-badge{margin-top:0}
+      @media(max-width:1120px){.schedule-calendar-grid{grid-template-columns:repeat(3,minmax(134px,156px));justify-content:center;gap:14px}}
+      @media(max-width:900px){.schedule-calendar-grid{grid-template-columns:repeat(2,minmax(138px,160px));justify-content:center}}
       @media(max-width:620px){.schedule-calendar-week-body{padding:10px}.schedule-calendar-grid{grid-template-columns:1fr;gap:8px}.schedule-calendar-card{grid-template-columns:62px 76px minmax(0,1fr);grid-template-rows:auto;align-items:center;min-height:86px;padding:8px;gap:9px}.schedule-calendar-card.off{grid-template-columns:62px minmax(0,1fr);grid-template-rows:auto;min-height:80px}.schedule-calendar-art{height:62px}.schedule-calendar-card-top{min-height:0}.schedule-calendar-card-bottom{gap:4px}.schedule-calendar-time strong{font-size:13px}}
     `;
   }
@@ -1426,7 +1463,7 @@ function yuraInstallLevelsNavLink() {
   clone.removeAttribute("data-view");
   clone.removeAttribute("aria-current");
   clone.classList.remove("active","is-active","selected");
-  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=339");
+  if (clone.tagName === "A") clone.setAttribute("href","levels.html?v=340");
   clone.innerHTML = clone.innerHTML
     .replace(/Ranking/g,"Levels")
     .replace(/TOP\s*10/gi,"EXP");
@@ -1434,7 +1471,7 @@ function yuraInstallLevelsNavLink() {
   clone.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = "levels.html?v=339";
+    window.location.href = "levels.html?v=340";
   }, true);
 
   ranking.insertAdjacentElement("afterend", clone);
