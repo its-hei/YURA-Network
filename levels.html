@@ -56,7 +56,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
     <nav class="nav">
       <a href="./">Komendy</a>
       <a href="./">Ranking <em>TOP 10</em></a>
-      <a href="levels.html?v=333" class="active">Levels <em>EXP</em></a>
+      <a href="levels.html?v=336" class="active">Levels <em>EXP</em></a>
       <a href="./">O mnie <em>PROFILE</em></a>
       <a href="./">Harmonogram <em>STREAM</em></a>
       <a href="./">Changelog</a>
@@ -173,21 +173,18 @@ function renderExpTable(){
   document.getElementById("expRows").innerHTML=html;
 }
 async function loadLevels(force=false){
-  if(document.hidden)return;
+  if(document.hidden && !force)return;
   const status=document.getElementById("status");
   try{
-    const rr=await fetch(`${CLOUD}/api/levels-revision`,{cache:"no-store"});
-    if(!rr.ok)throw new Error("revision "+rr.status);
-    const rv=await rr.json();
-    const nextRev=String(rv?.revision||"");
-    if(!force&&revision&&nextRev===revision){status.textContent="LIVE DATA";return}
-    const r=await fetch(`${CLOUD}/api/levels`,{cache:"no-store"});
+    // One fresh request is enough. The old revision endpoint queried the same
+    // level rows anyway and made LAST SYNC look stale when nobody gained EXP.
+    const r=await fetch(`${CLOUD}/api/levels?_=${Date.now()}`,{cache:"no-store"});
     if(!r.ok)throw new Error("levels "+r.status);
     const data=await r.json();
     allEntries=(Array.isArray(data?.entries)?data.entries:[]).map(normalizeEntry).sort((a,b)=>b.exp-a.exp||a.name.localeCompare(b.name));
-    revision=String(data?.revision||nextRev||"");
+    revision=String(data?.revision||"");
     localStorage.setItem(LAST_KEY,JSON.stringify(data));
-    document.getElementById("lastSync").textContent=stampLabel(data?.updatedAt||data?.generated_at_utc);
+    document.getElementById("lastSync").textContent=stampLabel(data?.generated_at_utc||data?.updatedAt||new Date().toISOString());
     status.textContent="LIVE DATA";
     renderRanking();
   }catch(err){
@@ -195,8 +192,8 @@ async function loadLevels(force=false){
       const cached=JSON.parse(localStorage.getItem(LAST_KEY)||"null");
       if(cached&&Array.isArray(cached.entries)){
         allEntries=cached.entries.map(normalizeEntry).sort((a,b)=>b.exp-a.exp||a.name.localeCompare(b.name));
-        document.getElementById("lastSync").textContent=stampLabel(cached?.updatedAt||cached?.generated_at_utc);
-        status.textContent="LAST SYNC";
+        document.getElementById("lastSync").textContent=stampLabel(cached?.generated_at_utc||cached?.updatedAt);
+        status.textContent="LAST GOOD DATA";
         renderRanking();
         return;
       }
@@ -220,7 +217,7 @@ document.getElementById("levelCalc").addEventListener("click",()=>{
   const lvl=Math.max(1,Math.trunc(Number(document.getElementById("levelInput").value)||1));
   document.getElementById("levelResult").textContent=`LVL ${lvl} wymaga ${nf.format(totalExp(lvl))} łącznego EXP`;
 });
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadLevels(false)});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadLevels(true)});
 renderExpTable();loadLevels(true);pollTimer=setInterval(()=>loadLevels(false),5*60*1000);
 </script>
 </body>
