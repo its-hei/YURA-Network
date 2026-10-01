@@ -1,13 +1,5 @@
 [
   {
-    "command": "!afk",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!afk",
-    "description": "Uruchamia funkcj\u0119 AFK na overlayu.",
-    "category": "OVERLAY"
-  },
-  {
     "command": "!nuke",
     "aliases": [],
     "permission": "Everyone",
@@ -24,48 +16,6 @@
     "usage": "!transfer @nick \u003Ckwota | procent% | all\u003E",
     "description": "Przekazuje w\u0142asne punkty innemu u\u017Cytkownikowi.",
     "category": "PUNKTY Y.U.R.A."
-  },
-  {
-    "command": "!skip",
-    "aliases": [
-      "!alert skip"
-    ],
-    "permission": "Moderator",
-    "usage": "!skip",
-    "description": "Natychmiast ukrywa aktualny alert dla widz\u00F3w i pomija jego d\u017Awi\u0119k na streamie.",
-    "category": "ALERTY"
-  },
-  {
-    "command": "!pause",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!pause",
-    "description": "Wstrzymuje kolejk\u0119 alert\u00F3w. Nowe alerty czekaj\u0105 do czasu wznowienia.",
-    "category": "ALERTY"
-  },
-  {
-    "command": "!unpause",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!unpause",
-    "description": "Wznawia kolejk\u0119 alert\u00F3w i uruchamia oczekuj\u0105ce alerty.",
-    "category": "ALERTY"
-  },
-  {
-    "command": "!mute",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!mute",
-    "description": "Wycisza d\u017Awi\u0119k alert\u00F3w na streamie, pozostawiaj\u0105c warstw\u0119 wizualn\u0105 aktywn\u0105.",
-    "category": "ALERTY"
-  },
-  {
-    "command": "!unmute",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!unmute",
-    "description": "Ponownie w\u0142\u0105cza d\u017Awi\u0119k alert\u00F3w na streamie.",
-    "category": "ALERTY"
   },
   {
     "command": "!donation",
@@ -164,7 +114,7 @@
     "command": "!raffle",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!raffle [pula] [sekundy]",
+    "usage": "!raffle [pula]",
     "description": "Uruchamia multi-raffle z nagrod\u0105 w YURA Points; widzowie do\u0142\u0105czaj\u0105 przez !join.",
     "category": "RAFFLE",
     "source": "YURA"
@@ -173,7 +123,7 @@
     "command": "!sraffle",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!sraffle [nagroda] [sekundy]",
+    "usage": "!sraffle [nagroda]",
     "description": "Uruchamia raffle z jednym zwyci\u0119zc\u0105 i nagrod\u0105 w YURA Points; widzowie do\u0142\u0105czaj\u0105 przez !join.",
     "category": "RAFFLE",
     "source": "YURA"
@@ -184,6 +134,24 @@
     "permission": "Moderator",
     "usage": "!cancelraffle",
     "description": "Anuluje aktywne raffle YURY.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!autoraffle",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!autoraffle [liczba zwyci\u0119zc\u00F3w]",
+    "description": "Losuje automatycznie spo\u015Br\u00F3d obecnych widz\u00F3w; domy\u015Blnie wybiera 3 osoby.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!join",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!join",
+    "description": "Do\u0142\u0105cza do aktualnie trwaj\u0105cego raffle YURY.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -204,7 +172,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!gamble \u003Ckwota|procent%|all\u003E",
-    "description": "Hazard punktami Y.U.R.A.; mo\u017Cesz poda\u0107 kwot\u0119, procent (np. 25%) albo all.",
+    "description": "Hazard punktami Y.U.R.A.; mo\u017Cesz poda\u0107 kwot\u0119, procent albo all.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -241,6 +209,100 @@
     "usage": "!remove @nick \u003Cliczba\u003E",
     "description": "Odbiera punkty wybranemu u\u017Cytkownikowi.",
     "category": "PUNKTY \u2014 ADMIN",
+    "source": "YURA"
+  },
+  {
+    "command": "!alert",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!alert \u003Cpause|resume|mute|unmute|skip|next\u003E",
+    "description": "Steruje globaln\u0105 kolejk\u0105 alert\u00F3w: pauza, wznowienie, wyciszenie, pomini\u0119cie i nast\u0119pny alert.",
+    "category": "ALERTY",
+    "source": "YURA"
+  },
+  {
+    "command": "!start",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!start",
+    "description": "Wznawia odtwarzanie muzyki.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!pause",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!pause",
+    "description": "Pauzuje aktualnie odtwarzany utw\u00F3r.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!stop",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!stop",
+    "description": "Zatrzymuje muzyk\u0119 i przewija utw\u00F3r do pocz\u0105tku.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!restart",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!restart",
+    "description": "Uruchamia aktualny utw\u00F3r od pocz\u0105tku.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!skip",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!skip",
+    "description": "Przechodzi do nast\u0119pnego utworu.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!volume up",
+    "aliases": [
+      "!vol up"
+    ],
+    "permission": "Moderator \u002B list",
+    "usage": "!volume up",
+    "description": "Zwi\u0119ksza g\u0142o\u015Bno\u015B\u0107 odtwarzacza o 5%.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!volume down",
+    "aliases": [
+      "!vol down"
+    ],
+    "permission": "Moderator \u002B list",
+    "usage": "!volume down",
+    "description": "Zmniejsza g\u0142o\u015Bno\u015B\u0107 odtwarzacza o 5%.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!sr on",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!sr on",
+    "description": "W\u0142\u0105cza przyjmowanie Song Request\u00F3w.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
+    "command": "!sr off",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!sr off",
+    "description": "Wy\u0142\u0105cza przyjmowanie Song Request\u00F3w.",
+    "category": "MUZYKA",
     "source": "YURA"
   },
   {
