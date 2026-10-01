@@ -1226,7 +1226,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_NATIVE_VIEW_V83
+// YURA_LEVELS_NATIVE_VIEW_V84
 const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
 const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
 let yuraLevelsHost = null;
@@ -1279,7 +1279,7 @@ function yuraLevelsProgress(exp) {
 
 function yuraLevelsStamp(raw) {
   const d = new Date(raw || "");
-  if (Number.isNaN(d.getTime())) return "â€”";
+  if (Number.isNaN(d.getTime())) return "\u2014";
   return d.toLocaleString("pl-PL", {
     day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"
   });
@@ -1290,7 +1290,7 @@ function yuraLevelsFindVisibleHeading() {
     const r = el.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) return false;
     const text = String(el.textContent || "").replace(/\s+/g," ").trim();
-    return /^(Komendy kanaĹ‚u|Ranking|O mnie|Harmonogram|Changelog)$/i.test(text);
+    return /^(Komendy kana\u0142u|Ranking|O mnie|Harmonogram|Changelog)$/i.test(text);
   }) || null;
 }
 
@@ -1346,7 +1346,7 @@ function yuraLevelsEnsureStyle() {
     .yura-levels-status{color:#72e3ad!important}
     .yura-levels-search{width:290px;border:1px solid #31455b;background:#080e14;color:white;border-radius:10px;padding:10px 12px;outline:none}
     .yura-levels-search:focus{border-color:#6d4917}
-    .yura-levels-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:14px}
+    .yura-levels-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:14px;min-height:185px}
     .yura-levels-card{min-height:185px;border:1px solid #223141;border-radius:15px;padding:20px;background:linear-gradient(135deg,rgba(242,140,24,.06),#0b1118 55%);position:relative;overflow:hidden}
     .yura-levels-card:first-child{border-color:#9a5e0d;background:linear-gradient(135deg,rgba(242,140,24,.13),#0c1219 60%)}
     .yura-levels-card:after{position:absolute;right:20px;top:12px;font:72px Georgia,serif;color:rgba(242,140,24,.13)}
@@ -1355,7 +1355,7 @@ function yuraLevelsEnsureStyle() {
     .yura-levels-name{font-size:27px;font-weight:850;margin-top:43px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .yura-levels-level{font:900 22px Consolas,monospace;margin-top:8px}
     .yura-levels-exp{font:9px Consolas,monospace;color:#6f8294;letter-spacing:.1em;margin-top:5px}
-    .yura-levels-table{border:1px solid #223141;border-radius:15px;overflow:hidden;background:#091017}
+    .yura-levels-table{border:1px solid #223141;border-radius:15px;overflow:hidden;background:#091017;min-height:340px}
     .yura-levels-head,.yura-levels-row{display:grid;grid-template-columns:90px minmax(180px,1.4fr) 150px 180px;align-items:center;gap:12px;padding:0 18px}
     .yura-levels-head{height:38px;border-bottom:1px solid #223141;font:9px Consolas,monospace;color:#65788a;letter-spacing:.12em}
     .yura-levels-row{min-height:61px;border-bottom:1px solid rgba(255,255,255,.045);font-size:14px}
@@ -1406,7 +1406,7 @@ function yuraLevelsMarkup() {
         <div>
           <div class="yura-levels-eyebrow">Y.U.R.A. LEVEL NETWORK</div>
           <h1 class="yura-levels-title">Levels</h1>
-          <p class="yura-levels-subtitle">Publiczny ranking poziomĂłw Y.U.R.A. oraz tabela doĹ›wiadczenia oparta 1:1 o klasycznÄ… krzywÄ… Tibii.</p>
+          <p class="yura-levels-subtitle">Publiczny ranking poziom\u00f3w Y.U.R.A. oraz tabela do\u015bwiadczenia oparta 1:1 o klasyczn\u0105 krzyw\u0105 Tibii.</p>
         </div>
         <div class="yura-levels-live">LIVE DATA</div>
       </div>
@@ -1420,14 +1420,14 @@ function yuraLevelsMarkup() {
         <div class="yura-levels-toolbar">
           <div class="yura-levels-meta">
             <div class="yura-levels-metric"><small>EXP SYNC</small><strong>5 MIN</strong></div>
-            <div class="yura-levels-metric"><small>LAST SYNC</small><strong data-yura-levels-last>â€”</strong></div>
-            <div class="yura-levels-metric"><small>STATUS</small><strong class="yura-levels-status" data-yura-levels-status>ĹADOWANIE</strong></div>
+            <div class="yura-levels-metric"><small>LAST SYNC</small><strong data-yura-levels-last>\u2014</strong></div>
+            <div class="yura-levels-metric"><small>STATUS</small><strong class="yura-levels-status" data-yura-levels-status>\u0141ADOWANIE</strong></div>
           </div>
-          <input class="yura-levels-search" data-yura-levels-search placeholder="âŚ• Szukaj siebie na liĹ›cieâ€¦">
+          <input class="yura-levels-search" data-yura-levels-search placeholder="\u2315 Szukaj siebie na li\u015bcie\u2026">
         </div>
         <div class="yura-levels-podium" data-yura-levels-podium></div>
         <div class="yura-levels-table">
-          <div class="yura-levels-head"><div>POZYCJA</div><div>UĹ»YTKOWNIK</div><div>LEVEL</div><div style="text-align:right">TOTAL EXP</div></div>
+          <div class="yura-levels-head"><div>POZYCJA</div><div>U\u017bYTKOWNIK</div><div>LEVEL</div><div style="text-align:right">TOTAL EXP</div></div>
           <div data-yura-levels-rows></div>
         </div>
       </div>
@@ -1435,19 +1435,19 @@ function yuraLevelsMarkup() {
       <div class="yura-levels-hidden" data-yura-levels-view="table">
         <div class="yura-levels-expgrid">
           <div class="yura-levels-calc">
-            <h3>EXP â†’ LEVEL</h3>
+            <h3>EXP \u2192 LEVEL</h3>
             <div class="yura-levels-calcline"><input data-yura-exp-input type="number" min="0" value="9300"><button data-yura-exp-calc>OBLICZ</button></div>
             <div class="yura-levels-calcresult" data-yura-exp-result></div>
           </div>
           <div class="yura-levels-calc">
-            <h3>LEVEL â†’ TOTAL EXP</h3>
+            <h3>LEVEL \u2192 TOTAL EXP</h3>
             <div class="yura-levels-calcline"><input data-yura-level-input type="number" min="1" max="100" value="50"><button data-yura-level-calc>OBLICZ</button></div>
             <div class="yura-levels-calcresult" data-yura-level-result></div>
           </div>
         </div>
-        <p class="yura-levels-note">Tabela LVL 1â€“100 jest generowana z tej samej formuĹ‚y co YURA Desktop i YURA Cloud.</p>
+        <p class="yura-levels-note">Tabela LVL 1\u2013100 jest generowana z tej samej formu\u0142y co YURA Desktop i YURA Cloud.</p>
         <div class="yura-levels-table">
-          <div class="yura-levels-head"><div>LEVEL</div><div>TOTAL EXP</div><div>OD POPRZEDNIEGO</div><div style="text-align:right">DO NASTÄPNEGO</div></div>
+          <div class="yura-levels-head"><div>LEVEL</div><div>TOTAL EXP</div><div>OD POPRZEDNIEGO</div><div style="text-align:right">DO NAST\u0118PNEGO</div></div>
           <div data-yura-exp-rows></div>
         </div>
       </div>
@@ -1459,7 +1459,7 @@ function yuraLevelsNormalizeEntry(x) {
   const p = yuraLevelsProgress(exp);
   return {
     login:String(x?.login || ""),
-    name:String(x?.name || x?.login || "â€”"),
+    name:String(x?.name || x?.login || "\u2014"),
     exp,
     level:Number(x?.level || p.lvl) || p.lvl,
     progress:Number(x?.progress ?? p.progress),
@@ -1485,7 +1485,7 @@ function yuraLevelsRenderRanking() {
 
   const rows = yuraLevelsPanel.querySelector("[data-yura-levels-rows]");
   if (!filtered.length) {
-    rows.innerHTML = `<div class="yura-levels-empty">Brak wynikĂłw.</div>`;
+    rows.innerHTML = `<div class="yura-levels-empty">Brak wynik\u00f3w.</div>`;
     return;
   }
 
@@ -1514,11 +1514,39 @@ function yuraLevelsRenderExpTable() {
       <div class="yura-levels-row">
         <div class="yura-levels-pos">${lvl}</div>
         <div class="yura-levels-user">${nf.format(total)} EXP</div>
-        <div><span class="yura-levels-pill">${lvl===1 ? "â€”" : nf.format(prev)}</span></div>
+        <div><span class="yura-levels-pill">${lvl===1 ? "\u2014" : nf.format(prev)}</span></div>
         <div class="yura-levels-expval">${nf.format(next)}</div>
       </div>`;
   }
   yuraLevelsPanel.querySelector("[data-yura-exp-rows]").innerHTML = html;
+}
+
+function yuraLevelsPrimeImmediate() {
+  if (!yuraLevelsPanel) return false;
+
+  const status = yuraLevelsPanel.querySelector("[data-yura-levels-status]");
+  const last = yuraLevelsPanel.querySelector("[data-yura-levels-last]");
+
+  if (Array.isArray(yuraLevelsEntries) && yuraLevelsEntries.length > 0) {
+    status.textContent = "LIVE DATA";
+    yuraLevelsRenderRanking();
+    return true;
+  }
+
+  try {
+    const cached = JSON.parse(localStorage.getItem(YURA_LEVELS_CACHE_KEY) || "null");
+    if (cached && Array.isArray(cached.entries)) {
+      yuraLevelsEntries = cached.entries
+        .map(yuraLevelsNormalizeEntry)
+        .sort((a,b)=>b.exp-a.exp || a.name.localeCompare(b.name));
+      last.textContent = yuraLevelsStamp(cached?.generated_at_utc || cached?.updatedAt);
+      status.textContent = "REFRESHING";
+      yuraLevelsRenderRanking();
+      return true;
+    }
+  } catch {}
+
+  return false;
 }
 
 async function yuraLevelsLoad(force=false) {
@@ -1578,7 +1606,7 @@ function yuraLevelsWire() {
     const exp = Math.max(0, Math.trunc(Number(input?.value) || 0));
     const p = yuraLevelsProgress(exp);
     yuraLevelsPanel.querySelector("[data-yura-exp-result]").textContent =
-      `LVL ${p.lvl} â€˘ ${nf.format(p.progress)} / ${nf.format(p.target)} EXP`;
+      `LVL ${p.lvl} \u2022 ${nf.format(p.progress)} / ${nf.format(p.target)} EXP`;
   });
 
   yuraLevelsPanel.querySelector("[data-yura-level-calc]")?.addEventListener("click", () => {
@@ -1587,7 +1615,7 @@ function yuraLevelsWire() {
     const lvl = Math.max(1, Math.min(100, Math.trunc(Number(input?.value) || 1)));
     input.value = String(lvl);
     yuraLevelsPanel.querySelector("[data-yura-level-result]").textContent =
-      `LVL ${lvl} wymaga ${nf.format(yuraLevelsTotalExp(lvl))} Ĺ‚Ä…cznego EXP`;
+      `LVL ${lvl} wymaga ${nf.format(yuraLevelsTotalExp(lvl))} \u0142\u0105cznego EXP`;
   });
 
   yuraLevelsRenderExpTable();
@@ -1617,6 +1645,7 @@ function yuraShowLevelsView(pushHistory=true) {
     yuraLevelsPanel = panel;
 
     yuraLevelsWire();
+    yuraLevelsPrimeImmediate();
     yuraLevelsLoad(true);
     yuraLevelsTimer = window.setInterval(() => yuraLevelsLoad(false), 5*60*1000);
   }
@@ -1696,9 +1725,10 @@ document.addEventListener("click", event => {
   const item = event.target?.closest?.("a,button,[data-view]");
   if (!item || item.matches("[data-yura-levels-nav='1']")) return;
   const text = String(item.textContent || "").replace(/\s+/g," ").trim();
-  if (/^(Komendy|Ranking|O mnie|Harmonogram|Changelog)\b/i.test(text))
-    yuraHideLevelsView(true);
-}, true);
+  if (/^(Komendy|Ranking|O mnie|Harmonogram|Changelog)\b/i.test(text)) {
+    window.setTimeout(() => yuraHideLevelsView(true), 0);
+  }
+}, false);
 
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && yuraLevelsPanel) yuraLevelsLoad(true);
