@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-10-01T20:45:40.9188882\u002B02:00",
+  "updatedAt": "2026-10-01T21:13:16.3269478\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -11,6 +11,7 @@
   ],
   "defaultCategory": "FFXIV",
   "publicLayout": "SLIM",
+  "levelsBarStyle": "TIBIA",
   "weeklyRules": {
     "0": {
       "enabled": true,
