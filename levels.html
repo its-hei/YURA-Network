@@ -37,6 +37,13 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
 .exp-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}.calc{border:1px solid var(--line);border-radius:14px;background:#0b1219;padding:16px}.calc h3{margin:0 0 12px;font-size:14px}.calc-line{display:grid;grid-template-columns:1fr auto;gap:8px}.calc input{background:#070d13;color:#fff;border:1px solid var(--line2);border-radius:9px;padding:10px}.calc button,.more{background:#142335;color:#fff;border:1px solid #36526f;border-radius:9px;padding:9px 12px;cursor:pointer}.calc-result{font:11px Consolas,monospace;color:#9fb2c6;margin-top:10px;min-height:16px}.table-note{color:#778797;font-size:12px;margin:0 0 12px}
 .more{display:block;margin:13px auto 0}
 .hidden{display:none!important}
+
+html.yura-levels-embed,html.yura-levels-embed body{background:transparent!important;min-height:0}
+html.yura-levels-embed body:before{display:none!important}
+html.yura-levels-embed .sidebar{display:none!important}
+html.yura-levels-embed .shell{display:block!important;max-width:none!important;margin:0!important;padding:0!important}
+html.yura-levels-embed .content{width:100%!important;min-width:0!important;padding:0!important}
+html.yura-levels-embed .hero{padding-top:0!important}
 @media(max-width:1240px){.shell{grid-template-columns:360px minmax(0,1fr);padding-left:18px;padding-right:18px}.profile{grid-template-columns:150px 1fr}.core,.nav{width:100%}}@media(max-width:980px){.shell{grid-template-columns:1fr}.sidebar{display:none}.podium{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.search{width:100%}.table-head,.table-row{grid-template-columns:58px 1fr 90px 115px}.exp-tools{grid-template-columns:1fr}}
 @media(max-width:620px){.shell{padding:22px 12px}.hero h1{font-size:39px}.table-head,.table-row{grid-template-columns:45px 1fr 72px}.table-head div:last-child,.table-row .exp-val{display:none}}
 </style>
@@ -56,7 +63,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
     <nav class="nav">
       <a href="./">Komendy</a>
       <a href="./">Ranking <em>TOP 10</em></a>
-      <a href="levels.html?v=336" class="active">Levels <em>EXP</em></a>
+      <a href="levels.html?v=341" class="active">Levels <em>EXP</em></a>
       <a href="./">O mnie <em>PROFILE</em></a>
       <a href="./">Harmonogram <em>STREAM</em></a>
       <a href="./">Changelog</a>
@@ -113,6 +120,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
 </div>
 
 <script>
+const YURA_LEVELS_EMBED = new URLSearchParams(window.location.search).get("embed") === "1";
+if (YURA_LEVELS_EMBED) document.documentElement.classList.add("yura-levels-embed");
 const CLOUD="https://yura-cloud.heiyeshi.workers.dev";
 const LAST_KEY="yura-levels-last-good-v1";
 let allEntries=[];
