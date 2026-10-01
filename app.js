@@ -1226,9 +1226,11 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_NATIVE_VIEW_V84
+// YURA_LEVELS_NATIVE_VIEW_V85
 const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
 const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
+const YURA_LEVELS_STYLE_CACHE_KEY = "yura-levels-bar-style-v1";
+let yuraLevelsBarStyle = "MODERN";
 let yuraLevelsHost = null;
 let yuraLevelsPanel = null;
 let yuraLevelsHiddenChildren = [];
@@ -1366,6 +1368,12 @@ function yuraLevelsEnsureStyle() {
     .yura-levels-expval{justify-self:end;font:900 12px Consolas,monospace}
     .yura-levels-progress{height:4px;border-radius:99px;background:#182330;margin-top:7px;overflow:hidden}
     .yura-levels-progress i{display:block;height:100%;background:linear-gradient(90deg,#f28c18,#3b9cff);border-radius:99px}
+    .yura-levels-tibia-stat{display:none;margin-top:8px;width:min(100%,430px);font-family:Consolas,monospace;color:#e7e7e7;text-shadow:1px 1px 0 #000}
+    .yura-levels-native.yura-levels-style-tibia .yura-levels-progress-modern{display:none}
+    .yura-levels-native.yura-levels-style-tibia .yura-levels-tibia-stat{display:block}
+    .yura-levels-tibia-line{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:900;letter-spacing:.03em;line-height:1.1}
+    .yura-levels-tibia-bar{height:8px;margin:4px 0 5px;border:1px solid #6a6a6a;background:#101010;box-shadow:inset 0 0 0 1px #000;overflow:hidden}
+    .yura-levels-tibia-bar i{display:block;height:100%;background:#d40000;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
     .yura-levels-empty{padding:36px;text-align:center;color:#788898}
     .yura-levels-expgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
     .yura-levels-calc{border:1px solid #223141;border-radius:14px;background:#0b1219;padding:16px}
@@ -1399,6 +1407,33 @@ function yuraLevelsSetNavActive(active) {
   }
 }
 
+function yuraLevelsNormalizeBarStyle(value) {
+  return String(value || "").trim().toUpperCase() === "TIBIA" ? "TIBIA" : "MODERN";
+}
+
+function yuraLevelsApplyBarStyle(value) {
+  yuraLevelsBarStyle = yuraLevelsNormalizeBarStyle(value);
+  try { localStorage.setItem(YURA_LEVELS_STYLE_CACHE_KEY, yuraLevelsBarStyle); } catch {}
+  if (yuraLevelsPanel) {
+    const root = yuraLevelsPanel.querySelector(".yura-levels-native");
+    root?.classList.toggle("yura-levels-style-tibia", yuraLevelsBarStyle === "TIBIA");
+    const label = yuraLevelsPanel.querySelector("[data-yura-levels-style-label]");
+    if (label) label.textContent = yuraLevelsBarStyle;
+    yuraLevelsRenderRanking();
+  }
+}
+
+async function yuraLevelsLoadDisplayConfig() {
+  try {
+    const r = await fetch(`network-config.json?_=${Date.now()}`, { cache:"no-store" });
+    if (!r.ok) throw new Error(`network config ${r.status}`);
+    const cfg = await r.json();
+    yuraLevelsApplyBarStyle(cfg?.levelsBarStyle || "MODERN");
+  } catch {
+    // Keep cached/default style if schedule config is temporarily unavailable.
+  }
+}
+
 function yuraLevelsMarkup() {
   return `
     <section class="yura-levels-native">
@@ -1422,6 +1457,7 @@ function yuraLevelsMarkup() {
             <div class="yura-levels-metric"><small>EXP SYNC</small><strong>5 MIN</strong></div>
             <div class="yura-levels-metric"><small>LAST SYNC</small><strong data-yura-levels-last>\u2014</strong></div>
             <div class="yura-levels-metric"><small>STATUS</small><strong class="yura-levels-status" data-yura-levels-status>\u0141ADOWANIE</strong></div>
+            <div class="yura-levels-metric"><small>BAR STYLE</small><strong data-yura-levels-style-label>MODERN</strong></div>
           </div>
           <input class="yura-levels-search" data-yura-levels-search placeholder="\u2315 Szukaj siebie na li\u015bcie\u2026">
         </div>
@@ -1495,7 +1531,14 @@ function yuraLevelsRenderRanking() {
     return `
       <div class="yura-levels-row">
         <div class="yura-levels-pos">${String(realPos).padStart(2,"0")}</div>
-        <div><div class="yura-levels-user">${yuraLevelsEsc(x.name)}</div><div class="yura-levels-progress"><i style="width:${pct.toFixed(2)}%"></i></div></div>
+        <div><div class="yura-levels-user">${yuraLevelsEsc(x.name)}</div>
+          <div class="yura-levels-progress yura-levels-progress-modern"><i style="width:${pct.toFixed(2)}%"></i></div>
+          <div class="yura-levels-tibia-stat">
+            <div class="yura-levels-tibia-line"><span>Level</span><strong>${nf.format(x.level)}</strong></div>
+            <div class="yura-levels-tibia-bar"><i style="width:${pct.toFixed(2)}%"></i></div>
+            <div class="yura-levels-tibia-line"><span>Experience</span><strong>${nf.format(x.exp)}</strong></div>
+          </div>
+        </div>
         <div><span class="yura-levels-pill">LVL ${nf.format(x.level)}</span></div>
         <div class="yura-levels-expval">${nf.format(x.exp)}</div>
       </div>`;
@@ -1645,9 +1688,14 @@ function yuraShowLevelsView(pushHistory=true) {
     yuraLevelsPanel = panel;
 
     yuraLevelsWire();
+    try { yuraLevelsApplyBarStyle(localStorage.getItem(YURA_LEVELS_STYLE_CACHE_KEY) || "MODERN"); } catch { yuraLevelsApplyBarStyle("MODERN"); }
     yuraLevelsPrimeImmediate();
     yuraLevelsLoad(true);
-    yuraLevelsTimer = window.setInterval(() => yuraLevelsLoad(false), 5*60*1000);
+    yuraLevelsLoadDisplayConfig();
+    yuraLevelsTimer = window.setInterval(() => {
+      yuraLevelsLoad(false);
+      yuraLevelsLoadDisplayConfig();
+    }, 5*60*1000);
   }
 
   yuraLevelsSetNavActive(true);
