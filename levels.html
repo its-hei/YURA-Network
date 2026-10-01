@@ -19,15 +19,15 @@ html,body{margin:0;min-height:100%;background:
  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
  repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 4px);opacity:.35}
-.topbar{height:72px;border-bottom:1px solid #202b36;background:#080c11eF;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:20}
+.topbar{display:none}
 .brand{display:flex;align-items:center;gap:12px}.brand img{width:38px;height:38px;object-fit:contain}.brand strong{font-size:15px;letter-spacing:.18em}.brand small{display:block;color:var(--muted);font:9px Consolas,monospace;letter-spacing:.22em;margin-top:2px}
 .online{font:10px Consolas,monospace;letter-spacing:.14em;color:#c5cbd2}.online i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px rgba(72,214,148,.75);margin-right:7px}
-.shell{max-width:1530px;margin:0 auto;display:grid;grid-template-columns:500px minmax(0,1fr);gap:28px;padding:32px 0 70px}
-.sidebar{padding:0}.profile{display:grid;grid-template-columns:190px 1fr;gap:12px}.avatar{border:1px solid var(--line);padding:9px;border-radius:14px;background:#0b1118}.avatar img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;display:block}
+.shell{max-width:1480px;margin:0 auto;display:grid;grid-template-columns:500px minmax(0,1fr);gap:28px;padding:0 28px 70px}
+.sidebar{padding:0}.profile{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:start}.avatar{border:1px solid var(--line);padding:9px;border-radius:14px;background:#0b1118}.avatar img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;display:block}
 .profile-card{border:1px solid var(--line);border-radius:14px;padding:22px;background:linear-gradient(180deg,#0d141c,#0a1017)}.profile-card h2{margin:0 0 22px;font-size:21px}.profile-row{display:grid;grid-template-columns:62px 1fr;padding:10px 0;border-top:1px solid rgba(255,255,255,.05);font-size:12px}.profile-row b{font:9px Consolas,monospace;letter-spacing:.1em;color:var(--orange)}.profile-row.discord b{color:#a581ff}.profile-row span{color:#89a3c0}
 .core{width:190px;margin-top:12px;border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:14px;padding:14px;background:linear-gradient(100deg,rgba(242,140,24,.09),transparent 45%)}.core b{display:block;color:var(--orange);font:10px Consolas,monospace;letter-spacing:.14em}.core span{display:block;color:#8c98a6;font-size:12px;margin-top:6px;line-height:1.45}
 .nav{width:190px;margin-top:14px;display:grid;gap:5px}.nav a{display:flex;align-items:center;justify-content:space-between;min-height:45px;padding:0 13px;border:1px solid transparent;border-radius:10px;color:#f4f5f7;text-decoration:none;font-family:Georgia,serif;font-weight:700;font-size:14px}.nav a:hover{border-color:#273547;background:#0b1118}.nav a.active{border-color:#70450b;background:linear-gradient(90deg,rgba(242,140,24,.16),rgba(242,140,24,.05));box-shadow:inset 2px 0 var(--orange)}.nav em{font:9px Consolas,monospace;color:#87a7c9;letter-spacing:.12em;font-style:normal}.nav a.active em{color:var(--orange2)}
-.content{min-width:0}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:4px 2px 22px}.eyebrow{font:10px Consolas,monospace;color:var(--orange);font-weight:900;letter-spacing:.16em}.hero h1{font-size:52px;line-height:.95;margin:7px 0 8px;letter-spacing:-.045em}.hero p{color:#8d9aaa;margin:0;max-width:780px;font-size:15px;line-height:1.35}.live-chip{border:1px solid rgba(72,214,148,.45);background:rgba(72,214,148,.08);color:#76e9b4;border-radius:999px;padding:8px 13px;font:10px Consolas,monospace;letter-spacing:.08em}
+.content{min-width:0;padding-top:0}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:0 2px 22px}.eyebrow{font:10px Consolas,monospace;color:var(--orange);font-weight:900;letter-spacing:.16em}.hero h1{font-size:52px;line-height:.95;margin:7px 0 8px;letter-spacing:-.045em}.hero p{color:#8d9aaa;margin:0;max-width:780px;font-size:15px;line-height:1.35}.live-chip{border:1px solid rgba(72,214,148,.45);background:rgba(72,214,148,.08);color:#76e9b4;border-radius:999px;padding:8px 13px;font:10px Consolas,monospace;letter-spacing:.08em}
 .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px}.tab{border:0;border-bottom:2px solid transparent;background:transparent;color:#8190a0;padding:12px 17px 11px;cursor:pointer;font:900 11px Consolas,monospace;letter-spacing:.08em}.tab.active{color:#fff;border-bottom-color:var(--orange)}
 .toolbar{display:grid;grid-template-columns:1fr auto;gap:12px;border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:12px;background:rgba(12,19,27,.88)}.sync-meta{display:flex;gap:38px;align-items:center}.metric small{display:block;color:#6f8092;font:9px Consolas,monospace;letter-spacing:.13em}.metric strong{display:block;margin-top:5px;font:12px Consolas,monospace;color:#f5f6f8}.status{color:#72e3ad!important}.search{width:290px;border:1px solid var(--line2);background:#080e14;color:white;border-radius:10px;padding:10px 12px;outline:none}.search:focus{border-color:#6d4917}
 .rules{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}.rule{border:1px solid #28394b;background:#0a1118;border-radius:999px;padding:7px 10px;font:9px Consolas,monospace;color:#9cadbd}.rule b{color:var(--orange2);font-size:10px}
@@ -42,11 +42,6 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><img src="yura-logo.png" alt=""><div><strong>Y.U.R.A. NETWORK</strong><small>PUBLIC LEVEL DATABASE</small></div></div>
-  <div class="online"><i></i>ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;YURA EXP</div>
-</header>
-
 <div class="shell">
   <aside class="sidebar">
     <div class="profile">
@@ -57,7 +52,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
         <div class="profile-row discord"><b>DISCORD</b><span>discord.gg/8NHhFsRed5</span></div>
       </div>
     </div>
-    <div class="core"><b>Y.U.R.A. CORE</b><span>Publiczna baza poziomów i doświadczenia widzów.</span></div>
+    <div class="core"><b>Y.U.R.A. CORE</b><span>Publiczna lista komend działających na kanale.</span></div>
     <nav class="nav">
       <a href="./">Komendy</a>
       <a href="./">Ranking <em>TOP 10</em></a>
@@ -70,7 +65,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
 
   <main class="content">
     <div class="hero">
-      <div><div class="eyebrow">Y.U.R.A. NETWORK // VIEWER PROGRESSION</div><h1>Levels</h1><p>Publiczny ranking poziomów Y.U.R.A. oraz dokładna tabela doświadczenia oparta 1:1 o klasyczną krzywą Tibii.</p></div>
+      <div><div class="eyebrow">Y.U.R.A. LEVEL NETWORK</div><h1>Levels</h1><p>Publiczny ranking poziomów Y.U.R.A. oraz dokładna tabela doświadczenia oparta 1:1 o klasyczną krzywą Tibii.</p></div>
       <div class="live-chip">LIVE DATA</div>
     </div>
 
