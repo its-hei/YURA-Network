@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "source": "YURA Desktop",
-  "updatedAt": "2026-10-01T17:44:24.9712126\u002B02:00",
+  "updatedAt": "2026-10-01T17:44:40.6953715\u002B02:00",
   "monthlyVipExclusions": [
     "yurasei"
   ],
@@ -27,7 +27,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": 3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -51,7 +51,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -63,7 +63,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -75,7 +75,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -87,7 +87,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -111,7 +111,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -123,7 +123,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -255,7 +255,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 2,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -267,7 +267,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": true,
       "monthlyVipEligible": false,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -279,7 +279,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -291,7 +291,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -303,7 +303,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -3,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -340,7 +340,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "login": "chloeey_",
@@ -351,7 +351,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -363,7 +363,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 23,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -375,7 +375,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -387,7 +387,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -399,7 +399,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -411,7 +411,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -423,7 +423,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -435,7 +435,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -447,7 +447,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -459,7 +459,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -471,7 +471,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -483,7 +483,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -495,7 +495,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -507,7 +507,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -519,7 +519,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -531,7 +531,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -639,7 +639,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": 1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -652,7 +652,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "login": "scholastichearervi",
@@ -676,7 +676,7 @@
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
       "rankDelta": 0,
-      "isNew": true
+      "isNew": false
     },
     {
       "login": "lonor_0",
@@ -687,7 +687,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     },
     {
@@ -699,7 +699,7 @@
       "isManagedMonthlyVip": false,
       "isMonthlyVipExcluded": false,
       "monthlyVipEligible": true,
-      "rankDelta": -1,
+      "rankDelta": 0,
       "isNew": false
     }
   ]
