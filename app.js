@@ -1035,6 +1035,220 @@ if (!yuraInstallLevelsNavLink()) {
   window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
 }
 
+// YURA_LEVELS_INTEGRATED_VIEW_V81
+let yuraLevelsHost = null;
+let yuraLevelsFrame = null;
+let yuraLevelsHiddenChildren = [];
+
+function yuraLevelsFindMainHost() {
+  const direct = [
+    document.querySelector("main"),
+    document.querySelector('[role="main"]'),
+    document.querySelector("#main"),
+    document.querySelector("#content"),
+    document.querySelector(".main-content"),
+    document.querySelector(".content-main"),
+    document.querySelector(".view-container")
+  ].filter(Boolean);
+
+  for (const el of direct) {
+    const r = el.getBoundingClientRect();
+    if (r.width >= 650 && r.height >= 350 && r.left >= 260) return el;
+  }
+
+  const visibleHeading = [...document.querySelectorAll("h1,h2")].find(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return false;
+    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
+    return /^(Komendy kanaĹ‚u|Ranking|O mnie|Harmonogram|Changelog)$/i.test(text);
+  });
+
+  if (!visibleHeading) return null;
+
+  let node = visibleHeading.parentElement;
+  while (node && node !== document.body) {
+    const r = node.getBoundingClientRect();
+    if (r.width >= 650 && r.height >= 350 && r.left >= 260) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
+function yuraLevelsSetNavActive(active) {
+  const levels = document.querySelector("[data-yura-levels-nav='1']");
+  if (!levels) return;
+
+  const navItems = [...document.querySelectorAll("a,button,[data-view]")];
+  if (active) {
+    navItems.forEach(el => {
+      if (el === levels) return;
+      el.classList.remove("active","is-active","selected");
+      el.removeAttribute("aria-current");
+    });
+    levels.classList.add("active");
+    levels.setAttribute("aria-current","page");
+  } else {
+    levels.classList.remove("active","is-active","selected");
+    levels.removeAttribute("aria-current");
+  }
+}
+
+function yuraLevelsResizeFrame() {
+  if (!yuraLevelsFrame) return;
+  try {
+    const doc = yuraLevelsFrame.contentDocument;
+    if (!doc) return;
+    const height = Math.max(
+      620,
+      doc.documentElement?.scrollHeight || 0,
+      doc.body?.scrollHeight || 0
+    );
+    yuraLevelsFrame.style.height = `${height}px`;
+  } catch {}
+}
+
+function yuraShowLevelsView(pushHistory = true) {
+  const host = yuraLevelsFindMainHost();
+  if (!host) {
+    window.location.href = "levels.html?v=341";
+    return;
+  }
+
+  if (yuraLevelsHost && yuraLevelsHost !== host)
+    yuraHideLevelsView(false);
+
+  yuraLevelsHost = host;
+
+  if (!yuraLevelsFrame) {
+    yuraLevelsHiddenChildren = [...host.children].map(el => ({
+      el,
+      display: el.style.display
+    }));
+    yuraLevelsHiddenChildren.forEach(x => x.el.style.display = "none");
+
+    const frame = document.createElement("iframe");
+    frame.id = "yura-levels-integrated-frame";
+    frame.src = "levels.html?v=341&embed=1";
+    frame.title = "Y.U.R.A. Levels";
+    frame.style.cssText = [
+      "display:block",
+      "width:100%",
+      "min-height:620px",
+      "height:720px",
+      "border:0",
+      "background:transparent",
+      "overflow:hidden"
+    ].join(";");
+
+    frame.addEventListener("load", () => {
+      yuraLevelsResizeFrame();
+      try {
+        const doc = frame.contentDocument;
+        if (doc?.body && "ResizeObserver" in window) {
+          const observer = new ResizeObserver(() => yuraLevelsResizeFrame());
+          observer.observe(doc.body);
+          frame._yuraResizeObserver = observer;
+        }
+      } catch {}
+    });
+
+    host.appendChild(frame);
+    yuraLevelsFrame = frame;
+  }
+
+  yuraLevelsSetNavActive(true);
+
+  if (pushHistory) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("yuraView","levels");
+    history.pushState({ yuraView:"levels" }, "", url);
+  }
+
+  window.setTimeout(yuraLevelsResizeFrame, 120);
+}
+
+function yuraHideLevelsView(updateHistory = true) {
+  if (yuraLevelsFrame) {
+    try { yuraLevelsFrame._yuraResizeObserver?.disconnect?.(); } catch {}
+    yuraLevelsFrame.remove();
+    yuraLevelsFrame = null;
+  }
+
+  yuraLevelsHiddenChildren.forEach(x => {
+    if (x?.el) x.el.style.display = x.display || "";
+  });
+  yuraLevelsHiddenChildren = [];
+  yuraLevelsHost = null;
+  yuraLevelsSetNavActive(false);
+
+  if (updateHistory) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("yuraView");
+    history.replaceState({}, "", url);
+  }
+}
+
+function yuraInstallLevelsNavLink() {
+  if (document.querySelector("[data-yura-levels-nav='1']")) return true;
+
+  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
+  const ranking = candidates.find(el => {
+    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
+    return /^Ranking\b/i.test(text) || /\bRanking\s+TOP\s*10\b/i.test(text);
+  });
+  if (!ranking) return false;
+
+  const clone = ranking.cloneNode(true);
+  clone.setAttribute("data-yura-levels-nav","1");
+  clone.removeAttribute("data-view");
+  clone.removeAttribute("aria-current");
+  clone.classList.remove("active","is-active","selected");
+  if (clone.tagName === "A") clone.setAttribute("href","?yuraView=levels");
+
+  clone.innerHTML = clone.innerHTML
+    .replace(/Ranking/g,"Levels")
+    .replace(/TOP\s*10/gi,"EXP");
+
+  clone.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    yuraShowLevelsView(true);
+  }, true);
+
+  ranking.insertAdjacentElement("afterend", clone);
+  return true;
+}
+
+document.addEventListener("click", event => {
+  if (!yuraLevelsFrame) return;
+  const item = event.target?.closest?.("a,button,[data-view]");
+  if (!item || item.matches("[data-yura-levels-nav='1']")) return;
+  const text = String(item.textContent || "").replace(/\s+/g," ").trim();
+  if (/^(Komendy|Ranking|O mnie|Harmonogram|Changelog)\b/i.test(text))
+    yuraHideLevelsView(true);
+}, true);
+
+window.addEventListener("popstate", () => {
+  const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
+  if (wantsLevels) yuraShowLevelsView(false);
+  else yuraHideLevelsView(false);
+});
+
+if (!yuraInstallLevelsNavLink()) {
+  const yuraLevelsNavObserver = new MutationObserver(() => {
+    if (yuraInstallLevelsNavLink()) {
+      const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
+      if (wantsLevels) window.setTimeout(() => yuraShowLevelsView(false), 50);
+      yuraLevelsNavObserver.disconnect();
+    }
+  });
+  yuraLevelsNavObserver.observe(document.documentElement,{childList:true,subtree:true});
+  window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
+} else {
+  const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
+  if (wantsLevels) window.setTimeout(() => yuraShowLevelsView(false), 50);
+}
+
 // YURA_LIVE_SCHEDULE_V78
 const YURA_SCHEDULE_TIME_ZONE = "Europe/Warsaw";
 const YURA_SCHEDULE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1485,49 +1699,164 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_INTEGRATED_VIEW_V81
+// YURA_LEVELS_NATIVE_VIEW_V82
+const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
+const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
 let yuraLevelsHost = null;
-let yuraLevelsFrame = null;
+let yuraLevelsPanel = null;
 let yuraLevelsHiddenChildren = [];
+let yuraLevelsEntries = [];
+let yuraLevelsTimer = null;
 
-function yuraLevelsFindMainHost() {
-  const direct = [
-    document.querySelector("main"),
-    document.querySelector('[role="main"]'),
-    document.querySelector("#main"),
-    document.querySelector("#content"),
-    document.querySelector(".main-content"),
-    document.querySelector(".content-main"),
-    document.querySelector(".view-container")
-  ].filter(Boolean);
+function yuraLevelsEsc(value) {
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
 
-  for (const el of direct) {
-    const r = el.getBoundingClientRect();
-    if (r.width >= 650 && r.height >= 350 && r.left >= 260) return el;
+function yuraLevelsTotalExp(level) {
+  const l = Math.max(1, Math.trunc(Number(level) || 1));
+  if (l <= 1) return 0;
+  return Math.max(0, Math.trunc((50 * (l*l*l - 6*l*l + 17*l - 12)) / 3));
+}
+
+function yuraLevelsLevelForExp(exp) {
+  const value = Math.max(0, Math.trunc(Number(exp) || 0));
+  let lo = 1, hi = 2;
+  while (hi < 1000000 && yuraLevelsTotalExp(hi) <= value) {
+    lo = hi;
+    hi = Math.min(1000000, hi * 2);
+    if (hi === lo) break;
   }
+  while (lo + 1 < hi) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (yuraLevelsTotalExp(mid) <= value) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
 
-  const visibleHeading = [...document.querySelectorAll("h1,h2")].find(el => {
+function yuraLevelsProgress(exp) {
+  const lvl = yuraLevelsLevelForExp(exp);
+  const start = yuraLevelsTotalExp(lvl);
+  const next = yuraLevelsTotalExp(lvl + 1);
+  return {
+    lvl,
+    progress: Math.max(0, exp - start),
+    target: Math.max(1, next - start)
+  };
+}
+
+function yuraLevelsStamp(raw) {
+  const d = new Date(raw || "");
+  if (Number.isNaN(d.getTime())) return "â€”";
+  return d.toLocaleString("pl-PL", {
+    day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"
+  });
+}
+
+function yuraLevelsFindVisibleHeading() {
+  return [...document.querySelectorAll("h1,h2")].find(el => {
     const r = el.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) return false;
     const text = String(el.textContent || "").replace(/\s+/g," ").trim();
     return /^(Komendy kanaĹ‚u|Ranking|O mnie|Harmonogram|Changelog)$/i.test(text);
-  });
+  }) || null;
+}
 
-  if (!visibleHeading) return null;
+function yuraLevelsFindMainHost() {
+  const heading = yuraLevelsFindVisibleHeading();
+  if (!heading) return null;
 
-  let node = visibleHeading.parentElement;
-  while (node && node !== document.body) {
+  const hr = heading.getBoundingClientRect();
+  let node = heading.parentElement;
+  let best = null;
+
+  // Walk only inside the same RIGHT content column. The previous implementation
+  // used generic width/left thresholds and could miss the actual page host.
+  while (node && node !== document.body && node !== document.documentElement) {
     const r = node.getBoundingClientRect();
-    if (r.width >= 650 && r.height >= 350 && r.left >= 260) return node;
+    const sameRightColumn = r.left >= Math.max(250, hr.left - 130);
+    const usefulWidth = r.width >= 620;
+    const usefulHeight = r.height >= 260;
+
+    if (sameRightColumn && usefulWidth && usefulHeight)
+      best = node;
+
+    // Once an ancestor jumps far left toward the profile/sidebar, stop.
+    if (r.left < hr.left - 170)
+      break;
+
     node = node.parentElement;
   }
-  return null;
+
+  return best;
+}
+
+function yuraLevelsEnsureStyle() {
+  if (document.getElementById("yura-levels-native-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "yura-levels-native-style";
+  style.textContent = `
+    .yura-levels-native{width:100%;min-width:0;color:#f5f7fa}
+    .yura-levels-native *{box-sizing:border-box}
+    .yura-levels-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 22px}
+    .yura-levels-eyebrow{font:900 10px Consolas,monospace;letter-spacing:.16em;color:#f28c18;margin-bottom:8px}
+    .yura-levels-title{font-size:52px;line-height:.95;letter-spacing:-.045em;margin:0 0 8px}
+    .yura-levels-subtitle{margin:0;color:#8d9aaa;font-size:15px;line-height:1.35}
+    .yura-levels-live{flex:0 0 auto;border:1px solid rgba(72,214,148,.45);background:rgba(72,214,148,.08);color:#76e9b4;border-radius:999px;padding:8px 13px;font:10px Consolas,monospace;letter-spacing:.08em}
+    .yura-levels-tabs{display:flex;gap:8px;border-bottom:1px solid #223141;margin-bottom:18px}
+    .yura-levels-tab{border:0;border-bottom:2px solid transparent;background:transparent;color:#8190a0;padding:12px 17px 11px;cursor:pointer;font:900 11px Consolas,monospace;letter-spacing:.08em}
+    .yura-levels-tab.active{color:#fff;border-bottom-color:#f28c18}
+    .yura-levels-toolbar{display:grid;grid-template-columns:1fr auto;gap:12px;border:1px solid #223141;border-radius:15px;padding:17px;margin-bottom:12px;background:rgba(12,19,27,.88)}
+    .yura-levels-meta{display:flex;gap:38px;align-items:center}
+    .yura-levels-metric small{display:block;color:#6f8092;font:9px Consolas,monospace;letter-spacing:.13em}
+    .yura-levels-metric strong{display:block;margin-top:5px;font:12px Consolas,monospace;color:#f5f6f8}
+    .yura-levels-status{color:#72e3ad!important}
+    .yura-levels-search{width:290px;border:1px solid #31455b;background:#080e14;color:white;border-radius:10px;padding:10px 12px;outline:none}
+    .yura-levels-search:focus{border-color:#6d4917}
+    .yura-levels-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:14px}
+    .yura-levels-card{min-height:185px;border:1px solid #223141;border-radius:15px;padding:20px;background:linear-gradient(135deg,rgba(242,140,24,.06),#0b1118 55%);position:relative;overflow:hidden}
+    .yura-levels-card:first-child{border-color:#9a5e0d;background:linear-gradient(135deg,rgba(242,140,24,.13),#0c1219 60%)}
+    .yura-levels-card:after{position:absolute;right:20px;top:12px;font:72px Georgia,serif;color:rgba(242,140,24,.13)}
+    .yura-levels-card:nth-child(1):after{content:"I"}.yura-levels-card:nth-child(2):after{content:"II"}.yura-levels-card:nth-child(3):after{content:"III"}
+    .yura-levels-ranktag{font:900 9px Consolas,monospace;color:#f28c18;letter-spacing:.12em}
+    .yura-levels-name{font-size:27px;font-weight:850;margin-top:43px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .yura-levels-level{font:900 22px Consolas,monospace;margin-top:8px}
+    .yura-levels-exp{font:9px Consolas,monospace;color:#6f8294;letter-spacing:.1em;margin-top:5px}
+    .yura-levels-table{border:1px solid #223141;border-radius:15px;overflow:hidden;background:#091017}
+    .yura-levels-head,.yura-levels-row{display:grid;grid-template-columns:90px minmax(180px,1.4fr) 150px 180px;align-items:center;gap:12px;padding:0 18px}
+    .yura-levels-head{height:38px;border-bottom:1px solid #223141;font:9px Consolas,monospace;color:#65788a;letter-spacing:.12em}
+    .yura-levels-row{min-height:61px;border-bottom:1px solid rgba(255,255,255,.045);font-size:14px}
+    .yura-levels-row:last-child{border-bottom:0}
+    .yura-levels-pos{font:900 11px Consolas,monospace;color:#f28c18}
+    .yura-levels-user{font-weight:800}
+    .yura-levels-pill{justify-self:start;border:1px solid #37485a;border-radius:999px;padding:5px 9px;font:900 10px Consolas,monospace;color:#a9d1ff}
+    .yura-levels-expval{justify-self:end;font:900 12px Consolas,monospace}
+    .yura-levels-progress{height:4px;border-radius:99px;background:#182330;margin-top:7px;overflow:hidden}
+    .yura-levels-progress i{display:block;height:100%;background:linear-gradient(90deg,#f28c18,#3b9cff);border-radius:99px}
+    .yura-levels-empty{padding:36px;text-align:center;color:#788898}
+    .yura-levels-expgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .yura-levels-calc{border:1px solid #223141;border-radius:14px;background:#0b1219;padding:16px}
+    .yura-levels-calc h3{margin:0 0 12px;font-size:14px}
+    .yura-levels-calcline{display:grid;grid-template-columns:1fr auto;gap:8px}
+    .yura-levels-calc input{background:#070d13;color:#fff;border:1px solid #31455b;border-radius:9px;padding:10px}
+    .yura-levels-calc button{background:#142335;color:#fff;border:1px solid #36526f;border-radius:9px;padding:9px 12px;cursor:pointer}
+    .yura-levels-calcresult{font:11px Consolas,monospace;color:#9fb2c6;margin-top:10px;min-height:16px}
+    .yura-levels-note{color:#778797;font-size:12px;margin:0 0 12px}
+    .yura-levels-hidden{display:none!important}
+    @media(max-width:1050px){.yura-levels-podium{grid-template-columns:1fr}.yura-levels-toolbar{grid-template-columns:1fr}.yura-levels-search{width:100%}}
+  `;
+  document.head.appendChild(style);
 }
 
 function yuraLevelsSetNavActive(active) {
   const levels = document.querySelector("[data-yura-levels-nav='1']");
   if (!levels) return;
-
   const navItems = [...document.querySelectorAll("a,button,[data-view]")];
   if (active) {
     navItems.forEach(el => {
@@ -1543,67 +1872,226 @@ function yuraLevelsSetNavActive(active) {
   }
 }
 
-function yuraLevelsResizeFrame() {
-  if (!yuraLevelsFrame) return;
-  try {
-    const doc = yuraLevelsFrame.contentDocument;
-    if (!doc) return;
-    const height = Math.max(
-      620,
-      doc.documentElement?.scrollHeight || 0,
-      doc.body?.scrollHeight || 0
-    );
-    yuraLevelsFrame.style.height = `${height}px`;
-  } catch {}
+function yuraLevelsMarkup() {
+  return `
+    <section class="yura-levels-native">
+      <div class="yura-levels-hero">
+        <div>
+          <div class="yura-levels-eyebrow">Y.U.R.A. LEVEL NETWORK</div>
+          <h1 class="yura-levels-title">Levels</h1>
+          <p class="yura-levels-subtitle">Publiczny ranking poziomĂłw Y.U.R.A. oraz tabela doĹ›wiadczenia oparta 1:1 o klasycznÄ… krzywÄ… Tibii.</p>
+        </div>
+        <div class="yura-levels-live">LIVE DATA</div>
+      </div>
+
+      <div class="yura-levels-tabs">
+        <button class="yura-levels-tab active" data-yura-levels-tab="ranking">RANKING</button>
+        <button class="yura-levels-tab" data-yura-levels-tab="table">EXP TABLE</button>
+      </div>
+
+      <div data-yura-levels-view="ranking">
+        <div class="yura-levels-toolbar">
+          <div class="yura-levels-meta">
+            <div class="yura-levels-metric"><small>EXP SYNC</small><strong>5 MIN</strong></div>
+            <div class="yura-levels-metric"><small>LAST SYNC</small><strong data-yura-levels-last>â€”</strong></div>
+            <div class="yura-levels-metric"><small>STATUS</small><strong class="yura-levels-status" data-yura-levels-status>ĹADOWANIE</strong></div>
+          </div>
+          <input class="yura-levels-search" data-yura-levels-search placeholder="âŚ• Szukaj siebie na liĹ›cieâ€¦">
+        </div>
+        <div class="yura-levels-podium" data-yura-levels-podium></div>
+        <div class="yura-levels-table">
+          <div class="yura-levels-head"><div>POZYCJA</div><div>UĹ»YTKOWNIK</div><div>LEVEL</div><div style="text-align:right">TOTAL EXP</div></div>
+          <div data-yura-levels-rows></div>
+        </div>
+      </div>
+
+      <div class="yura-levels-hidden" data-yura-levels-view="table">
+        <div class="yura-levels-expgrid">
+          <div class="yura-levels-calc">
+            <h3>EXP â†’ LEVEL</h3>
+            <div class="yura-levels-calcline"><input data-yura-exp-input type="number" min="0" value="9300"><button data-yura-exp-calc>OBLICZ</button></div>
+            <div class="yura-levels-calcresult" data-yura-exp-result></div>
+          </div>
+          <div class="yura-levels-calc">
+            <h3>LEVEL â†’ TOTAL EXP</h3>
+            <div class="yura-levels-calcline"><input data-yura-level-input type="number" min="1" max="100" value="50"><button data-yura-level-calc>OBLICZ</button></div>
+            <div class="yura-levels-calcresult" data-yura-level-result></div>
+          </div>
+        </div>
+        <p class="yura-levels-note">Tabela LVL 1â€“100 jest generowana z tej samej formuĹ‚y co YURA Desktop i YURA Cloud.</p>
+        <div class="yura-levels-table">
+          <div class="yura-levels-head"><div>LEVEL</div><div>TOTAL EXP</div><div>OD POPRZEDNIEGO</div><div style="text-align:right">DO NASTÄPNEGO</div></div>
+          <div data-yura-exp-rows></div>
+        </div>
+      </div>
+    </section>`;
 }
 
-function yuraShowLevelsView(pushHistory = true) {
-  const host = yuraLevelsFindMainHost();
-  if (!host) {
-    window.location.href = "levels.html?v=341";
+function yuraLevelsNormalizeEntry(x) {
+  const exp = Math.max(0, Number(x?.exp || 0) || 0);
+  const p = yuraLevelsProgress(exp);
+  return {
+    login:String(x?.login || ""),
+    name:String(x?.name || x?.login || "â€”"),
+    exp,
+    level:Number(x?.level || p.lvl) || p.lvl,
+    progress:Number(x?.progress ?? p.progress),
+    target:Number(x?.target ?? p.target)
+  };
+}
+
+function yuraLevelsRenderRanking() {
+  if (!yuraLevelsPanel) return;
+  const nf = new Intl.NumberFormat("pl-PL");
+  const input = yuraLevelsPanel.querySelector("[data-yura-levels-search]");
+  const q = String(input?.value || "").trim().toLowerCase();
+  const filtered = yuraLevelsEntries.filter(x => !q || x.name.toLowerCase().includes(q) || x.login.toLowerCase().includes(q));
+
+  const podium = yuraLevelsPanel.querySelector("[data-yura-levels-podium]");
+  podium.innerHTML = yuraLevelsEntries.slice(0,3).map((x,i) => `
+    <article class="yura-levels-card">
+      <div class="yura-levels-ranktag">RANK ${String(i+1).padStart(2,"0")}</div>
+      <div class="yura-levels-name">${yuraLevelsEsc(x.name)}</div>
+      <div class="yura-levels-level">LVL ${nf.format(x.level)}</div>
+      <div class="yura-levels-exp">${nf.format(x.exp)} YURA EXP</div>
+    </article>`).join("");
+
+  const rows = yuraLevelsPanel.querySelector("[data-yura-levels-rows]");
+  if (!filtered.length) {
+    rows.innerHTML = `<div class="yura-levels-empty">Brak wynikĂłw.</div>`;
     return;
   }
 
-  if (yuraLevelsHost && yuraLevelsHost !== host)
-    yuraHideLevelsView(false);
+  rows.innerHTML = filtered.map(x => {
+    const realPos = yuraLevelsEntries.indexOf(x) + 1;
+    const pct = Math.max(0, Math.min(100, (x.progress / Math.max(1,x.target)) * 100));
+    return `
+      <div class="yura-levels-row">
+        <div class="yura-levels-pos">${String(realPos).padStart(2,"0")}</div>
+        <div><div class="yura-levels-user">${yuraLevelsEsc(x.name)}</div><div class="yura-levels-progress"><i style="width:${pct.toFixed(2)}%"></i></div></div>
+        <div><span class="yura-levels-pill">LVL ${nf.format(x.level)}</span></div>
+        <div class="yura-levels-expval">${nf.format(x.exp)}</div>
+      </div>`;
+  }).join("");
+}
 
+function yuraLevelsRenderExpTable() {
+  if (!yuraLevelsPanel) return;
+  const nf = new Intl.NumberFormat("pl-PL");
+  let html = "";
+  for (let lvl=1; lvl<=100; lvl++) {
+    const total = yuraLevelsTotalExp(lvl);
+    const prev = lvl <= 1 ? 0 : total - yuraLevelsTotalExp(lvl-1);
+    const next = yuraLevelsTotalExp(lvl+1) - total;
+    html += `
+      <div class="yura-levels-row">
+        <div class="yura-levels-pos">${lvl}</div>
+        <div class="yura-levels-user">${nf.format(total)} EXP</div>
+        <div><span class="yura-levels-pill">${lvl===1 ? "â€”" : nf.format(prev)}</span></div>
+        <div class="yura-levels-expval">${nf.format(next)}</div>
+      </div>`;
+  }
+  yuraLevelsPanel.querySelector("[data-yura-exp-rows]").innerHTML = html;
+}
+
+async function yuraLevelsLoad(force=false) {
+  if (!yuraLevelsPanel) return;
+  if (document.hidden && !force) return;
+
+  const status = yuraLevelsPanel.querySelector("[data-yura-levels-status]");
+  const last = yuraLevelsPanel.querySelector("[data-yura-levels-last]");
+
+  try {
+    const r = await fetch(`${YURA_LEVELS_CLOUD}/api/levels?_=${Date.now()}`, { cache:"no-store" });
+    if (!r.ok) throw new Error(`levels ${r.status}`);
+    const data = await r.json();
+
+    yuraLevelsEntries = (Array.isArray(data?.entries) ? data.entries : [])
+      .map(yuraLevelsNormalizeEntry)
+      .sort((a,b) => b.exp-a.exp || a.name.localeCompare(b.name));
+
+    localStorage.setItem(YURA_LEVELS_CACHE_KEY, JSON.stringify(data));
+    last.textContent = yuraLevelsStamp(data?.generated_at_utc || data?.updatedAt || new Date().toISOString());
+    status.textContent = "LIVE DATA";
+    yuraLevelsRenderRanking();
+  } catch (err) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(YURA_LEVELS_CACHE_KEY) || "null");
+      if (cached && Array.isArray(cached.entries)) {
+        yuraLevelsEntries = cached.entries.map(yuraLevelsNormalizeEntry).sort((a,b)=>b.exp-a.exp || a.name.localeCompare(b.name));
+        last.textContent = yuraLevelsStamp(cached?.generated_at_utc || cached?.updatedAt);
+        status.textContent = "LAST GOOD DATA";
+        yuraLevelsRenderRanking();
+        return;
+      }
+    } catch {}
+    status.textContent = "SYNC ERROR";
+    console.error(err);
+  }
+}
+
+function yuraLevelsWire() {
+  if (!yuraLevelsPanel) return;
+
+  yuraLevelsPanel.querySelectorAll("[data-yura-levels-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-yura-levels-tab");
+      yuraLevelsPanel.querySelectorAll("[data-yura-levels-tab]").forEach(x => x.classList.toggle("active", x===btn));
+      yuraLevelsPanel.querySelectorAll("[data-yura-levels-view]").forEach(view => {
+        view.classList.toggle("yura-levels-hidden", view.getAttribute("data-yura-levels-view") !== target);
+      });
+    });
+  });
+
+  yuraLevelsPanel.querySelector("[data-yura-levels-search]")?.addEventListener("input", yuraLevelsRenderRanking);
+
+  yuraLevelsPanel.querySelector("[data-yura-exp-calc]")?.addEventListener("click", () => {
+    const nf = new Intl.NumberFormat("pl-PL");
+    const input = yuraLevelsPanel.querySelector("[data-yura-exp-input]");
+    const exp = Math.max(0, Math.trunc(Number(input?.value) || 0));
+    const p = yuraLevelsProgress(exp);
+    yuraLevelsPanel.querySelector("[data-yura-exp-result]").textContent =
+      `LVL ${p.lvl} â€˘ ${nf.format(p.progress)} / ${nf.format(p.target)} EXP`;
+  });
+
+  yuraLevelsPanel.querySelector("[data-yura-level-calc]")?.addEventListener("click", () => {
+    const nf = new Intl.NumberFormat("pl-PL");
+    const input = yuraLevelsPanel.querySelector("[data-yura-level-input]");
+    const lvl = Math.max(1, Math.min(100, Math.trunc(Number(input?.value) || 1)));
+    input.value = String(lvl);
+    yuraLevelsPanel.querySelector("[data-yura-level-result]").textContent =
+      `LVL ${lvl} wymaga ${nf.format(yuraLevelsTotalExp(lvl))} Ĺ‚Ä…cznego EXP`;
+  });
+
+  yuraLevelsRenderExpTable();
+}
+
+function yuraShowLevelsView(pushHistory=true) {
+  const host = yuraLevelsFindMainHost();
+
+  // Never navigate to standalone Levels from the sidebar anymore.
+  // If host discovery fails, leave the current page intact and retry shortly.
+  if (!host) {
+    window.setTimeout(() => yuraShowLevelsView(pushHistory), 120);
+    return;
+  }
+
+  yuraLevelsEnsureStyle();
   yuraLevelsHost = host;
 
-  if (!yuraLevelsFrame) {
-    yuraLevelsHiddenChildren = [...host.children].map(el => ({
-      el,
-      display: el.style.display
-    }));
+  if (!yuraLevelsPanel) {
+    yuraLevelsHiddenChildren = [...host.children].map(el => ({el, display:el.style.display}));
     yuraLevelsHiddenChildren.forEach(x => x.el.style.display = "none");
 
-    const frame = document.createElement("iframe");
-    frame.id = "yura-levels-integrated-frame";
-    frame.src = "levels.html?v=341&embed=1";
-    frame.title = "Y.U.R.A. Levels";
-    frame.style.cssText = [
-      "display:block",
-      "width:100%",
-      "min-height:620px",
-      "height:720px",
-      "border:0",
-      "background:transparent",
-      "overflow:hidden"
-    ].join(";");
+    const panel = document.createElement("div");
+    panel.id = "yura-levels-native-view";
+    panel.innerHTML = yuraLevelsMarkup();
+    host.appendChild(panel);
+    yuraLevelsPanel = panel;
 
-    frame.addEventListener("load", () => {
-      yuraLevelsResizeFrame();
-      try {
-        const doc = frame.contentDocument;
-        if (doc?.body && "ResizeObserver" in window) {
-          const observer = new ResizeObserver(() => yuraLevelsResizeFrame());
-          observer.observe(doc.body);
-          frame._yuraResizeObserver = observer;
-        }
-      } catch {}
-    });
-
-    host.appendChild(frame);
-    yuraLevelsFrame = frame;
+    yuraLevelsWire();
+    yuraLevelsLoad(true);
+    yuraLevelsTimer = window.setInterval(() => yuraLevelsLoad(false), 5*60*1000);
   }
 
   yuraLevelsSetNavActive(true);
@@ -1611,22 +2099,25 @@ function yuraShowLevelsView(pushHistory = true) {
   if (pushHistory) {
     const url = new URL(window.location.href);
     url.searchParams.set("yuraView","levels");
-    history.pushState({ yuraView:"levels" }, "", url);
+    history.pushState({yuraView:"levels"},"",url);
   }
-
-  window.setTimeout(yuraLevelsResizeFrame, 120);
 }
 
-function yuraHideLevelsView(updateHistory = true) {
-  if (yuraLevelsFrame) {
-    try { yuraLevelsFrame._yuraResizeObserver?.disconnect?.(); } catch {}
-    yuraLevelsFrame.remove();
-    yuraLevelsFrame = null;
+function yuraHideLevelsView(updateHistory=true) {
+  if (yuraLevelsTimer) {
+    window.clearInterval(yuraLevelsTimer);
+    yuraLevelsTimer = null;
+  }
+
+  if (yuraLevelsPanel) {
+    yuraLevelsPanel.remove();
+    yuraLevelsPanel = null;
   }
 
   yuraLevelsHiddenChildren.forEach(x => {
     if (x?.el) x.el.style.display = x.display || "";
   });
+
   yuraLevelsHiddenChildren = [];
   yuraLevelsHost = null;
   yuraLevelsSetNavActive(false);
@@ -1639,7 +2130,11 @@ function yuraHideLevelsView(updateHistory = true) {
 }
 
 function yuraInstallLevelsNavLink() {
-  if (document.querySelector("[data-yura-levels-nav='1']")) return true;
+  const old = document.querySelector("[data-yura-levels-nav='1']");
+  if (old) {
+    // Replace stale historical clones/handlers instead of trusting them.
+    old.remove();
+  }
 
   const candidates = [...document.querySelectorAll("a,button,[data-view]")];
   const ranking = candidates.find(el => {
@@ -1651,9 +2146,9 @@ function yuraInstallLevelsNavLink() {
   const clone = ranking.cloneNode(true);
   clone.setAttribute("data-yura-levels-nav","1");
   clone.removeAttribute("data-view");
+  clone.removeAttribute("href");
   clone.removeAttribute("aria-current");
   clone.classList.remove("active","is-active","selected");
-  if (clone.tagName === "A") clone.setAttribute("href","?yuraView=levels");
 
   clone.innerHTML = clone.innerHTML
     .replace(/Ranking/g,"Levels")
@@ -1661,7 +2156,7 @@ function yuraInstallLevelsNavLink() {
 
   clone.addEventListener("click", event => {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
     yuraShowLevelsView(true);
   }, true);
 
@@ -1670,7 +2165,7 @@ function yuraInstallLevelsNavLink() {
 }
 
 document.addEventListener("click", event => {
-  if (!yuraLevelsFrame) return;
+  if (!yuraLevelsPanel) return;
   const item = event.target?.closest?.("a,button,[data-view]");
   if (!item || item.matches("[data-yura-levels-nav='1']")) return;
   const text = String(item.textContent || "").replace(/\s+/g," ").trim();
@@ -1678,23 +2173,30 @@ document.addEventListener("click", event => {
     yuraHideLevelsView(true);
 }, true);
 
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && yuraLevelsPanel) yuraLevelsLoad(true);
+});
+
 window.addEventListener("popstate", () => {
-  const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
-  if (wantsLevels) yuraShowLevelsView(false);
+  const wants = new URL(window.location.href).searchParams.get("yuraView") === "levels";
+  if (wants) yuraShowLevelsView(false);
   else yuraHideLevelsView(false);
 });
 
-if (!yuraInstallLevelsNavLink()) {
-  const yuraLevelsNavObserver = new MutationObserver(() => {
-    if (yuraInstallLevelsNavLink()) {
-      const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
-      if (wantsLevels) window.setTimeout(() => yuraShowLevelsView(false), 50);
-      yuraLevelsNavObserver.disconnect();
-    }
-  });
-  yuraLevelsNavObserver.observe(document.documentElement,{childList:true,subtree:true});
-  window.setTimeout(() => yuraLevelsNavObserver.disconnect(),15000);
-} else {
-  const wantsLevels = new URL(window.location.href).searchParams.get("yuraView") === "levels";
-  if (wantsLevels) window.setTimeout(() => yuraShowLevelsView(false), 50);
+function yuraBootLevelsNative() {
+  if (!yuraInstallLevelsNavLink()) {
+    const observer = new MutationObserver(() => {
+      if (yuraInstallLevelsNavLink()) {
+        observer.disconnect();
+        if (new URL(window.location.href).searchParams.get("yuraView") === "levels")
+          window.setTimeout(() => yuraShowLevelsView(false), 50);
+      }
+    });
+    observer.observe(document.documentElement,{childList:true,subtree:true});
+    window.setTimeout(() => observer.disconnect(),15000);
+  } else if (new URL(window.location.href).searchParams.get("yuraView") === "levels") {
+    window.setTimeout(() => yuraShowLevelsView(false), 50);
+  }
 }
+
+yuraBootLevelsNative();
