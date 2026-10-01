@@ -61,7 +61,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
     <nav class="nav">
       <a href="./">Komendy</a>
       <a href="./">Ranking <em>TOP 10</em></a>
-      <a href="levels.html" class="active">Levels <em>EXP</em></a>
+      <a href="levels.html?v=333" class="active">Levels <em>EXP</em></a>
       <a href="./">O mnie <em>PROFILE</em></a>
       <a href="./">Harmonogram <em>STREAM</em></a>
       <a href="./">Changelog</a>
@@ -113,7 +113,6 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:
         <div class="table-head"><div>LEVEL</div><div>TOTAL EXP</div><div>OD POPRZEDNIEGO</div><div style="text-align:right">DO NASTĘPNEGO</div></div>
         <div id="expRows"></div>
       </div>
-      <button id="moreLevels" class="more">POKAŻ KOLEJNE 100 LEVELI</button>
     </section>
   </main>
 </div>
@@ -123,7 +122,7 @@ const CLOUD="https://yura-cloud.heiyeshi.workers.dev";
 const LAST_KEY="yura-levels-last-good-v1";
 let allEntries=[];
 let revision="";
-let visibleLevelMax=100;
+const visibleLevelMax=100;
 let pollTimer=null;
 
 const nf=new Intl.NumberFormat("pl-PL");
@@ -218,7 +217,6 @@ document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>
   document.getElementById("tableTab").classList.toggle("hidden",rank);
 }));
 document.getElementById("search").addEventListener("input",renderRanking);
-document.getElementById("moreLevels").addEventListener("click",()=>{visibleLevelMax+=100;renderExpTable()});
 document.getElementById("expCalc").addEventListener("click",()=>{
   const exp=Math.max(0,Math.trunc(Number(document.getElementById("expInput").value)||0)),p=progressFor(exp);
   document.getElementById("expResult").textContent=`LVL ${p.lvl} • ${nf.format(p.progress)} / ${nf.format(p.target)} EXP • ${nf.format(p.toNext)} do LVL ${p.lvl+1}`;
