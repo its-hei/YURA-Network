@@ -1226,7 +1226,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_NATIVE_VIEW_V87
+// YURA_LEVELS_NATIVE_VIEW_V88
 const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
 const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
 const YURA_LEVELS_STYLE_CACHE_KEY = "yura-levels-bar-style-v1";
@@ -1768,34 +1768,63 @@ function yuraStreamMapEnsureStyle() {
   const style = document.createElement("style");
   style.id = "yura-stream-map-style";
   style.textContent = `
-    .yura-stream-map{width:100%;min-width:0;color:#f5f7fa}
+    .yura-stream-map{--orange:#ff8a00;--purple:#9c4dff;--blue:#20b8ff;width:100%;min-width:0;color:#f5f7fa;position:relative}
     .yura-stream-map *{box-sizing:border-box}
-    .yura-stream-map-hero{border:1px solid #263646;border-radius:18px;padding:24px;background:linear-gradient(120deg,#0b1219 0%,#0d151f 58%,rgba(242,140,24,.08) 100%);margin-bottom:16px}
-    .yura-stream-map-kicker{font:900 10px Consolas,monospace;letter-spacing:.16em;color:#f28c18}
-    .yura-stream-map-title{font-size:46px;line-height:1;margin:7px 0 8px;letter-spacing:-.035em}
-    .yura-stream-map-subtitle{margin:0;color:#9aabba;font-size:16px;line-height:1.4}
-    .yura-stream-map-intro{margin:14px 0 0;padding-top:14px;border-top:1px solid #223141;color:#d2d9df;font-size:13px;line-height:1.5}
+    .yura-stream-map:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;background:
+      linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);
+      background-size:26px 26px;mask-image:linear-gradient(to bottom,#000,transparent 82%)}
+    .yura-stream-map-shell{position:relative;padding:2px}
+    .yura-stream-map-hero{position:relative;overflow:hidden;border:1px solid rgba(255,138,0,.55);border-radius:20px;padding:26px 28px 24px;background:
+      radial-gradient(circle at 88% 30%,rgba(255,138,0,.20),transparent 28%),
+      linear-gradient(120deg,#0a1118 0%,#0c1620 62%,#17100a 100%);
+      box-shadow:0 0 0 1px rgba(255,255,255,.018),0 0 26px rgba(255,138,0,.08),inset 0 0 42px rgba(255,138,0,.035);margin-bottom:14px}
+    .yura-stream-map-hero:before,.yura-stream-map-hero:after{content:"";position:absolute;width:130px;height:3px;background:linear-gradient(90deg,transparent,var(--orange),transparent);filter:drop-shadow(0 0 8px var(--orange))}
+    .yura-stream-map-hero:before{top:0;left:24px}.yura-stream-map-hero:after{right:24px;bottom:0}
+    .yura-stream-map-kicker{display:flex;align-items:center;gap:9px;font:900 10px Consolas,monospace;letter-spacing:.20em;color:var(--orange)}
+    .yura-stream-map-kicker:before{content:"M";display:grid;place-items:center;width:26px;height:26px;border:1px solid rgba(255,138,0,.55);border-radius:7px;background:rgba(255,138,0,.08);font-size:15px;box-shadow:0 0 14px rgba(255,138,0,.16)}
+    .yura-stream-map-title{font-size:52px;line-height:.96;margin:11px 0 8px;letter-spacing:-.045em;background:linear-gradient(180deg,#fff 8%,#dfe7ee 58%,#8e9aa6 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .yura-stream-map-subtitle{margin:0;color:#b8c7d3;font-size:17px;line-height:1.4}
+    .yura-stream-map-intro{margin:15px 0 0;padding-top:14px;border-top:1px solid rgba(255,138,0,.25);color:#dbe3e9;font-size:13px;line-height:1.55}
+    .yura-stream-map-section-title{display:flex;align-items:center;gap:10px;margin:15px 0 9px;color:#f6f8fa;font-weight:900;font-size:14px;letter-spacing:.02em}
+    .yura-stream-map-section-title:before{content:"";width:8px;height:8px;transform:rotate(45deg);background:var(--orange);box-shadow:0 0 12px rgba(255,138,0,.7)}
+    .yura-stream-map-section-title:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(255,138,0,.35),rgba(42,56,69,.18))}
     .yura-stream-map-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
-    .yura-stream-map-flow div{border:1px solid #223141;background:#0a1118;border-radius:13px;padding:13px 14px;font-weight:800;font-size:13px;text-align:center}
+    .yura-stream-map-flow-item{position:relative;overflow:hidden;border:1px solid #273848;background:linear-gradient(145deg,#0a1219,#0b1016);border-radius:13px;padding:13px 14px 13px 48px;min-height:67px;box-shadow:inset 0 0 28px rgba(255,138,0,.018)}
+    .yura-stream-map-flow-item:after{content:"\u203a";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:24px;text-shadow:0 0 12px rgba(255,138,0,.5)}
+    .yura-stream-map-flow-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:28px;height:28px;border:1px solid rgba(255,138,0,.42);border-radius:8px;color:var(--orange);background:rgba(255,138,0,.06);font-weight:900}
+    .yura-stream-map-flow-item b{display:block;font-size:12px;color:#fff}
+    .yura-stream-map-flow-item small{display:block;margin-top:4px;color:#8192a0;font-size:9.5px;line-height:1.25;padding-right:13px}
     .yura-stream-map-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-    .yura-stream-map-card{border:1px solid #263646;border-radius:17px;padding:18px;background:#0a1118;min-height:355px;position:relative;overflow:hidden}
-    .yura-stream-map-card:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--map-accent)}
-    .yura-stream-map-card.ttv{--map-accent:#944dff;background:linear-gradient(145deg,rgba(148,77,255,.10),#0a1118 38%)}
-    .yura-stream-map-card.yura{--map-accent:#f28c18;background:linear-gradient(145deg,rgba(242,140,24,.10),#0a1118 38%)}
-    .yura-stream-map-card.level{--map-accent:#39a4ff;background:linear-gradient(145deg,rgba(57,164,255,.10),#0a1118 38%)}
-    .yura-stream-map-card-badge{display:inline-flex;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--map-accent) 55%,#263646);color:var(--map-accent);border-radius:999px;padding:6px 9px;font:900 10px Consolas,monospace;letter-spacing:.1em}
-    .yura-stream-map-card h2{font-size:23px;margin:17px 0 7px}
-    .yura-stream-map-summary{color:#8fa0b0;font-size:12px;line-height:1.45;min-height:36px}
-    .yura-stream-map-row{margin-top:14px;border-top:1px solid #1d2a36;padding-top:12px}
-    .yura-stream-map-row small{display:block;color:var(--map-accent);font:900 9px Consolas,monospace;letter-spacing:.12em;margin-bottom:5px}
-    .yura-stream-map-row p{margin:0;color:#d7dde2;font-size:12px;line-height:1.45}
-    .yura-stream-map-differences{margin-top:16px;border:1px solid #263646;border-radius:15px;background:#0a1118;padding:15px}
-    .yura-stream-map-differences h3{margin:0 0 11px;font-size:14px}
-    .yura-stream-map-diff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    .yura-stream-map-diff-grid div{border:1px solid #1e2b37;border-radius:11px;padding:11px;color:#b9c5cf;font-size:12px}
-    .yura-stream-map-diff-grid strong{display:block;color:#fff;margin-bottom:4px}
-    .yura-stream-map-footer{margin-top:14px;border:1px solid rgba(242,140,24,.42);border-radius:13px;padding:13px 15px;background:rgba(242,140,24,.06);color:#d7dde2;font-size:12px;text-align:center}
-    @media(max-width:1050px){.yura-stream-map-cards{grid-template-columns:1fr}.yura-stream-map-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.yura-stream-map-card{min-height:0}.yura-stream-map-diff-grid{grid-template-columns:1fr}}
+    .yura-stream-map-card{--accent:#fff;--accent-rgb:255,255,255;position:relative;overflow:hidden;border:1px solid rgba(var(--accent-rgb),.60);border-radius:18px;padding:0 17px 17px;background:
+      radial-gradient(circle at 50% 17%,rgba(var(--accent-rgb),.18),transparent 28%),
+      linear-gradient(165deg,rgba(var(--accent-rgb),.065),#091017 34%,#081017 100%);
+      min-height:430px;box-shadow:0 0 20px rgba(var(--accent-rgb),.10),inset 0 0 38px rgba(var(--accent-rgb),.025)}
+    .yura-stream-map-card.ttv{--accent:#a34dff;--accent-rgb:163,77,255}
+    .yura-stream-map-card.yura{--accent:#ff920f;--accent-rgb:255,146,15}
+    .yura-stream-map-card.level{--accent:#20b8ff;--accent-rgb:32,184,255}
+    .yura-stream-map-card:before{content:"";position:absolute;inset:0 18% auto;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 14px var(--accent)}
+    .yura-stream-map-card-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:0 -17px 14px;padding:13px 16px 11px;border-bottom:1px solid rgba(var(--accent-rgb),.20);background:linear-gradient(90deg,rgba(var(--accent-rgb),.08),transparent)}
+    .yura-stream-map-card-no{font:900 12px Consolas,monospace;color:var(--accent);letter-spacing:.1em}
+    .yura-stream-map-emblem{justify-self:center;display:grid;place-items:center;width:74px;height:58px;border:1px solid rgba(var(--accent-rgb),.45);border-radius:16px;background:radial-gradient(circle,rgba(var(--accent-rgb),.22),rgba(var(--accent-rgb),.04) 60%,transparent 70%);color:var(--accent);font:900 20px Consolas,monospace;letter-spacing:.08em;box-shadow:0 0 20px rgba(var(--accent-rgb),.16),inset 0 0 18px rgba(var(--accent-rgb),.10)}
+    .yura-stream-map-card-badge{justify-self:end;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(var(--accent-rgb),.55);color:var(--accent);border-radius:999px;padding:5px 8px;font:900 9px Consolas,monospace;letter-spacing:.11em;background:rgba(var(--accent-rgb),.05)}
+    .yura-stream-map-card h2{font-size:24px;line-height:1.05;margin:0 0 8px;color:#fff}
+    .yura-stream-map-summary{color:#91a3b2;font-size:12px;line-height:1.45;min-height:35px;padding-bottom:11px;border-bottom:1px solid rgba(var(--accent-rgb),.14)}
+    .yura-stream-map-row{position:relative;margin-top:11px;border:1px solid rgba(var(--accent-rgb),.16);border-radius:11px;padding:11px 11px 11px 43px;background:rgba(3,8,12,.42)}
+    .yura-stream-map-row:before{content:attr(data-icon);position:absolute;left:11px;top:10px;display:grid;place-items:center;width:23px;height:23px;border:1px solid rgba(var(--accent-rgb),.40);border-radius:7px;color:var(--accent);font-size:12px;font-weight:900}
+    .yura-stream-map-row small{display:block;color:var(--accent);font:900 8.5px Consolas,monospace;letter-spacing:.12em;margin-bottom:4px}
+    .yura-stream-map-row p{margin:0;color:#dce3e8;font-size:11.5px;line-height:1.4}
+    .yura-stream-map-differences,.yura-stream-map-rewards{margin-top:15px;border:1px solid #293a49;border-radius:15px;background:linear-gradient(145deg,#0a1219,#081017);padding:15px;box-shadow:inset 0 0 30px rgba(255,138,0,.018)}
+    .yura-stream-map-differences h3,.yura-stream-map-rewards h3{display:flex;align-items:center;gap:9px;margin:0 0 11px;font-size:14px}
+    .yura-stream-map-differences h3:before,.yura-stream-map-rewards h3:before{content:"\u25c6";color:var(--orange);font-size:11px}
+    .yura-stream-map-diff-grid,.yura-stream-map-reward-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .yura-stream-map-diff-grid div,.yura-stream-map-reward-grid div{position:relative;overflow:hidden;border:1px solid #22313f;border-radius:11px;padding:12px 12px 12px 44px;color:#b9c5cf;font-size:11.5px;min-height:62px;background:#091118}
+    .yura-stream-map-diff-grid span,.yura-stream-map-reward-grid span{position:absolute;left:11px;top:13px;display:grid;place-items:center;width:23px;height:23px;border-radius:7px;border:1px solid rgba(255,138,0,.35);color:var(--orange);font-weight:900}
+    .yura-stream-map-diff-grid strong,.yura-stream-map-reward-grid strong{display:block;color:#fff;margin-bottom:4px}
+    .yura-stream-map-footer{margin-top:14px;border:1px solid rgba(255,138,0,.55);border-radius:13px;padding:13px 15px;background:linear-gradient(90deg,rgba(255,138,0,.08),rgba(255,138,0,.025));color:#e0e6eb;font-size:12px;text-align:center;box-shadow:0 0 18px rgba(255,138,0,.06)}
+    .yura-stream-map-footer b{color:var(--orange)}
+    @media(max-width:1100px){.yura-stream-map-cards{grid-template-columns:1fr}.yura-stream-map-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.yura-stream-map-card{min-height:0}.yura-stream-map-diff-grid,.yura-stream-map-reward-grid{grid-template-columns:1fr}}
+    @media(max-width:680px){.yura-stream-map-title{font-size:38px}.yura-stream-map-flow{grid-template-columns:1fr}.yura-stream-map-hero{padding:21px}}
   `;
   document.head.appendChild(style);
 }
@@ -1813,48 +1842,65 @@ function yuraStreamMapMerge(raw) {
 
 function yuraStreamMapMarkup(data) {
   const m = yuraStreamMapMerge(data);
-  const card = (kind,badge,title,summary,earn,use,rewards) => `
+
+  const card = (kind,no,badge,emblem,title,summary,earn,use,rewards) => `
     <article class="yura-stream-map-card ${kind}">
-      <span class="yura-stream-map-card-badge">${yuraLevelsEsc(badge)}</span>
+      <div class="yura-stream-map-card-top">
+        <span class="yura-stream-map-card-no">${no}</span>
+        <div class="yura-stream-map-emblem">${yuraLevelsEsc(emblem)}</div>
+        <span class="yura-stream-map-card-badge">${yuraLevelsEsc(badge)}</span>
+      </div>
       <h2>${yuraLevelsEsc(title)}</h2>
       <div class="yura-stream-map-summary">${yuraLevelsEsc(summary)}</div>
-      <div class="yura-stream-map-row"><small>ZA CO?</small><p>${yuraLevelsEsc(earn)}</p></div>
-      <div class="yura-stream-map-row"><small>DO CZEGO?</small><p>${yuraLevelsEsc(use)}</p></div>
-      <div class="yura-stream-map-row"><small>NAGRODY</small><p>${yuraLevelsEsc(rewards)}</p></div>
+      <div class="yura-stream-map-row" data-icon="+"><small>ZA CO?</small><p>${yuraLevelsEsc(earn)}</p></div>
+      <div class="yura-stream-map-row" data-icon=">"><small>DO CZEGO?</small><p>${yuraLevelsEsc(use)}</p></div>
+      <div class="yura-stream-map-row" data-icon="*"><small>NAGRODY</small><p>${yuraLevelsEsc(rewards)}</p></div>
     </article>`;
 
   return `
     <section class="yura-stream-map">
-      <div class="yura-stream-map-hero">
-        <div class="yura-stream-map-kicker">Y.U.R.A. // VIEWER GUIDE</div>
-        <h1 class="yura-stream-map-title">${yuraLevelsEsc(m.title)}</h1>
-        <p class="yura-stream-map-subtitle">${yuraLevelsEsc(m.subtitle)}</p>
-        <p class="yura-stream-map-intro">${yuraLevelsEsc(m.intro)}</p>
-      </div>
-
-      <div class="yura-stream-map-flow">
-        <div>Ogladanie streama</div>
-        <div>Czat i aktywnosc</div>
-        <div>Sub / Gift Sub</div>
-        <div>Wsparcie i interakcje</div>
-      </div>
-
-      <div class="yura-stream-map-cards">
-        ${card("ttv","TTV",m.twitchTitle,m.twitchSummary,m.twitchEarn,m.twitchUse,m.twitchRewards)}
-        ${card("yura","YURA",m.yuraTitle,m.yuraSummary,m.yuraEarn,m.yuraUse,m.yuraRewards)}
-        ${card("level","LVL",m.levelTitle,m.levelSummary,m.levelEarn,m.levelUse,m.levelRewards)}
-      </div>
-
-      <div class="yura-stream-map-differences">
-        <h3>Najwazniejsze roznice</h3>
-        <div class="yura-stream-map-diff-grid">
-          <div><strong>TTV Points</strong>punkty kanalowe Twitch do redeemow i interakcji.</div>
-          <div><strong>YURA Points</strong>waluta ekonomii Y.U.R.A. do systemow streamowych.</div>
-          <div><strong>EXP / Level</strong>staly progres widza - EXP buduje level i nie sluzy do wydawania.</div>
+      <div class="yura-stream-map-shell">
+        <div class="yura-stream-map-hero">
+          <div class="yura-stream-map-kicker">Y.U.R.A. NETWORK // VIEWER GUIDE</div>
+          <h1 class="yura-stream-map-title">${yuraLevelsEsc(m.title)}</h1>
+          <p class="yura-stream-map-subtitle">${yuraLevelsEsc(m.subtitle)}</p>
+          <p class="yura-stream-map-intro">${yuraLevelsEsc(m.intro)}</p>
         </div>
-      </div>
 
-      <div class="yura-stream-map-footer">${yuraLevelsEsc(m.footer)}</div>
+        <div class="yura-stream-map-section-title">AKTYWNOSC WIDZA</div>
+        <div class="yura-stream-map-flow">
+          <div class="yura-stream-map-flow-item"><span class="yura-stream-map-flow-icon">O</span><b>Ogladanie streama</b><small>Czas na kanale i stala aktywnosc.</small></div>
+          <div class="yura-stream-map-flow-item"><span class="yura-stream-map-flow-icon">#</span><b>Czat i aktywnosc</b><small>Wiadomosci, interakcje i udzial w akcjach.</small></div>
+          <div class="yura-stream-map-flow-item"><span class="yura-stream-map-flow-icon">S</span><b>Sub / Gift Sub</b><small>Subskrypcje, prezenty i lojalnosc.</small></div>
+          <div class="yura-stream-map-flow-item"><span class="yura-stream-map-flow-icon">$</span><b>Wsparcie i interakcje</b><small>Donate, wsparcie i wydarzenia specjalne.</small></div>
+        </div>
+
+        <div class="yura-stream-map-cards">
+          ${card("ttv","01","TTV","TTV",m.twitchTitle,m.twitchSummary,m.twitchEarn,m.twitchUse,m.twitchRewards)}
+          ${card("yura","02","YURA","Y",m.yuraTitle,m.yuraSummary,m.yuraEarn,m.yuraUse,m.yuraRewards)}
+          ${card("level","03","LVL","LVL",m.levelTitle,m.levelSummary,m.levelEarn,m.levelUse,m.levelRewards)}
+        </div>
+
+        <div class="yura-stream-map-differences">
+          <h3>NAJWAZNIEJSZE ROZNICE</h3>
+          <div class="yura-stream-map-diff-grid">
+            <div><span>T</span><strong>TTV Points</strong>punkty kanalowe Twitch do redeemow i interakcji.</div>
+            <div><span>Y</span><strong>YURA Points</strong>waluta streama Y.U.R.A. do systemow ekonomii.</div>
+            <div><span>E</span><strong>EXP / Level</strong>buduje level i progres, ale nie sluzy do wydawania.</div>
+          </div>
+        </div>
+
+        <div class="yura-stream-map-rewards">
+          <h3>NAGRODY I CO DALEJ?</h3>
+          <div class="yura-stream-map-reward-grid">
+            <div><span>T</span><strong>Redeemy Twitch</strong>${yuraLevelsEsc(m.twitchRewards)}</div>
+            <div><span>Y</span><strong>Ekonomia YURA</strong>${yuraLevelsEsc(m.yuraRewards)}</div>
+            <div><span>L</span><strong>Progres widza</strong>${yuraLevelsEsc(m.levelRewards)}</div>
+          </div>
+        </div>
+
+        <div class="yura-stream-map-footer"><b>?</b>&nbsp;&nbsp;${yuraLevelsEsc(m.footer)}</div>
+      </div>
     </section>`;
 }
 
@@ -1971,7 +2017,11 @@ function yuraInstallStreamMapNavLink() {
     yuraShowStreamMapView(true);
   }, true);
 
-  levels.insertAdjacentElement("afterend",clone);
+  const navRoot = levels.parentElement;
+  if (navRoot)
+    navRoot.insertBefore(clone, navRoot.firstElementChild);
+  else
+    levels.insertAdjacentElement("beforebegin", clone);
   return true;
 }
 
