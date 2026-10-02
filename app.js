@@ -1226,7 +1226,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_NATIVE_VIEW_V85
+// YURA_LEVELS_NATIVE_VIEW_V86
 const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
 const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
 const YURA_LEVELS_STYLE_CACHE_KEY = "yura-levels-bar-style-v1";
@@ -1292,7 +1292,7 @@ function yuraLevelsFindVisibleHeading() {
     const r = el.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) return false;
     const text = String(el.textContent || "").replace(/\s+/g," ").trim();
-    return /^(Komendy kana\u0142u|Ranking|O mnie|Harmonogram|Changelog)$/i.test(text);
+    return /^(Komendy kana\u0142u|Ranking|O mnie|Harmonogram)$/i.test(text);
   }) || null;
 }
 
@@ -1773,7 +1773,7 @@ document.addEventListener("click", event => {
   const item = event.target?.closest?.("a,button,[data-view]");
   if (!item || item.matches("[data-yura-levels-nav='1']")) return;
   const text = String(item.textContent || "").replace(/\s+/g," ").trim();
-  if (/^(Komendy|Ranking|O mnie|Harmonogram|Changelog)\b/i.test(text)) {
+  if (/^(Komendy|Ranking|O mnie|Harmonogram)\b/i.test(text)) {
     window.setTimeout(() => yuraHideLevelsView(true), 0);
   }
 }, false);
@@ -1788,9 +1788,21 @@ window.addEventListener("popstate", () => {
   else yuraHideLevelsView(false);
 });
 
+function yuraRemovePublicChangelogNav() {
+  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
+  for (const el of candidates) {
+    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
+    if (/^Changelog(?:\s|$)/i.test(text)) {
+      el.remove();
+    }
+  }
+}
+
 function yuraBootLevelsNative() {
+  yuraRemovePublicChangelogNav();
   if (!yuraInstallLevelsNavLink()) {
     const observer = new MutationObserver(() => {
+      yuraRemovePublicChangelogNav();
       if (yuraInstallLevelsNavLink()) {
         observer.disconnect();
         if (new URL(window.location.href).searchParams.get("yuraView") === "levels")
@@ -1805,3 +1817,6 @@ function yuraBootLevelsNative() {
 }
 
 yuraBootLevelsNative();
+const yuraChangelogNavObserver = new MutationObserver(() => yuraRemovePublicChangelogNav());
+yuraChangelogNavObserver.observe(document.documentElement,{childList:true,subtree:true});
+window.setTimeout(() => yuraChangelogNavObserver.disconnect(),30000);
