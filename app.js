@@ -1226,7 +1226,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 yuraScheduleStartAutoRefresh();
-// YURA_LEVELS_NATIVE_VIEW_V86
+// YURA_LEVELS_NATIVE_VIEW_V87
 const YURA_LEVELS_CLOUD = "https://yura-cloud.heiyeshi.workers.dev";
 const YURA_LEVELS_CACHE_KEY = "yura-levels-native-last-good-v1";
 const YURA_LEVELS_STYLE_CACHE_KEY = "yura-levels-bar-style-v1";
@@ -1733,6 +1733,248 @@ function yuraHideLevelsView(updateHistory=true) {
   }
 }
 
+
+const YURA_STREAM_MAP_CACHE_KEY = "yura-stream-map-last-good-v1";
+let yuraStreamMapHost = null;
+let yuraStreamMapPanel = null;
+let yuraStreamMapHiddenChildren = [];
+
+function yuraStreamMapDefaults() {
+  return {
+    title:"Mapa streama",
+    subtitle:"Jak dzialaja punkty, EXP, level i nagrody na kanale.",
+    intro:"Na streamie dzialaja trzy rozne systemy. Kazdy ma inne zastosowanie i nie zastepuja sie wzajemnie.",
+    twitchTitle:"Punkty Twitch (TTV)",
+    twitchSummary:"Natywne punkty kanalu Twitch.",
+    twitchEarn:"Glownie za ogladanie streama i aktywnosc na kanale.",
+    twitchUse:"Redeemy kanalowe, interakcje i efekty na streamie.",
+    twitchRewards:"Nagrody przypisane do redeemow Twitch.",
+    yuraTitle:"YURA Points",
+    yuraSummary:"Wlasna ekonomia streama Y.U.R.A.",
+    yuraEarn:"Za obecnosc na streamie, aktywnosc i inne akcje Y.U.R.A.",
+    yuraUse:"Raffle, gamble, ranking i inne systemy ekonomii Y.U.R.A.",
+    yuraRewards:"M.in. Monthly VIP i nagrody powiazane z ekonomia Y.U.R.A.",
+    levelTitle:"YURA EXP / Level",
+    levelSummary:"Staly progres widza - EXP nie jest waluta.",
+    levelEarn:"Za czat, pierwsza wiadomosc na streamie, suby i inne zrodla EXP.",
+    levelUse:"Buduje poziom widza, ranking leveli i przyszle odblokowania.",
+    levelRewards:"Nagrody i odblokowania zalezne od levela beda rozwijane wraz z systemem.",
+    footer:"Nie wiesz, ktorego systemu dotyczy dana nagroda? Zapytaj na czacie albo sprawdz komendy Y.U.R.A."
+  };
+}
+
+function yuraStreamMapEnsureStyle() {
+  if (document.getElementById("yura-stream-map-style")) return;
+  const style = document.createElement("style");
+  style.id = "yura-stream-map-style";
+  style.textContent = `
+    .yura-stream-map{width:100%;min-width:0;color:#f5f7fa}
+    .yura-stream-map *{box-sizing:border-box}
+    .yura-stream-map-hero{border:1px solid #263646;border-radius:18px;padding:24px;background:linear-gradient(120deg,#0b1219 0%,#0d151f 58%,rgba(242,140,24,.08) 100%);margin-bottom:16px}
+    .yura-stream-map-kicker{font:900 10px Consolas,monospace;letter-spacing:.16em;color:#f28c18}
+    .yura-stream-map-title{font-size:46px;line-height:1;margin:7px 0 8px;letter-spacing:-.035em}
+    .yura-stream-map-subtitle{margin:0;color:#9aabba;font-size:16px;line-height:1.4}
+    .yura-stream-map-intro{margin:14px 0 0;padding-top:14px;border-top:1px solid #223141;color:#d2d9df;font-size:13px;line-height:1.5}
+    .yura-stream-map-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    .yura-stream-map-flow div{border:1px solid #223141;background:#0a1118;border-radius:13px;padding:13px 14px;font-weight:800;font-size:13px;text-align:center}
+    .yura-stream-map-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .yura-stream-map-card{border:1px solid #263646;border-radius:17px;padding:18px;background:#0a1118;min-height:355px;position:relative;overflow:hidden}
+    .yura-stream-map-card:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--map-accent)}
+    .yura-stream-map-card.ttv{--map-accent:#944dff;background:linear-gradient(145deg,rgba(148,77,255,.10),#0a1118 38%)}
+    .yura-stream-map-card.yura{--map-accent:#f28c18;background:linear-gradient(145deg,rgba(242,140,24,.10),#0a1118 38%)}
+    .yura-stream-map-card.level{--map-accent:#39a4ff;background:linear-gradient(145deg,rgba(57,164,255,.10),#0a1118 38%)}
+    .yura-stream-map-card-badge{display:inline-flex;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--map-accent) 55%,#263646);color:var(--map-accent);border-radius:999px;padding:6px 9px;font:900 10px Consolas,monospace;letter-spacing:.1em}
+    .yura-stream-map-card h2{font-size:23px;margin:17px 0 7px}
+    .yura-stream-map-summary{color:#8fa0b0;font-size:12px;line-height:1.45;min-height:36px}
+    .yura-stream-map-row{margin-top:14px;border-top:1px solid #1d2a36;padding-top:12px}
+    .yura-stream-map-row small{display:block;color:var(--map-accent);font:900 9px Consolas,monospace;letter-spacing:.12em;margin-bottom:5px}
+    .yura-stream-map-row p{margin:0;color:#d7dde2;font-size:12px;line-height:1.45}
+    .yura-stream-map-differences{margin-top:16px;border:1px solid #263646;border-radius:15px;background:#0a1118;padding:15px}
+    .yura-stream-map-differences h3{margin:0 0 11px;font-size:14px}
+    .yura-stream-map-diff-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .yura-stream-map-diff-grid div{border:1px solid #1e2b37;border-radius:11px;padding:11px;color:#b9c5cf;font-size:12px}
+    .yura-stream-map-diff-grid strong{display:block;color:#fff;margin-bottom:4px}
+    .yura-stream-map-footer{margin-top:14px;border:1px solid rgba(242,140,24,.42);border-radius:13px;padding:13px 15px;background:rgba(242,140,24,.06);color:#d7dde2;font-size:12px;text-align:center}
+    @media(max-width:1050px){.yura-stream-map-cards{grid-template-columns:1fr}.yura-stream-map-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.yura-stream-map-card{min-height:0}.yura-stream-map-diff-grid{grid-template-columns:1fr}}
+  `;
+  document.head.appendChild(style);
+}
+
+function yuraStreamMapMerge(raw) {
+  const d = yuraStreamMapDefaults();
+  const src = raw && typeof raw === "object" ? raw : {};
+  const out = {...d};
+  for (const key of Object.keys(d)) {
+    const v = String(src[key] ?? "").trim();
+    if (v) out[key] = v;
+  }
+  return out;
+}
+
+function yuraStreamMapMarkup(data) {
+  const m = yuraStreamMapMerge(data);
+  const card = (kind,badge,title,summary,earn,use,rewards) => `
+    <article class="yura-stream-map-card ${kind}">
+      <span class="yura-stream-map-card-badge">${yuraLevelsEsc(badge)}</span>
+      <h2>${yuraLevelsEsc(title)}</h2>
+      <div class="yura-stream-map-summary">${yuraLevelsEsc(summary)}</div>
+      <div class="yura-stream-map-row"><small>ZA CO?</small><p>${yuraLevelsEsc(earn)}</p></div>
+      <div class="yura-stream-map-row"><small>DO CZEGO?</small><p>${yuraLevelsEsc(use)}</p></div>
+      <div class="yura-stream-map-row"><small>NAGRODY</small><p>${yuraLevelsEsc(rewards)}</p></div>
+    </article>`;
+
+  return `
+    <section class="yura-stream-map">
+      <div class="yura-stream-map-hero">
+        <div class="yura-stream-map-kicker">Y.U.R.A. // VIEWER GUIDE</div>
+        <h1 class="yura-stream-map-title">${yuraLevelsEsc(m.title)}</h1>
+        <p class="yura-stream-map-subtitle">${yuraLevelsEsc(m.subtitle)}</p>
+        <p class="yura-stream-map-intro">${yuraLevelsEsc(m.intro)}</p>
+      </div>
+
+      <div class="yura-stream-map-flow">
+        <div>Ogladanie streama</div>
+        <div>Czat i aktywnosc</div>
+        <div>Sub / Gift Sub</div>
+        <div>Wsparcie i interakcje</div>
+      </div>
+
+      <div class="yura-stream-map-cards">
+        ${card("ttv","TTV",m.twitchTitle,m.twitchSummary,m.twitchEarn,m.twitchUse,m.twitchRewards)}
+        ${card("yura","YURA",m.yuraTitle,m.yuraSummary,m.yuraEarn,m.yuraUse,m.yuraRewards)}
+        ${card("level","LVL",m.levelTitle,m.levelSummary,m.levelEarn,m.levelUse,m.levelRewards)}
+      </div>
+
+      <div class="yura-stream-map-differences">
+        <h3>Najwazniejsze roznice</h3>
+        <div class="yura-stream-map-diff-grid">
+          <div><strong>TTV Points</strong>punkty kanalowe Twitch do redeemow i interakcji.</div>
+          <div><strong>YURA Points</strong>waluta ekonomii Y.U.R.A. do systemow streamowych.</div>
+          <div><strong>EXP / Level</strong>staly progres widza - EXP buduje level i nie sluzy do wydawania.</div>
+        </div>
+      </div>
+
+      <div class="yura-stream-map-footer">${yuraLevelsEsc(m.footer)}</div>
+    </section>`;
+}
+
+async function yuraStreamMapLoad() {
+  let data = null;
+  try {
+    const r = await fetch(`network-config.json?_=${Date.now()}`, {cache:"no-store"});
+    if (!r.ok) throw new Error(`network config ${r.status}`);
+    const cfg = await r.json();
+    data = yuraStreamMapMerge(cfg?.streamMap);
+    localStorage.setItem(YURA_STREAM_MAP_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    try { data = yuraStreamMapMerge(JSON.parse(localStorage.getItem(YURA_STREAM_MAP_CACHE_KEY) || "null")); }
+    catch { data = yuraStreamMapDefaults(); }
+  }
+
+  if (yuraStreamMapPanel)
+    yuraStreamMapPanel.innerHTML = yuraStreamMapMarkup(data);
+}
+
+function yuraStreamMapSetNavActive(active) {
+  const map = document.querySelector("[data-yura-stream-map-nav='1']");
+  if (!map) return;
+  if (active) {
+    [...document.querySelectorAll("a,button,[data-view]")].forEach(el => {
+      if (el === map) return;
+      el.classList.remove("active","is-active","selected");
+      el.removeAttribute("aria-current");
+    });
+    map.classList.add("active");
+    map.setAttribute("aria-current","page");
+  } else {
+    map.classList.remove("active","is-active","selected");
+    map.removeAttribute("aria-current");
+  }
+}
+
+function yuraShowStreamMapView(pushHistory=true) {
+  if (yuraLevelsPanel) yuraHideLevelsView(false);
+
+  const host = yuraLevelsFindMainHost();
+  if (!host) {
+    window.setTimeout(() => yuraShowStreamMapView(pushHistory), 120);
+    return;
+  }
+
+  yuraStreamMapEnsureStyle();
+  yuraStreamMapHost = host;
+
+  if (!yuraStreamMapPanel) {
+    yuraStreamMapHiddenChildren = [...host.children].map(el => ({el,display:el.style.display}));
+    yuraStreamMapHiddenChildren.forEach(x => x.el.style.display = "none");
+
+    const panel = document.createElement("div");
+    panel.id = "yura-stream-map-native-view";
+    panel.innerHTML = yuraStreamMapMarkup(yuraStreamMapDefaults());
+    host.appendChild(panel);
+    yuraStreamMapPanel = panel;
+
+    yuraStreamMapLoad();
+  }
+
+  yuraStreamMapSetNavActive(true);
+
+  if (pushHistory) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("yuraView","streammap");
+    history.pushState({yuraView:"streammap"},"",url);
+  }
+}
+
+function yuraHideStreamMapView(updateHistory=true) {
+  if (yuraStreamMapPanel) {
+    yuraStreamMapPanel.remove();
+    yuraStreamMapPanel = null;
+  }
+
+  yuraStreamMapHiddenChildren.forEach(x => {
+    if (x?.el) x.el.style.display = x.display || "";
+  });
+  yuraStreamMapHiddenChildren = [];
+  yuraStreamMapHost = null;
+  yuraStreamMapSetNavActive(false);
+
+  if (updateHistory) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("yuraView");
+    history.replaceState({},"",url);
+  }
+}
+
+function yuraInstallStreamMapNavLink() {
+  const old = document.querySelector("[data-yura-stream-map-nav='1']");
+  if (old) old.remove();
+
+  const levels = document.querySelector("[data-yura-levels-nav='1']");
+  if (!levels) return false;
+
+  const clone = levels.cloneNode(true);
+  clone.setAttribute("data-yura-stream-map-nav","1");
+  clone.removeAttribute("data-yura-levels-nav");
+  clone.removeAttribute("data-view");
+  clone.removeAttribute("href");
+  clone.removeAttribute("aria-current");
+  clone.classList.remove("active","is-active","selected");
+
+  clone.innerHTML = clone.innerHTML
+    .replace(/Levels/g,"Mapa streama")
+    .replace(/EXP/gi,"GUIDE");
+
+  clone.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    yuraShowStreamMapView(true);
+  }, true);
+
+  levels.insertAdjacentElement("afterend",clone);
+  return true;
+}
+
 function yuraInstallLevelsNavLink() {
   const old = document.querySelector("[data-yura-levels-nav='1']");
   if (old) {
@@ -1761,12 +2003,22 @@ function yuraInstallLevelsNavLink() {
   clone.addEventListener("click", event => {
     event.preventDefault();
     event.stopImmediatePropagation();
+    if (yuraStreamMapPanel) yuraHideStreamMapView(false);
     yuraShowLevelsView(true);
   }, true);
 
   ranking.insertAdjacentElement("afterend", clone);
   return true;
 }
+
+document.addEventListener("click", event => {
+  if (!yuraStreamMapPanel) return;
+  const item = event.target?.closest?.("a,button,[data-view]");
+  if (!item || item.matches("[data-yura-stream-map-nav='1']")) return;
+  const text = String(item.textContent || "").replace(/\s+/g," ").trim();
+  if (/^(Komendy|Ranking|Levels|O mnie|Harmonogram)\b/i.test(text))
+    window.setTimeout(() => yuraHideStreamMapView(true),0);
+}, false);
 
 document.addEventListener("click", event => {
   if (!yuraLevelsPanel) return;
@@ -1783,9 +2035,17 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("popstate", () => {
-  const wants = new URL(window.location.href).searchParams.get("yuraView") === "levels";
-  if (wants) yuraShowLevelsView(false);
-  else yuraHideLevelsView(false);
+  const view = new URL(window.location.href).searchParams.get("yuraView");
+  if (view === "levels") {
+    if (yuraStreamMapPanel) yuraHideStreamMapView(false);
+    yuraShowLevelsView(false);
+  } else if (view === "streammap") {
+    if (yuraLevelsPanel) yuraHideLevelsView(false);
+    yuraShowStreamMapView(false);
+  } else {
+    yuraHideLevelsView(false);
+    yuraHideStreamMapView(false);
+  }
 });
 
 function yuraRemovePublicChangelogNav() {
@@ -1800,19 +2060,33 @@ function yuraRemovePublicChangelogNav() {
 
 function yuraBootLevelsNative() {
   yuraRemovePublicChangelogNav();
-  if (!yuraInstallLevelsNavLink()) {
+
+  const restoreRequestedView = () => {
+    const view = new URL(window.location.href).searchParams.get("yuraView");
+    if (view === "levels")
+      window.setTimeout(() => yuraShowLevelsView(false),50);
+    else if (view === "streammap")
+      window.setTimeout(() => yuraShowStreamMapView(false),50);
+  };
+
+  const installAll = () => {
+    const levelsReady = yuraInstallLevelsNavLink();
+    const mapReady = levelsReady && yuraInstallStreamMapNavLink();
+    return levelsReady && mapReady;
+  };
+
+  if (!installAll()) {
     const observer = new MutationObserver(() => {
       yuraRemovePublicChangelogNav();
-      if (yuraInstallLevelsNavLink()) {
+      if (installAll()) {
         observer.disconnect();
-        if (new URL(window.location.href).searchParams.get("yuraView") === "levels")
-          window.setTimeout(() => yuraShowLevelsView(false), 50);
+        restoreRequestedView();
       }
     });
     observer.observe(document.documentElement,{childList:true,subtree:true});
     window.setTimeout(() => observer.disconnect(),30000);
-  } else if (new URL(window.location.href).searchParams.get("yuraView") === "levels") {
-    window.setTimeout(() => yuraShowLevelsView(false), 50);
+  } else {
+    restoreRequestedView();
   }
 }
 
