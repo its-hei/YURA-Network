@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 2,
-  "updatedAt": "2026-10-01T21:21:07.4718862\u002B02:00",
+  "schemaVersion": 3,
+  "updatedAt": "2026-10-02T17:35:29.3819241\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -12,6 +12,27 @@
   "defaultCategory": "FFXIV",
   "publicLayout": "SLIM",
   "levelsBarStyle": "MODERN",
+  "streamMap": {
+    "title": "Mapa streama",
+    "subtitle": "Jak dzia\u0142aj\u0105 punkty, EXP, level i nagrody na kanale.",
+    "intro": "Na streamie dzia\u0142aj\u0105 trzy r\u00F3\u017Cne systemy. Ka\u017Cdy ma inne zastosowanie i nie zast\u0119puj\u0105 si\u0119 wzajemnie.",
+    "twitchTitle": "Punkty Twitch (TTV)",
+    "twitchSummary": "Natywne punkty kana\u0142u Twitch.",
+    "twitchEarn": "G\u0142\u00F3wnie za ogl\u0105danie streama i aktywno\u015B\u0107 na kanale.",
+    "twitchUse": "Redeemy kana\u0142owe, interakcje i efekty na streamie.",
+    "twitchRewards": "Nagrody przypisane do redeem\u00F3w Twitch.",
+    "yuraTitle": "YURA Points",
+    "yuraSummary": "W\u0142asna ekonomia streama Y.U.R.A.",
+    "yuraEarn": "Za obecno\u015B\u0107 na streamie, aktywno\u015B\u0107 i inne akcje Y.U.R.A.",
+    "yuraUse": "Raffle, gamble, ranking i inne systemy ekonomii Y.U.R.A.",
+    "yuraRewards": "M.in. Monthly VIP i nagrody powi\u0105zane z ekonomi\u0105 Y.U.R.A.",
+    "levelTitle": "YURA EXP / Level",
+    "levelSummary": "Sta\u0142y progres widza \u2014 EXP nie jest walut\u0105.",
+    "levelEarn": "Za czat, pierwsz\u0105 wiadomo\u015B\u0107 na streamie, suby i inne \u017Ar\u00F3d\u0142a EXP.",
+    "levelUse": "Buduje poziom widza, ranking leveli i przysz\u0142e odblokowania.",
+    "levelRewards": "Nagrody i odblokowania zale\u017Cne od levela b\u0119d\u0105 rozwijane wraz z systemem.",
+    "footer": "Nie wiesz, kt\u00F3rego systemu dotyczy dana nagroda? Zapytaj na czacie albo sprawd\u017A komendy Y.U.R.A."
+  },
   "weeklyRules": {
     "0": {
       "enabled": true,
