@@ -788,6 +788,16 @@ const YURA_SCHEDULE_DEFAULT_CONFIG = {
   anchorShift: "RANO",
   shiftCycle: ["RANO", "NOCKA", "POPO"],
   defaultCategory: "FFXIV",
+  ranoStart: "17:00",
+  ranoEnd: "20:00",
+  nockaStart: "17:00",
+  nockaEnd: "20:00",
+  popoStart: "09:00",
+  popoEnd: "12:00",
+  saturdayStart: "16:00",
+  saturdayEnd: "22:00",
+  sundayStart: "16:00",
+  sundayEnd: "20:00",
   publicLayout: "MODERN",
   weeklyRules: {
     "0": { enabled: true, category: "FFXIV" },
@@ -898,10 +908,31 @@ function yuraScheduleFormatMinutes(total) {
 
 function yuraScheduleAutomaticWindow(dayIndex, shift, allowThursday = false) {
   if (dayIndex === 3 && !allowThursday) return { start: null, end: null, label: "OFF", isOff: true };
-  if (dayIndex === 5) return { start: 16 * 60, end: 22 * 60, label: "16:00\u201322:00", isOff: false };
-  if (dayIndex === 6) return { start: 16 * 60, end: 20 * 60, label: "16:00\u201320:00", isOff: false };
-  if (shift === "POPO") return { start: 9 * 60, end: 12 * 60, label: "09:00\u201312:00", isOff: false };
-  return { start: 17 * 60, end: 20 * 60, label: "17:00\u201320:00", isOff: false };
+
+  let startText;
+  let endText;
+  if (dayIndex === 5) {
+    startText = yuraScheduleConfig.saturdayStart || "16:00";
+    endText = yuraScheduleConfig.saturdayEnd || "22:00";
+  } else if (dayIndex === 6) {
+    startText = yuraScheduleConfig.sundayStart || "16:00";
+    endText = yuraScheduleConfig.sundayEnd || "20:00";
+  } else if (shift === "POPO") {
+    startText = yuraScheduleConfig.popoStart || "09:00";
+    endText = yuraScheduleConfig.popoEnd || "12:00";
+  } else if (shift === "NOCKA") {
+    startText = yuraScheduleConfig.nockaStart || "17:00";
+    endText = yuraScheduleConfig.nockaEnd || "20:00";
+  } else {
+    startText = yuraScheduleConfig.ranoStart || "17:00";
+    endText = yuraScheduleConfig.ranoEnd || "20:00";
+  }
+
+  const start = yuraScheduleMinutes(startText);
+  const end = yuraScheduleMinutes(endText);
+  const safeStart = start == null ? 17 * 60 : start;
+  const safeEnd = end == null ? 20 * 60 : end;
+  return { start: safeStart, end: safeEnd, label: `${yuraScheduleFormatMinutes(safeStart)}\u2013${yuraScheduleFormatMinutes(safeEnd)}`, isOff: false };
 }
 
 function yuraScheduleArtForCategory(category) {
@@ -1200,7 +1231,7 @@ function renderYuraLiveScheduleModern() {
       <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>NAJBLI\u017BSZY STREAM<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
       <div class="schedule-calendar-head"><div><span>STREAM CALENDAR // 25 DAYS</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} \u2014 ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">AUTO-UPDATE \u2022 EUROPE/WARSAW</div></div>
       <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleModernWeekHtml(weekDays, now, index)).join("")}</div>
-      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>${layoutName === "SLIM" ? "SLIM pokazuje wyĹĽsze i wÄ™ĹĽsze karty" : "MODERN pokazuje 5 wiÄ™kszych kart na panel"}; dni OFF pozostajÄ… bez grafiki.</strong></div>
+      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>${layoutName === "SLIM" ? "SLIM pokazuje wyższe i węższe karty" : "MODERN pokazuje 5 większych kart na panel"}; dni OFF pozostają bez grafiki.</strong></div>
     </section>`;
   yuraScheduleApplyModernArts(host);
 }
