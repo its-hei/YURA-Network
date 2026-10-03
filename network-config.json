@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "updatedAt": "2026-10-02T18:08:35.5295971\u002B02:00",
+  "updatedAt": "2026-10-03T22:43:05.7483008\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -10,6 +10,16 @@
     "POPO"
   ],
   "defaultCategory": "FFXIV",
+  "ranoStart": "17:00",
+  "ranoEnd": "20:00",
+  "nockaStart": "17:00",
+  "nockaEnd": "20:00",
+  "popoStart": "09:00",
+  "popoEnd": "12:00",
+  "saturdayStart": "16:00",
+  "saturdayEnd": "22:00",
+  "sundayStart": "16:00",
+  "sundayEnd": "20:00",
   "publicLayout": "SLIM",
   "levelsBarStyle": "MODERN",
   "streamMap": {
