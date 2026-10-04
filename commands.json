@@ -212,15 +212,6 @@
     "source": "YURA"
   },
   {
-    "command": "!alert",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!alert \u003Cpause|resume|mute|unmute|skip|next\u003E",
-    "description": "Steruje globaln\u0105 kolejk\u0105 alert\u00F3w: pauza, wznowienie, wyciszenie, pomini\u0119cie i nast\u0119pny alert.",
-    "category": "ALERTY",
-    "source": "YURA"
-  },
-  {
     "command": "!start",
     "aliases": [],
     "permission": "Moderator \u002B list",
