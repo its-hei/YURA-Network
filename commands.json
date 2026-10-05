@@ -299,5 +299,159 @@
     "description": "Zapraszam na moj\u0105 stron\u0119 internetow\u0105: https://its-hei.github.io/YURA-Network/",
     "category": "OG\u00D3LNE",
     "source": "YURA"
+  },
+  {
+    "command": "!afk",
+    "aliases": [
+      "!afkon"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!afk",
+    "description": "AfkON \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!afkoff",
+    "aliases": [
+      "!offafk"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!afkoff",
+    "description": "AfkOFF \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!alerts",
+    "aliases": [
+      "!alert"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!alerts",
+    "description": "Alerts Check \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!doggoff",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!doggoff",
+    "description": "DoggOFF \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!doggon",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!doggon",
+    "description": "DoggON \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donation",
+    "aliases": [
+      "!dono"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!donation",
+    "description": "Donation - Change Title \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donocel",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!donocel",
+    "description": "Donation - Goal \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donoreset",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!donoreset",
+    "description": "Donation - Reset \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!mutealert",
+    "aliases": [
+      "!mutealerts"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!mutealert",
+    "description": "Alerts Mute \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!pausealert",
+    "aliases": [
+      "!pausealerts"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!pausealert",
+    "description": "Alerts Pause \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!skipalert",
+    "aliases": [
+      "!skipalerts"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!skipalert",
+    "description": "Alert Skip \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!tits",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!tits",
+    "description": "TTS female \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!tts",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!tts",
+    "description": "TTS male \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!unmute",
+    "aliases": [
+      "!unmutealert",
+      "!unmutealerts"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!unmute",
+    "description": "Alerts Unmute \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!unpausealert",
+    "aliases": [
+      "!unpausealerts"
+    ],
+    "permission": "Streamer.bot",
+    "usage": "!unpausealert",
+    "description": "Alerts Unpause \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
   }
 ]
