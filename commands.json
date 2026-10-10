@@ -59,9 +59,7 @@
   },
   {
     "command": "!dedge",
-    "aliases": [
-      "!deska"
-    ],
+    "aliases": [],
     "permission": "Everyone",
     "usage": "!dedge [liczba]",
     "description": "Dodaje 1 lub podan\u0105 liczb\u0119 do aktywnego licznika \u015Bmierci.",
@@ -321,6 +319,15 @@
     "permission": "Streamer.bot",
     "usage": "!alerts",
     "description": "Alerts Check \u2022 obs\u0142ugiwane przez Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!deska",
+    "aliases": [],
+    "permission": "Streamer.bot",
+    "usage": "!deska",
+    "description": "Deaths \u2022 obs\u0142ugiwane przez Streamer.bot.",
     "category": "STREAMER.BOT \u2022 Overlay",
     "source": "STREAMER.BOT"
   },
