@@ -237,15 +237,6 @@
     "source": "YURA"
   },
   {
-    "command": "!sr on",
-    "aliases": [],
-    "permission": "Moderator \u002B list",
-    "usage": "!sr on",
-    "description": "W\u0142\u0105cza przyjmowanie Song Request\u00F3w.",
-    "category": "MUZYKA",
-    "source": "YURA"
-  },
-  {
     "command": "!sr off",
     "aliases": [],
     "permission": "Moderator \u002B list",
