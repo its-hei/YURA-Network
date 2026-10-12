@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "updatedAt": "2026-10-10T18:17:08.0662186\u002B02:00",
+  "updatedAt": "2026-10-12T23:33:02.7454811\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -91,6 +91,33 @@
       "note": ""
     },
     "2026-10-01": {
+      "enabled": true,
+      "start": "",
+      "end": "",
+      "category": "",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-13": {
+      "enabled": false,
+      "start": "",
+      "end": "",
+      "category": "",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-17": {
+      "enabled": true,
+      "start": "",
+      "end": "",
+      "category": "",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-15": {
       "enabled": true,
       "start": "",
       "end": "",
