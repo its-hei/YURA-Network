@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 3,
-  "updatedAt": "2026-10-12T23:33:02.7454811\u002B02:00",
+  "schemaVersion": 4,
+  "updatedAt": "2026-10-15T23:46:35.6690942\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -82,6 +82,7 @@
   },
   "overrides": {
     "2026-09-29": {
+      "templateGenerated": false,
       "enabled": false,
       "start": "",
       "end": "",
@@ -91,6 +92,7 @@
       "note": ""
     },
     "2026-10-01": {
+      "templateGenerated": false,
       "enabled": true,
       "start": "",
       "end": "",
@@ -100,6 +102,7 @@
       "note": ""
     },
     "2026-10-13": {
+      "templateGenerated": false,
       "enabled": false,
       "start": "",
       "end": "",
@@ -109,22 +112,4145 @@
       "note": ""
     },
     "2026-10-17": {
+      "templateGenerated": false,
       "enabled": true,
-      "start": "",
-      "end": "",
-      "category": "",
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
       "artUrl": "",
       "special": false,
       "note": ""
     },
     "2026-10-15": {
+      "templateGenerated": false,
       "enabled": true,
-      "start": "",
-      "end": "",
-      "category": "",
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
       "artUrl": "",
       "special": false,
       "note": ""
+    },
+    "2026-10-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-10-31": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-02": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-03": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-09": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-23": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-24": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-29": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-11-30": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-20": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-21": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-26": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2026-12-31": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-09": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-10": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-11": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-16": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-29": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-30": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-01-31": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-01": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-20": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-21": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-22": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-26": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-02-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-01": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-09": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-10": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-11": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-12": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-13": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-16": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-22": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-26": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-29": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-30": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-03-31": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-01": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-02": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-03": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-12": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-16": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-20": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-21": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-22": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-23": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-24": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-04-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-03": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-10": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-11": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-12": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-13": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-24": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-26": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-05-31": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-01": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-02": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-03": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-16": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-21": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-22": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-23": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-24": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-06-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-12": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-13": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-27": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-07-31": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-02": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-03": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-09": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-18": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-23": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-24": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-29": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-30": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-08-31": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-08": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-13": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-14": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-19": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-20": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-25": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-26": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-28": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-29": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-09-30": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-01": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-04": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-05": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-06": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-07": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-09": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-10": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-11": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-15": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-16": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-17": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-19": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-20": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-21": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-22": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-23": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-24": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-25": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-26": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-27": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-28": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-29": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-30": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-10-31": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-01": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-02": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-03": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-04": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-05": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-06": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-07": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-08": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-09": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-10": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-11": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-12": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-13": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "19:00",
+      "end": "23:00",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-14": {
+      "templateGenerated": true,
+      "enabled": true,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-15": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-16": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-17": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-18": {
+      "templateGenerated": true,
+      "enabled": false,
+      "start": "09:00",
+      "end": "11:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    }
+  },
+  "rotationTemplateEnabled": true,
+  "rotationWeeks": {
+    "RANO": {
+      "days": {
+        "0": {
+          "enabled": false,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "1": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "2": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "3": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "4": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "5": {
+          "enabled": true,
+          "start": "19:00",
+          "end": "23:00",
+          "category": "FFXIV"
+        },
+        "6": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        }
+      }
+    },
+    "NOCKA": {
+      "days": {
+        "0": {
+          "enabled": false,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "1": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "2": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "3": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "4": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        },
+        "5": {
+          "enabled": true,
+          "start": "19:00",
+          "end": "23:00",
+          "category": "FFXIV"
+        },
+        "6": {
+          "enabled": true,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        }
+      }
+    },
+    "POPO": {
+      "days": {
+        "0": {
+          "enabled": false,
+          "start": "09:00",
+          "end": "11:30",
+          "category": "FFXIV"
+        },
+        "1": {
+          "enabled": false,
+          "start": "09:00",
+          "end": "11:30",
+          "category": "FFXIV"
+        },
+        "2": {
+          "enabled": false,
+          "start": "09:00",
+          "end": "11:30",
+          "category": "FFXIV"
+        },
+        "3": {
+          "enabled": false,
+          "start": "09:00",
+          "end": "11:30",
+          "category": "FFXIV"
+        },
+        "4": {
+          "enabled": false,
+          "start": "09:00",
+          "end": "11:30",
+          "category": "FFXIV"
+        },
+        "5": {
+          "enabled": false,
+          "start": "19:00",
+          "end": "23:00",
+          "category": "FFXIV"
+        },
+        "6": {
+          "enabled": false,
+          "start": "17:00",
+          "end": "19:30",
+          "category": "FFXIV"
+        }
+      }
     }
   }
 }
