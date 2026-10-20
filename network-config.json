@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "updatedAt": "2026-10-19T18:27:46.7748424\u002B02:00",
+  "updatedAt": "2026-10-20T16:20:13.7511750\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -127,16 +127,6 @@
       "start": "",
       "end": "",
       "category": "",
-      "artUrl": "",
-      "special": false,
-      "note": ""
-    },
-    "2026-10-19": {
-      "templateGenerated": true,
-      "enabled": false,
-      "start": "17:00",
-      "end": "19:30",
-      "category": "FFXIV",
       "artUrl": "",
       "special": false,
       "note": ""
@@ -4124,6 +4114,16 @@
     "2027-11-22": {
       "templateGenerated": true,
       "enabled": false,
+      "start": "17:00",
+      "end": "19:30",
+      "category": "FFXIV",
+      "artUrl": "",
+      "special": false,
+      "note": ""
+    },
+    "2027-11-23": {
+      "templateGenerated": true,
+      "enabled": true,
       "start": "17:00",
       "end": "19:30",
       "category": "FFXIV",
