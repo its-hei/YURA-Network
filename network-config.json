@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "updatedAt": "2026-10-21T18:17:16.3923074\u002B02:00",
+  "updatedAt": "2026-10-21T18:18:44.1306307\u002B02:00",
   "timeZone": "Europe/Warsaw",
   "anchorMonday": "2026-09-28",
   "anchorShift": "RANO",
@@ -163,7 +163,7 @@
     },
     "2026-10-24": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -373,7 +373,7 @@
     },
     "2026-11-14": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -583,7 +583,7 @@
     },
     "2026-12-05": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -793,7 +793,7 @@
     },
     "2026-12-26": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -1003,7 +1003,7 @@
     },
     "2027-01-16": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -1213,7 +1213,7 @@
     },
     "2027-02-06": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -1423,7 +1423,7 @@
     },
     "2027-02-27": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -1633,7 +1633,7 @@
     },
     "2027-03-20": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -1843,7 +1843,7 @@
     },
     "2027-04-10": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -2053,7 +2053,7 @@
     },
     "2027-05-01": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -2263,7 +2263,7 @@
     },
     "2027-05-22": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -2473,7 +2473,7 @@
     },
     "2027-06-12": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -2683,7 +2683,7 @@
     },
     "2027-07-03": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -2893,7 +2893,7 @@
     },
     "2027-07-24": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -3103,7 +3103,7 @@
     },
     "2027-08-14": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -3313,7 +3313,7 @@
     },
     "2027-09-04": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -3523,7 +3523,7 @@
     },
     "2027-09-25": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -3733,7 +3733,7 @@
     },
     "2027-10-16": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -3943,7 +3943,7 @@
     },
     "2027-11-06": {
       "templateGenerated": true,
-      "enabled": false,
+      "enabled": true,
       "start": "18:30",
       "end": "23:00",
       "category": "FFXIV",
@@ -4167,7 +4167,7 @@
           "category": "FFXIV"
         },
         "5": {
-          "enabled": false,
+          "enabled": true,
           "start": "18:30",
           "end": "23:00",
           "category": "FFXIV"
