@@ -2246,3 +2246,11 @@ body > .shell{display:block}
  .top-navigation{display:flex;gap:18px;grid-template-columns:none}
  .top-navigation .side-item{min-height:44px;font-size:12px;padding:0 1px;overflow-wrap:normal}
 }
+
+/* Match the reference site's centered content width on desktop.
+   Align the header, all views and footer to the same 1080px column. */
+@media (min-width:821px){
+  body > .shell{width:min(1080px,calc(100% - 32px))}
+  .topbar{padding-inline:max(16px,calc((100% - 1080px)/2))}
+  footer.site-footer{width:min(1080px,calc(100% - 32px))}
+}
