@@ -21,141 +21,209 @@
 #leaderboardView .monthly-vip-rule[hidden],
 #leaderboardView .yura-vip-odds[hidden]{display:none!important}
 
-
-/* Featured #1 leaderboard layout — shared by GAINS, LEVELS and POINTS. */
-#leaderboardView .podium[hidden],
-#leaderboardView .leaderboard-list[hidden]{display:none!important}
-#leaderboardView .podium{
-  grid-template-columns:minmax(0,1fr);
-  gap:0;
-}
-#leaderboardView .podium-card.rank-1{
+/* Kubon-inspired ranking layout: #1 featured left, #2/#3 stacked right. */
+#leaderboardView .leaderboard-layout{display:grid;gap:16px}
+#leaderboardView .leaderboard-top-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(235px,.43fr);
-  align-items:end;
-  gap:24px;
-  min-height:236px;
-  padding:30px 32px;
-  border-left:3px solid var(--accent);
+  grid-template-columns:minmax(0,1.52fr) minmax(300px,1fr);
+  gap:18px;
+  align-items:stretch;
+}
+#leaderboardView .leaderboard-top-grid:has(#leaderboardPodium[hidden]){display:none}
+#leaderboardView .leaderboard-bottom-grid{
+  display:grid;
+  grid-template-columns:minmax(0,2.28fr) minmax(280px,.92fr);
+  gap:18px;
+  align-items:start;
+}
+#leaderboardView .leaderboard-main-col,
+#leaderboardView .leaderboard-side-col{min-width:0}
+#leaderboardView .leaderboard-side-col{display:grid;gap:14px}
+#leaderboardView .podium-stage{margin:0;min-width:0}
+#leaderboardView .podium{display:grid;grid-template-columns:1fr;gap:0;margin:0;height:100%}
+#leaderboardView .podium[hidden],
+#leaderboardView .leaderboard-list[hidden],
+#leaderboardView .leaderboard-top-side[hidden],
+#leaderboardView .monthly-vip-rule[hidden],
+#leaderboardView .yura-vip-odds[hidden]{display:none!important}
+
+/* Leader: one visual feature card like the primary Kubon queue card. */
+#leaderboardView .podium-card.rank-1{
+  display:flex;
+  flex-direction:column;
+  min-height:246px;
+  height:100%;
+  padding:28px 30px 24px;
+  border:1px solid rgba(242,140,24,.31);
+  border-radius:13px;
+  overflow:hidden;
   background:
-    radial-gradient(ellipse at 76% 24%,rgba(242,140,24,.13),transparent 57%),
-    linear-gradient(113deg,rgba(242,140,24,.055),rgba(10,13,17,.82) 65%),
+    radial-gradient(ellipse at 86% 18%,rgba(242,140,24,.16),transparent 58%),
+    linear-gradient(105deg,rgba(242,140,24,.085),rgba(15,18,23,.9) 58%),
     var(--panel);
 }
 #leaderboardView .podium-card.rank-1::after{
-  height:1px;
-  opacity:.35;
+  height:1px;opacity:.34;
 }
 #leaderboardView .podium-leader-main{
-  position:relative;
-  z-index:1;
-  min-width:0;
-  align-self:stretch;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  gap:24px;
+  position:relative;z-index:1;min-width:0;flex:1;
+  display:flex;flex-direction:column;justify-content:space-between;gap:26px;
 }
 #leaderboardView .podium-kicker{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  font-family:var(--font-ui);
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.09em;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  color:var(--accent);font-family:var(--font-ui);
+  font-size:12px;font-weight:800;letter-spacing:.09em;
 }
+#leaderboardView .podium-leader-identity{display:grid;gap:14px;min-width:0}
 #leaderboardView .podium-name{
-  display:block;
-  margin:0;
-  font-family:var(--font-ui);
-  font-size:clamp(28px,3.2vw,39px);
-  font-weight:800;
-  line-height:1.16;
-  letter-spacing:-.035em;
-  white-space:normal;
-  overflow-wrap:anywhere;
+  display:block;margin:0;position:relative;
+  color:#fff;font-family:var(--font-display);
+  font-size:clamp(32px,3.8vw,47px);font-weight:800;
+  line-height:1.05;letter-spacing:-.015em;
+  white-space:normal;overflow-wrap:anywhere;
 }
 #leaderboardView .podium-leader-stat{
-  position:relative;
-  z-index:1;
-  min-width:0;
-  text-align:right;
-  padding-bottom:3px;
+  display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;min-width:0;
 }
 #leaderboardView .podium-points{
-  margin:0;
-  font-family:var(--font-display);
-  font-size:clamp(37px,4vw,55px);
-  font-weight:800;
-  line-height:1;
-  letter-spacing:-.02em;
-  overflow-wrap:anywhere;
-  font-variant-numeric:tabular-nums;
+  margin:0;color:#f8b454;font-family:var(--font-display);
+  font-size:clamp(31px,3.4vw,42px)!important;
+  font-weight:800;line-height:1.07;letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere;
 }
 #leaderboardView .podium-unit{
-  margin-top:12px;
-  font-family:var(--font-ui);
-  color:#9ba6b3;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.07em;
+  margin:0;color:#9ca8b6;font-family:var(--font-ui);
+  font-size:11px;font-weight:700;line-height:1.5;letter-spacing:.05em;
 }
 #leaderboardView .podium-rank{
-  z-index:0;
-  top:20px;
-  right:28px;
-  color:rgba(242,140,24,.13);
-  font-family:var(--font-display);
-  font-size:106px;
-  font-weight:800;
-  letter-spacing:-.04em;
+  z-index:0;right:22px;top:40px;
+  color:rgba(242,140,24,.105);
+  font-family:var(--font-display);font-size:146px;font-weight:900;
+  line-height:1;letter-spacing:-.07em;pointer-events:none;
 }
 #leaderboardView .podium.candidate-mode .podium-card.rank-1{
-  border-left-color:#b7a1ff;
+  border-color:rgba(183,161,255,.46);
   background:
-    radial-gradient(ellipse at 76% 24%,rgba(183,161,255,.12),transparent 57%),
-    linear-gradient(113deg,rgba(183,161,255,.045),rgba(10,13,17,.82) 65%),
+    radial-gradient(ellipse at 86% 18%,rgba(183,161,255,.17),transparent 58%),
+    linear-gradient(105deg,rgba(183,161,255,.07),rgba(15,18,23,.9) 58%),
     var(--panel);
 }
-#leaderboardView .podium.candidate-mode::before{
-  display:block;
-  top:18px;
-  left:auto;
-  right:24px;
-  transform:none;
-  padding:6px 10px;
-  font-family:var(--font-ui);
-  font-size:10px;
-  line-height:1;
-  letter-spacing:.075em;
-  text-shadow:none;
+#leaderboardView .podium.candidate-mode .podium-card.rank-1::after{
+  background:linear-gradient(90deg,transparent,#b7a1ff,transparent);
 }
-#leaderboardView .leaderboard-list{margin-top:14px}
-#leaderboardView .leaderboard-row{min-height:65px}
+#leaderboardView .podium.candidate-mode::before{
+  display:block;z-index:4;top:15px;right:16px;left:auto;
+  transform:none;padding:6px 9px;
+  font-family:var(--font-ui);font-size:10px;
+  line-height:1.2;letter-spacing:.045em;text-shadow:none;
+}
+
+/* Runner-ups #2 and #3 share the right-side window. */
+#leaderboardView .leaderboard-top-side{
+  display:grid;grid-template-rows:repeat(2,minmax(0,1fr));
+  min-height:246px;overflow:hidden;
+  border:1px solid var(--line);border-radius:13px;
+  background:#11161c;box-shadow:var(--shadow);
+}
+#leaderboardView .leaderboard-runner{
+  min-width:0;padding:17px 21px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:8px;
+  transition:background .15s ease;
+}
+#leaderboardView .leaderboard-runner + .leaderboard-runner{border-top:1px solid #2a313b}
+#leaderboardView .leaderboard-runner:hover{background:rgba(255,255,255,.025)}
+#leaderboardView .leaderboard-runner.is-match{background:rgba(242,140,24,.11)}
+#leaderboardView .leaderboard-runner-header{
+  display:flex;align-items:center;gap:8px;justify-content:space-between;
+  color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.08em;
+}
+#leaderboardView .leaderboard-runner-body{
+  min-width:0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+}
+#leaderboardView .leaderboard-runner-name{
+  min-width:0;flex:1;color:#f4f5f7;
+  font-size:clamp(16px,1.6vw,21px);font-weight:800;line-height:1.18;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .leaderboard-runner-score{
+  min-width:0;max-width:46%;flex:0 1 auto;
+  display:grid;gap:2px;text-align:right;
+}
+#leaderboardView .leaderboard-runner-score .leaderboard-points{
+  color:#fff;font-family:var(--font-display);
+  font-size:clamp(19px,2.2vw,28px);
+  font-weight:800;line-height:1.05;letter-spacing:-.02em;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .leaderboard-runner-score .podium-unit{font-size:9px;line-height:1.25}
+
+/* Table on the left; right column is reserved for search, sync and VIP rules. */
+#leaderboardView .leaderboard-list{margin:0;border-radius:12px}
+#leaderboardView .leaderboard-row{min-height:66px}
 #leaderboardView .leaderboard-rank{
-  font-family:var(--font-ui);
-  font-size:14px;
+  font-family:var(--font-ui);font-size:14px;font-weight:750;
   font-variant-numeric:tabular-nums;
 }
-@media(max-width:680px){
-  #leaderboardView .podium-card.rank-1{
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
-    gap:26px;
-    min-height:228px;
-    padding:23px 20px;
-  }
-  #leaderboardView .podium-leader-main{gap:30px}
-  #leaderboardView .podium-name{font-size:clamp(25px,6vw,34px)}
-  #leaderboardView .podium-leader-stat{text-align:left}
-  #leaderboardView .podium-points{font-size:clamp(34px,8vw,44px)}
-  #leaderboardView .podium-rank{right:14px;top:50px;font-size:84px}
-  #leaderboardView .podium.candidate-mode::before{top:17px;right:13px;padding:5px 7px;font-size:9px}
+#leaderboardView .leaderboard-side-card{
+  min-width:0;padding:18px 18px 20px;
+  border:1px solid var(--line);border-radius:12px;
+  background:#10151a;box-shadow:var(--shadow);
 }
-@media(max-width:400px){
-  #leaderboardView .podium-kicker{font-size:10px}
-  #leaderboardView .podium.candidate-mode::before{top:auto;bottom:15px}
+#leaderboardView .leaderboard-side-heading{
+  display:flex;align-items:center;gap:8px;
+  margin:0 0 14px;color:#f1f4f7;font-size:14px;font-weight:800;
+}
+#leaderboardView .leaderboard-side-heading::before{
+  content:"";display:block;width:3px;height:16px;
+  border-radius:2px;background:var(--accent);
+}
+#leaderboardView .leaderboard-search-box{
+  width:100%;min-width:0;margin:0;
+}
+#leaderboardView .leaderboard-search-box input{min-width:0}
+#leaderboardView .leaderboard-side-col .eligibility-toggle{
+  width:100%;min-width:0;justify-content:center;margin-top:12px;
+}
+#leaderboardView .leaderboard-sync-stats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+}
+#leaderboardView .leaderboard-meta{min-width:0}
+#leaderboardView .leaderboard-meta strong{
+  font-size:13px;font-weight:800;overflow-wrap:anywhere;
+}
+#leaderboardView .monthly-vip-rule{
+  margin:0;display:grid;grid-template-columns:29px minmax(0,1fr);
+  gap:10px;padding:17px 15px;align-items:start;
+  border-radius:12px;box-shadow:var(--shadow);
+}
+#leaderboardView .monthly-vip-copy{min-width:0}
+#leaderboardView .monthly-vip-copy p{font-size:12px;line-height:1.7}
+#leaderboardView .monthly-vip-kicker{font-size:11px;letter-spacing:.04em}
+#leaderboardView .yura-vip-odds{
+  margin:0;min-width:0;padding:17px 15px;
+  background:#10151a;box-shadow:var(--shadow);
+}
+#leaderboardView .yura-vip-odds summary{font-size:12px;line-height:1.5}
+#leaderboardView .yura-vip-odds table{font-size:11px;max-width:100%}
+#leaderboardView .yura-vip-odds th,
+#leaderboardView .yura-vip-odds td{padding:7px 5px}
+#leaderboardView .leaderboard-empty{margin:0}
+
+/* The order remains natural on mobile: #1, #2/#3, remaining, then tools. */
+@media(max-width:980px){
+  #leaderboardView .leaderboard-top-grid,
+  #leaderboardView .leaderboard-bottom-grid{grid-template-columns:minmax(0,1fr)}
+  #leaderboardView .leaderboard-top-side{min-height:220px}
+  #leaderboardView .podium-card.rank-1{min-height:220px}
+}
+@media(max-width:620px){
+  #leaderboardView .podium-card.rank-1{padding:24px 20px;min-height:218px}
+  #leaderboardView .podium-name{font-size:clamp(29px,7vw,39px)}
+  #leaderboardView .podium-points{font-size:clamp(28px,7vw,36px)!important}
+  #leaderboardView .podium-rank{font-size:110px;right:12px;top:56px}
+  #leaderboardView .leaderboard-runner{padding:16px}
+  #leaderboardView .leaderboard-runner-name{font-size:17px}
+  #leaderboardView .leaderboard-runner-score .leaderboard-points{font-size:24px}
+  #leaderboardView .leaderboard-side-card{padding:16px}
+  #leaderboardView .podium.candidate-mode::before{top:8px;right:8px;font-size:9px;padding:5px 7px}
 }
