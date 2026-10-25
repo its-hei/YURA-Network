@@ -16,3 +16,7 @@
 
 /* Author display rules must not override the tab-specific hidden state. */
 #leaderboardEligibilityToggle[hidden]{display:none!important}
+
+/* Native hidden must win over the cards' explicit display styles. */
+#leaderboardView .monthly-vip-rule[hidden],
+#leaderboardView .yura-vip-odds[hidden]{display:none!important}
