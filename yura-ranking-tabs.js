@@ -15,7 +15,8 @@
   const originalEligible = document.getElementById('leaderboardEligibilityToggle');
   const title = host.querySelector('.hero p');
   const listHeader = host.querySelector('.leaderboard-list-head span:last-child');
-  const note = host.querySelector('.monthly-vip-rule p');
+  const vipRule = host.querySelector('.monthly-vip-rule');
+  const note = vipRule?.querySelector('p');
   const rankControls = document.createElement('div');
   rankControls.className = 'tabs yura-ranking-tabs';
   rankControls.setAttribute('role','tablist');
@@ -47,7 +48,6 @@
   host.querySelector('.leaderboard-toolbar')?.before(rankControls);
 
   // Transparent public odds: each stake bracket has a 10x smaller probability after loss.
-  const vipRule = host.querySelector('.monthly-vip-rule');
   if (vipRule && !host.querySelector('.yura-vip-odds')) {
     const details=document.createElement('details');
     details.className='yura-vip-odds';
@@ -62,6 +62,7 @@
       '</tbody></table>';
     vipRule.after(details);
   }
+  const oddsPanel = host.querySelector('.yura-vip-odds');
 
   function updateLabels() {
     if (title) title.textContent = selected === 'gains'
@@ -69,9 +70,11 @@
       : selected === 'level' ? 'Łączny poziom EXP od początku aktywności na kanale.'
       : 'Aktualne saldo YURA Points (może rosnąć i maleć przez gamble).';
     if (listHeader) listHeader.textContent = selected === 'gains' ? 'Zdobyte poziomy' : selected === 'level' ? 'Poziom' : 'Punkty';
-    if (note) note.textContent = 'MONTHLY VIP: najwięcej zdobytych poziomów EXP w miesiącu (GAINS), nie najwyższy LEVEL ani saldo POINTS. ' +
-      'VIP na kolejny miesiąc; aktualni stali VIP/moderatorzy są wykluczeni. ' +
-      'PERMANENT VIP: bardzo rzadka dodatkowa szansa przy !gamble all (0,001–0,10% po wygranej, po przegranej 10× mniejsza).';
+    if (note) note.textContent = 'Miesięczny VIP: wygrywa osoba z największym przyrostem poziomów EXP (GAINS) w danym miesiącu — nie z najwyższym LEVEL ani saldem POINTS. ' +
+      'Nagroda obowiązuje przez kolejny miesiąc i może zostać przedłużona po ponownym zwycięstwie. Stali VIP-i i moderatorzy nie są brani pod uwagę.';
+    // The two VIP programs belong to different ranking tabs.
+    if (vipRule) vipRule.hidden = selected !== 'gains';
+    if (oddsPanel) oddsPanel.hidden = selected !== 'points';
     if (originalEligible) originalEligible.hidden = selected !== 'gains';
   }
   function showRanking(data) {
