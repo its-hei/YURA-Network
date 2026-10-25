@@ -2212,3 +2212,18 @@ footer.site-footer{position:static;left:auto;bottom:auto;width:min(100% - 40px,1
 
 body > .shell{margin-bottom:40px}
 footer.site-footer{margin-top:auto}
+
+/* Minimal creator identity, matching the reference header. */
+.creator-avatar{width:38px;height:38px;flex-basis:38px;border-radius:50%}
+.creator-name{letter-spacing:0;font-size:16px}
+.creator-socials{gap:14px;margin-left:0}
+.creator-socials::before{content:"/";color:#52606d}
+.creator-twitch-link{color:var(--muted);text-decoration:none;font-size:12px;letter-spacing:.03em}
+.creator-twitch-link:hover,.creator-twitch-link:focus-visible{color:var(--accent)}
+.site-footer .system-state{display:flex;font-size:11px}
+@media(max-width:620px){
+ .creator-avatar{width:34px;height:34px;flex-basis:34px}
+ .creator-name{font-size:15px}
+ .creator-socials{margin-left:0}
+ .site-footer .system-state{display:flex;gap:8px;flex-wrap:wrap}
+}
