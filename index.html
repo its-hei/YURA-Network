@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=106">
-  <link rel="stylesheet" href="yura-ranking-tabs.css?v=101">
+  <link rel="stylesheet" href="yura-ranking-tabs.css?v=102">
 </head>
 <body>
   <div class="ambient"></div>
@@ -103,64 +103,79 @@
         <div class="status-chip leaderboard-status" id="leaderboardStatus">WAITING FOR DATA</div>
       </div>
 
-      <div class="leaderboard-toolbar">
-        <div class="leaderboard-meta">
-          <span class="meta-label">POINT SYNC</span>
-          <strong>5 MIN</strong>
+      <!-- GAINS / LEVELS / POINTS navigation is inserted above this grid. -->
+      <div class="leaderboard-layout">
+        <div class="leaderboard-top-grid">
+          <div class="podium-stage">
+            <div class="podium" id="leaderboardPodium" hidden></div>
+          </div>
+          <aside class="leaderboard-top-side" id="leaderboardTopSide" aria-label="Miejsca drugie i trzecie" hidden></aside>
         </div>
-        <div class="leaderboard-meta">
-          <span class="meta-label">LAST SYNC</span>
-          <strong id="leaderboardUpdated">—</strong>
+
+        <div class="leaderboard-bottom-grid">
+          <div class="leaderboard-main-col">
+            <div class="leaderboard-list" id="leaderboardList" hidden>
+              <div class="leaderboard-list-head">
+                <span>Pozycja</span>
+                <span>Użytkownik</span>
+                <span>Punkty</span>
+              </div>
+              <div id="leaderboardRows"></div>
+            </div>
+
+            <div id="leaderboardEmpty" class="leaderboard-empty">
+              <div class="empty-code">NO DATA</div>
+              <strong>Ranking czeka na pierwszy sync.</strong>
+              <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
+            </div>
+          </div>
+
+          <aside class="leaderboard-side-col" aria-label="Narzędzia i zasady rankingu">
+            <section class="leaderboard-side-card">
+              <h2 class="leaderboard-side-heading">Wyszukiwanie</h2>
+              <label class="search-box leaderboard-search-box">
+                <span class="search-icon">⌕</span>
+                <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie w rankingu..." autocomplete="off">
+              </label>
+              <button
+                class="eligibility-toggle"
+                id="leaderboardEligibilityToggle"
+                type="button"
+                aria-pressed="false"
+                title="Pokaż ranking kandydatów do miesięcznego VIP-a"
+              >
+                <span class="eligibility-dot" aria-hidden="true"></span>
+                <span id="leaderboardEligibilityLabel">KANDYDACI VIP</span>
+              </button>
+            </section>
+
+            <section class="leaderboard-side-card">
+              <h2 class="leaderboard-side-heading">Synchronizacja</h2>
+              <div class="leaderboard-sync-stats">
+                <div class="leaderboard-meta">
+                  <span class="meta-label">POINT SYNC</span>
+                  <strong>5 MIN</strong>
+                </div>
+                <div class="leaderboard-meta">
+                  <span class="meta-label">LAST SYNC</span>
+                  <strong id="leaderboardUpdated">—</strong>
+                </div>
+              </div>
+            </section>
+
+            <div class="monthly-vip-rule">
+              <div class="monthly-vip-icon" aria-hidden="true">★</div>
+              <div class="monthly-vip-copy">
+                <span class="monthly-vip-kicker">MIESIĘCZNY VIP • GAINS</span>
+                <p>
+                  Wygrywa największy przyrost poziomów EXP w miesiącu (GAINS), a nie najwyższy LEVEL
+                  ani saldo POINTS. VIP obowiązuje w kolejnym miesiącu i może zostać przedłużony
+                  po ponownym zwycięstwie. Stali VIP-i i moderatorzy nie biorą udziału.
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
-        <div class="leaderboard-tools">
-          <button
-            class="eligibility-toggle"
-            id="leaderboardEligibilityToggle"
-            type="button"
-            aria-pressed="false"
-            title="Pokaż ranking kandydatów do miesięcznego VIP-a"
-          >
-            <span class="eligibility-dot" aria-hidden="true"></span>
-            <span id="leaderboardEligibilityLabel">KANDYDACI VIP</span>
-          </button>
-
-          <label class="search-box leaderboard-search-box">
-            <span class="search-icon">⌕</span>
-            <input id="leaderboardSearchInput" type="search" placeholder="Szukaj siebie na liście..." autocomplete="off">
-          </label>
-        </div>
-      </div>
-
-      <div class="monthly-vip-rule">
-        <div class="monthly-vip-icon" aria-hidden="true">★</div>
-        <div class="monthly-vip-copy">
-          <span class="monthly-vip-kicker">MIESIĘCZNY VIP • GAINS</span>
-          <p>
-            Miesięczny VIP: wygrywa osoba z największym przyrostem poziomów EXP (GAINS)
-            w danym miesiącu — nie z najwyższym LEVEL ani saldem POINTS.
-            Nagroda obowiązuje przez kolejny miesiąc i może zostać przedłużona po ponownym zwycięstwie.
-            Stali VIP-i i moderatorzy nie są brani pod uwagę.
-          </p>
-        </div>
-      </div>
-
-      <div class="podium-stage">
-        <div class="podium" id="leaderboardPodium" hidden></div>
-      </div>
-
-      <div class="leaderboard-list" id="leaderboardList" hidden>
-        <div class="leaderboard-list-head">
-          <span>Pozycja</span>
-          <span>Użytkownik</span>
-          <span>Punkty</span>
-        </div>
-        <div id="leaderboardRows"></div>
-      </div>
-
-      <div id="leaderboardEmpty" class="leaderboard-empty">
-        <div class="empty-code">NO DATA</div>
-        <strong>Ranking czeka na pierwszy sync.</strong>
-        <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
       </div>
     </section>
     <section class="content view-panel" id="aboutView">
@@ -382,8 +397,8 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=mobile98"></script>
-  <script src="yura-ranking-tabs.js?v=100"></script>
+  <script src="app.js?v=mobile99"></script>
+  <script src="yura-ranking-tabs.js?v=102"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
