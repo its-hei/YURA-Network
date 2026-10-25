@@ -292,9 +292,6 @@ function formatSync(value) {
 }
 
 function rankMark(rank) {
-  if (rank === 1) return "Ⅰ";
-  if (rank === 2) return "Ⅱ";
-  if (rank === 3) return "Ⅲ";
   return String(rank).padStart(2, "0");
 }
 
@@ -398,26 +395,28 @@ function renderLeaderboard(data) {
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
 
-  const top = entries.slice(0, 3);
-  leaderboardPodium.innerHTML = top.map(entry => {
-    const rank = entry.rank;
-    const isMatch = query && matchNames.has(entry.name);
-    return `
-      <article class="podium-card rank-${rank} ${isMatch ? "is-match" : ""}" data-rank="${rank}" data-name="${esc(entry.name)}">
-        <div class="podium-rank">${rankMark(rank)}</div>
+  // The leader gets one full-width featured card; #2 and onward stay in the table.
+  const leader = entries[0];
+  const leaderIsMatch = query && matchNames.has(leader.name);
+  leaderboardPodium.innerHTML = `
+    <article class="podium-card rank-1 ${leaderIsMatch ? "is-match" : ""}" data-rank="1" data-name="${esc(leader.name)}">
+      <div class="podium-leader-main">
         <div class="podium-kicker">
-          <span>RANK ${String(rank).padStart(2, "0")}</span>
-          ${movementMarkup(entry)}
+          <span>LIDER RANKINGU • #1</span>
+          ${movementMarkup(leader)}
         </div>
-        <strong class="podium-name">${esc(entry.name)}</strong>
-        <div class="podium-points">${formatPoints(entry.points)}</div>
+        <strong class="podium-name">${esc(leader.name)}</strong>
+      </div>
+      <div class="podium-leader-stat">
+        <div class="podium-points">${formatPoints(leader.points)}</div>
         <div class="podium-unit">Y.U.R.A. POINTS</div>
-      </article>
-    `;
-  }).join("");
+      </div>
+      <div class="podium-rank" aria-hidden="true">01</div>
+    </article>
+  `;
   leaderboardPodium.hidden = false;
 
-  const remaining = entries.slice(3);
+  const remaining = entries.slice(1);
   if (remaining.length) {
     leaderboardRows.innerHTML = remaining.map(entry => {
       const isMatch = query && matchNames.has(entry.name);
