@@ -271,7 +271,7 @@ const changelogView = document.getElementById("changelogView");
 const streamMapView = document.getElementById("streamMapView");
 const changelogList = document.getElementById("changelogList");
 
-let activeView = "commands";
+let activeView = "about";
 let leaderboardTimer = null;
 let leaderboardBusy = false;
 function formatPoints(value) {
@@ -2054,6 +2054,11 @@ function yuraRestorePublicDeepLink() {
     window.setTimeout(() => {
       document.querySelector('.yura-ranking-tab[data-rank-mode="level"]')?.click();
     }, 0);
+  } else if (["about", "commands", "leaderboard", "schedule", "changelog"].includes(route)) {
+    switchView(route);
+  } else {
+    // New visitors land on About, including browser history navigation to /.
+    switchView("about");
   }
 }
 window.addEventListener("popstate", yuraRestorePublicDeepLink);
