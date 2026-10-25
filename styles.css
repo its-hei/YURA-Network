@@ -2377,3 +2377,64 @@ footer.site-footer{font-size:12px;letter-spacing:0}
   .view-panel > .hero .eyebrow{font-size:10px;gap:8px}
   .view-panel > .hero .eyebrow::before{flex-basis:20px;width:20px}
 }
+
+
+/* Responsive public header: all five navigation tabs stay visible without scrolling. */
+@media (max-width:820px){
+  .topbar .top-navigation{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    width:100%;
+    min-width:0;
+    margin:0;
+    gap:0;
+    overflow:visible;
+    align-self:auto;
+    align-items:stretch;
+  }
+  .topbar .top-navigation .side-item{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+    width:auto;
+    min-width:0;
+    min-height:44px;
+    padding:8px 4px;
+    border:0;
+    border-bottom:2px solid transparent;
+    border-radius:0;
+    background:transparent;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+    line-height:1.2;
+    letter-spacing:0;
+    text-align:center;
+    white-space:normal;
+    overflow-wrap:normal;
+  }
+  .topbar .top-navigation .side-item.active{
+    border-bottom-color:var(--accent);
+    background:transparent;
+    color:var(--accent);
+  }
+}
+@media (max-width:620px){
+  /* Three equal tabs on the first line, two equal tabs on the next. */
+  .topbar .top-navigation{
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    row-gap:0;
+    column-gap:0;
+  }
+  .topbar .top-navigation .side-item:nth-child(-n+3){grid-column:span 2}
+  .topbar .top-navigation .side-item:nth-child(n+4){grid-column:span 3}
+  .topbar .top-navigation .side-item{
+    min-height:42px;
+    padding:8px 3px;
+    font-size:12px;
+  }
+}
+@media (max-width:350px){
+  .topbar .top-navigation .side-item{font-size:11px;padding-inline:2px}
+}
