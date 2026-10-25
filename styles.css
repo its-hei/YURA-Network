@@ -2161,3 +2161,13 @@ footer{
   .side-nav{gap:5px}
   .side-item{font-size:10px;padding-inline:2px}
 }
+
+/* Compact social buttons replace the former CORE note. */
+.side-note.social-links{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding:0;border:0;background:none;
+}
+.social-link{text-align:center;text-decoration:none;letter-spacing:.08em}
+.social-link.twitch-link{color:var(--accent)}
+.social-link.discord-link{color:#b7a1ff}
+.social-link:hover,.social-link:focus-visible{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
