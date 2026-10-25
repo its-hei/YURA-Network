@@ -227,3 +227,49 @@
   #leaderboardView .leaderboard-side-card{padding:16px}
   #leaderboardView .podium.candidate-mode::before{top:8px;right:8px;font-size:9px;padding:5px 7px}
 }
+
+
+/* Dynamic Twitch leader portrait: fill the feature panel like a hero image. */
+#leaderboardView .podium-leader-art{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .4s ease;
+}
+#leaderboardView .podium-leader-art.is-loaded{opacity:1}
+#leaderboardView .podium-leader-avatar{
+  display:block;
+  position:absolute;
+  top:0;
+  right:0;
+  width:74%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 43%;
+  transform:scale(1.055);
+  filter:brightness(.78) saturate(.92) contrast(1.07) blur(1.7px);
+}
+#leaderboardView .podium-leader-art::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,#11161c 0%,rgba(17,22,28,.96) 28%,rgba(17,22,28,.55) 54%,rgba(17,22,28,.1) 100%),
+    linear-gradient(0deg,rgba(10,13,17,.55),transparent 65%);
+}
+#leaderboardView .podium-card.rank-1:has(.podium-leader-art.is-loaded) .podium-rank{
+  opacity:.18;
+}
+@media(max-width:620px){
+  #leaderboardView .podium-leader-avatar{width:90%;object-position:center 48%}
+  #leaderboardView .podium-leader-art::after{
+    background:linear-gradient(90deg,rgba(17,22,28,.98),rgba(17,22,28,.76) 50%,rgba(17,22,28,.35)),
+      linear-gradient(0deg,rgba(10,13,17,.65),transparent 70%);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #leaderboardView .podium-leader-art{transition:none}
+}
