@@ -78,6 +78,23 @@
     if (oddsPanel) oddsPanel.hidden = selected !== 'points';
     if (originalEligible) originalEligible.hidden = selected !== 'gains';
   }
+  // Preserve GAINS / LEVELS units whenever the search, VIP filter or live sync
+  // redraws the ranking (including the #2/#3 side card).
+  function applyRankingUnits() {
+    const displayUnit = selected === 'gains' ? 'LEVEL GAIN / THIS MONTH'
+      : selected === 'level' ? 'TOTAL LEVEL' : 'Y.U.R.A. POINTS';
+    for (const el of host.querySelectorAll('.podium-unit')) el.textContent = displayUnit;
+    for (const el of host.querySelectorAll('.podium-points, .leaderboard-points')) {
+      const value = el.textContent.trim();
+      if (!value) continue;
+      if (selected === 'gains' && !value.startsWith('+')) el.textContent = '+' + value + ' LVL';
+      if (selected === 'level' && !value.startsWith('LVL ')) el.textContent = 'LVL ' + value;
+    }
+  }
+  renderLeaderboard = function(data) {
+    originalRender(data);
+    applyRankingUnits();
+  };
   function showRanking(data) {
     const rows = Array.isArray(data?.[selected]) ? data[selected] : [];
     const convert = row => {
@@ -94,21 +111,7 @@
       rankDelta: 0,isNew:false
       };
     };
-    originalRender({entries:rows.map(convert), updatedAt:data.updatedAt || new Date().toISOString()});
-    // The legacy renderer labels every value as YURA Points. Correct the labels
-    // after rendering so GAINS never falsely appears to be currency.
-    const displayUnit = selected === 'gains' ? 'LEVEL GAIN / THIS MONTH'
-      : selected === 'level' ? 'TOTAL LEVEL' : 'Y.U.R.A. POINTS';
-    for (const el of host.querySelectorAll('.podium-unit')) el.textContent = displayUnit;
-    if (selected === 'gains') {
-      for (const el of host.querySelectorAll('.podium-points, .leaderboard-points')) {
-        if (el.textContent && !el.textContent.trim().startsWith('+'))
-          el.textContent = '+' + el.textContent.trim() + ' LVL';
-      }
-    } else if (selected === 'level') {
-      for (const el of host.querySelectorAll('.podium-points, .leaderboard-points'))
-        if (el.textContent) el.textContent = 'LVL ' + el.textContent.trim();
-    }
+    renderLeaderboard({entries:rows.map(convert), updatedAt:data.updatedAt || new Date().toISOString()});
     const label=document.getElementById('leaderboardStatus');
     if (label) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
   }
