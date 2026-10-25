@@ -367,6 +367,15 @@ function leaderboardHydrateLeaderAvatar(entry) {
   });
 }
 
+// The Cloud supplies the earned EXP since the monthly baseline. Display it as
+// progress beside full level gains; never infer or invent EXP for older responses.
+function leaderboardMonthlyExpMarkup(entry) {
+  if (entry?.monthlyExp === null || entry?.monthlyExp === undefined) return "";
+  const value = Number(entry.monthlyExp);
+  if (!Number.isFinite(value)) return "";
+  return `<span class="leaderboard-monthly-exp">+${formatPoints(Math.max(0,value))} EXP w tym miesiącu</span>`;
+}
+
 function renderLeaderboard(data) {
   const sourceEntries = Array.isArray(data?.entries)
     ? data.entries
@@ -469,6 +478,7 @@ function renderLeaderboard(data) {
           <div class="podium-leader-stat">
             <div class="podium-points">${formatPoints(leader.points)}</div>
             <div class="podium-unit">Y.U.R.A. POINTS</div>
+            ${leaderboardMonthlyExpMarkup(leader)}
           </div>
         </div>
       </div>
@@ -493,6 +503,7 @@ function renderLeaderboard(data) {
             <div class="leaderboard-runner-score">
               <strong class="leaderboard-points">${formatPoints(entry.points)}</strong>
               <span class="podium-unit">Y.U.R.A. POINTS</span>
+              ${leaderboardMonthlyExpMarkup(entry)}
             </div>
           </div>
         </article>
@@ -512,7 +523,10 @@ function renderLeaderboard(data) {
             <span>${esc(entry.name)}</span>
             ${movementMarkup(entry)}
           </strong>
-          <span class="leaderboard-points">${formatPoints(entry.points)}</span>
+          <span class="leaderboard-score-cell">
+            <span class="leaderboard-points">${formatPoints(entry.points)}</span>
+            ${leaderboardMonthlyExpMarkup(entry)}
+          </span>
         </div>
       `;
     }).join("");
