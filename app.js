@@ -314,6 +314,59 @@ function movementMarkup(entry) {
   return '<span class="rank-movement movement-flat">—</span>';
 }
 
+// Leader portrait: use a Twitch CDN URL already present in the ranking data,
+// otherwise resolve the public Twitch profile image via DecAPI. No Twitch
+// OAuth tokens or secrets are required in the public website.
+const leaderboardLeaderAvatarCache = new Map();
+const LEADERBOARD_AVATAR_TTL_MS = 30 * 60 * 1000;
+function leaderboardSafeTwitchImage(url) {
+  if (typeof url !== "string" || !url.trim()) return null;
+  try {
+    const parsed = new URL(url.trim());
+    if (parsed.protocol !== "https:") return null;
+    if (!/(^|\.)(jtvnw\.net|twitchcdn\.net|twitch\.tv)$/.test(parsed.hostname.toLowerCase())) return null;
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+function leaderboardTwitchLogin(entry) {
+  const name = String(entry?.login || entry?.name || "").trim().replace(/^@/, "").toLowerCase();
+  return /^[a-z0-9_]{2,25}$/.test(name) ? name : null;
+}
+function leaderboardResolveAvatar(entry, login) {
+  const direct = [
+    entry?.profile_image_url,entry?.profileImageUrl,entry?.avatarUrl,
+    entry?.avatar_url,entry?.avatar,entry?.profilePicture
+  ].map(leaderboardSafeTwitchImage).find(Boolean);
+  if (direct) return Promise.resolve(direct);
+  const cached = leaderboardLeaderAvatarCache.get(login);
+  if (cached && Date.now() - cached.checkedAt < LEADERBOARD_AVATAR_TTL_MS) return cached.promise;
+  const promise = fetch(`https://decapi.me/twitch/avatar/${encodeURIComponent(login)}`)
+    .then(async response => {
+      if (!response.ok) throw new Error(`Twitch avatar HTTP ${response.status}`);
+      return leaderboardSafeTwitchImage(await response.text());
+    })
+    .catch(() => null);
+  leaderboardLeaderAvatarCache.set(login,{checkedAt:Date.now(),promise});
+  return promise;
+}
+function leaderboardHydrateLeaderAvatar(entry) {
+  const image = leaderboardPodium?.querySelector(".podium-leader-avatar");
+  const login = leaderboardTwitchLogin(entry);
+  if (!image || !login) return;
+  const art = image.parentElement;
+  leaderboardResolveAvatar(entry,login).then(url => {
+    // Ignore stale async results when a sync changes the leader or ranking tab.
+    if (!url || !image.isConnected) return;
+    image.onload = () => {
+      if (image.isConnected && image.naturalWidth > 0) art?.classList.add("is-loaded");
+    };
+    image.onerror = () => art?.classList.remove("is-loaded");
+    image.src = url;
+  });
+}
+
 function renderLeaderboard(data) {
   const sourceEntries = Array.isArray(data?.entries)
     ? data.entries
@@ -403,6 +456,9 @@ function renderLeaderboard(data) {
   const leaderIsMatch = query && matchNames.has(leader.name);
   leaderboardPodium.innerHTML = `
     <article class="podium-card rank-1 ${leaderIsMatch ? "is-match" : ""}" data-rank="1" data-name="${esc(leader.name)}">
+      <div class="podium-leader-art" aria-hidden="true">
+        <img class="podium-leader-avatar" alt="" loading="eager" decoding="async">
+      </div>
       <div class="podium-leader-main">
         <div class="podium-kicker">
           <span>LIDER RANKINGU • #1</span>
@@ -420,6 +476,7 @@ function renderLeaderboard(data) {
     </article>
   `;
   leaderboardPodium.hidden = false;
+  leaderboardHydrateLeaderAvatar(leader);
 
   const runners = entries.slice(1, 3);
   if (leaderboardTopSide) {
