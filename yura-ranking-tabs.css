@@ -20,3 +20,142 @@
 /* Native hidden must win over the cards' explicit display styles. */
 #leaderboardView .monthly-vip-rule[hidden],
 #leaderboardView .yura-vip-odds[hidden]{display:none!important}
+
+
+/* Featured #1 leaderboard layout — shared by GAINS, LEVELS and POINTS. */
+#leaderboardView .podium[hidden],
+#leaderboardView .leaderboard-list[hidden]{display:none!important}
+#leaderboardView .podium{
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+}
+#leaderboardView .podium-card.rank-1{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(235px,.43fr);
+  align-items:end;
+  gap:24px;
+  min-height:236px;
+  padding:30px 32px;
+  border-left:3px solid var(--accent);
+  background:
+    radial-gradient(ellipse at 76% 24%,rgba(242,140,24,.13),transparent 57%),
+    linear-gradient(113deg,rgba(242,140,24,.055),rgba(10,13,17,.82) 65%),
+    var(--panel);
+}
+#leaderboardView .podium-card.rank-1::after{
+  height:1px;
+  opacity:.35;
+}
+#leaderboardView .podium-leader-main{
+  position:relative;
+  z-index:1;
+  min-width:0;
+  align-self:stretch;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:24px;
+}
+#leaderboardView .podium-kicker{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  font-family:var(--font-ui);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.09em;
+}
+#leaderboardView .podium-name{
+  display:block;
+  margin:0;
+  font-family:var(--font-ui);
+  font-size:clamp(28px,3.2vw,39px);
+  font-weight:800;
+  line-height:1.16;
+  letter-spacing:-.035em;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .podium-leader-stat{
+  position:relative;
+  z-index:1;
+  min-width:0;
+  text-align:right;
+  padding-bottom:3px;
+}
+#leaderboardView .podium-points{
+  margin:0;
+  font-family:var(--font-display);
+  font-size:clamp(37px,4vw,55px);
+  font-weight:800;
+  line-height:1;
+  letter-spacing:-.02em;
+  overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+#leaderboardView .podium-unit{
+  margin-top:12px;
+  font-family:var(--font-ui);
+  color:#9ba6b3;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.07em;
+}
+#leaderboardView .podium-rank{
+  z-index:0;
+  top:20px;
+  right:28px;
+  color:rgba(242,140,24,.13);
+  font-family:var(--font-display);
+  font-size:106px;
+  font-weight:800;
+  letter-spacing:-.04em;
+}
+#leaderboardView .podium.candidate-mode .podium-card.rank-1{
+  border-left-color:#b7a1ff;
+  background:
+    radial-gradient(ellipse at 76% 24%,rgba(183,161,255,.12),transparent 57%),
+    linear-gradient(113deg,rgba(183,161,255,.045),rgba(10,13,17,.82) 65%),
+    var(--panel);
+}
+#leaderboardView .podium.candidate-mode::before{
+  display:block;
+  top:18px;
+  left:auto;
+  right:24px;
+  transform:none;
+  padding:6px 10px;
+  font-family:var(--font-ui);
+  font-size:10px;
+  line-height:1;
+  letter-spacing:.075em;
+  text-shadow:none;
+}
+#leaderboardView .leaderboard-list{margin-top:14px}
+#leaderboardView .leaderboard-row{min-height:65px}
+#leaderboardView .leaderboard-rank{
+  font-family:var(--font-ui);
+  font-size:14px;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:680px){
+  #leaderboardView .podium-card.rank-1{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:26px;
+    min-height:228px;
+    padding:23px 20px;
+  }
+  #leaderboardView .podium-leader-main{gap:30px}
+  #leaderboardView .podium-name{font-size:clamp(25px,6vw,34px)}
+  #leaderboardView .podium-leader-stat{text-align:left}
+  #leaderboardView .podium-points{font-size:clamp(34px,8vw,44px)}
+  #leaderboardView .podium-rank{right:14px;top:50px;font-size:84px}
+  #leaderboardView .podium.candidate-mode::before{top:17px;right:13px;padding:5px 7px;font-size:9px}
+}
+@media(max-width:400px){
+  #leaderboardView .podium-kicker{font-size:10px}
+  #leaderboardView .podium.candidate-mode::before{top:auto;bottom:15px}
+}
