@@ -16,14 +16,14 @@
   const listHeader = host.querySelector('.leaderboard-list-head span:last-child');
   const note = host.querySelector('.monthly-vip-rule p');
   const rankControls = document.createElement('div');
-  rankControls.className = 'yura-ranking-tabs';
+  rankControls.className = 'tabs yura-ranking-tabs';
   rankControls.setAttribute('role','tablist');
   rankControls.setAttribute('aria-label','Typ rankingu YURA');
   for (const mode of modes) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'yura-ranking-tab' + (mode === selected ? ' active' : '');
-    button.textContent = mode.toUpperCase();
+    button.className = 'tab yura-ranking-tab' + (mode === selected ? ' active' : '');
+    button.textContent = mode === 'level' ? 'LEVELS' : mode.toUpperCase();
     button.dataset.rankMode = mode;
     button.setAttribute('role','tab');
     button.setAttribute('aria-selected',String(mode===selected));
