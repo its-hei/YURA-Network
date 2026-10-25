@@ -2351,3 +2351,29 @@ footer.site-footer{font-size:12px;letter-spacing:0}
   .eyebrow,.meta-label{font-size:10px}
   .system-card p{font-size:12px}
 }
+
+
+/* YURA reference eyebrow with orange leading rule, muted text.
+   Only section hero labels are affected; labels inside cards keep their accents. */
+.view-panel > .hero .eyebrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#abb5c3;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.13em;
+  line-height:1.4;
+}
+.view-panel > .hero .eyebrow::before{
+  content:"";
+  display:block;
+  flex:0 0 23px;
+  width:23px;
+  height:2px;
+  background:var(--accent);
+}
+@media (max-width:620px){
+  .view-panel > .hero .eyebrow{font-size:10px;gap:8px}
+  .view-panel > .hero .eyebrow::before{flex-basis:20px;width:20px}
+}
