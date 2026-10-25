@@ -2186,3 +2186,29 @@ footer{
  .side-note.social-links{grid-row:3}
  .side-nav{grid-row:4}
 }
+
+/* Creator header and full-width YURA footer. */
+body{min-height:100vh;display:flex;flex-direction:column}
+.creator-header{display:flex;align-items:center;gap:14px;min-width:0}
+.creator-avatar{width:42px;height:42px;flex:0 0 42px;object-fit:cover;border:1px solid var(--line);border-radius:10px}
+.creator-name{font-size:16px;letter-spacing:.12em;color:var(--text)}
+.creator-socials{display:flex;gap:8px;align-items:center}
+.profile-grid{display:block}
+.side-nav{margin:0}
+footer.site-footer{position:static;left:auto;bottom:auto;width:min(100% - 40px,1500px);margin:40px auto 0;padding:28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;border-top:1px solid var(--line);pointer-events:auto;font-size:11px;letter-spacing:.02em}
+.site-footer .brand{display:flex;align-items:center}
+.site-footer .brand-title{font-size:13px}
+.site-footer .brand-sub{font-size:10px}
+.footer-credit{color:var(--muted)}
+@media(max-width:620px){
+ .topbar{flex-wrap:wrap}
+ .creator-header{gap:9px;width:100%}
+ .creator-avatar{width:34px;height:34px;flex-basis:34px}
+ .creator-name{font-size:12px;letter-spacing:.08em}
+ .creator-socials{margin-left:auto;gap:5px}
+ .creator-socials .social-link{padding:8px;font-size:10px;letter-spacing:.03em}
+ footer.site-footer{width:calc(100% - 20px);padding:20px 0;gap:14px}
+}
+
+body > .shell{margin-bottom:40px}
+footer.site-footer{margin-top:auto}
