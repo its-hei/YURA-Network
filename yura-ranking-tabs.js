@@ -45,7 +45,8 @@
     });
     rankControls.appendChild(button);
   }
-  host.querySelector('.leaderboard-toolbar')?.before(rankControls);
+  // Ranking tabs remain above both leader and runner-up panels.
+  (host.querySelector('.leaderboard-layout') || host.querySelector('.leaderboard-toolbar'))?.before(rankControls);
 
   // Transparent public odds: each stake bracket has a 10x smaller probability after loss.
   if (vipRule && !host.querySelector('.yura-vip-odds')) {
