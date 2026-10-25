@@ -2171,3 +2171,18 @@ footer{
 .social-link.twitch-link{color:var(--accent)}
 .social-link.discord-link{color:#b7a1ff}
 .social-link:hover,.social-link:focus-visible{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+
+/* Profile stack: portrait, name, social links, navigation. */
+@media(min-width:821px){.shell{grid-template-columns:190px minmax(0,1fr)}}
+.profile-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto}
+.profile-card{grid-column:1;grid-row:2;height:auto;min-height:50px;width:100%;padding:14px}
+.profile-meta strong{margin:0}
+.side-note.social-links{grid-column:1;grid-row:3;width:100%}
+.side-nav{grid-column:1;grid-row:4;width:100%}
+@media(max-width:620px){
+ .profile-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto}
+ .profile-card{height:auto;min-height:42px;padding:12px}
+ .profile-meta strong{margin:0}
+ .side-note.social-links{grid-row:3}
+ .side-nav{grid-row:4}
+}

@@ -7,6 +7,7 @@
   if (!host || typeof renderLeaderboard !== 'function' || typeof loadLeaderboard !== 'function') return;
   const modes = ['gains', 'level', 'points'];
   let selected = 'gains';
+  let gainsCandidatesOnly = false;
   let pending = false;
   let lastRanking = null;
   const originalLoad = loadLeaderboard;
@@ -28,7 +29,10 @@
     button.setAttribute('role','tab');
     button.setAttribute('aria-selected',String(mode===selected));
     button.addEventListener('click', async () => {
+      if (selected === 'gains') gainsCandidatesOnly = state.leaderboardHidePrivileged;
       selected = mode;
+      state.leaderboardHidePrivileged = mode === 'gains' && gainsCandidatesOnly;
+      updateLabels();
       for (const item of rankControls.children) {
         item.classList.toggle('active',item.dataset.rankMode === selected);
         item.setAttribute('aria-selected',String(item.dataset.rankMode === selected));
