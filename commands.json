@@ -97,8 +97,17 @@
     "command": "!autoraffle",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!autoraffle [liczba zwyci\u0119zc\u00F3w]",
-    "description": "Losuje automatycznie spo\u015Br\u00F3d obecnych widz\u00F3w; domy\u015Blnie wybiera 3 osoby.",
+    "usage": "!autoraffle [pula YURA]",
+    "description": "Losuje 3 r\u00F3\u017Cnych widz\u00F3w i dzieli pul\u0119 YURA: 50% / 35% / 15%.",
+    "category": "RAFFLE",
+    "source": "YURA"
+  },
+  {
+    "command": "!jackpot",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!jackpot \u003Cwpisowe\u003E [sekundy]",
+    "description": "!join wp\u0142aca wpisowe do puli. Jeden wylosowany gracz zdobywa 100% puli.",
     "category": "RAFFLE",
     "source": "YURA"
   },
