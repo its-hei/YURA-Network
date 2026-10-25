@@ -268,6 +268,7 @@ const leaderboardEmpty = document.getElementById("leaderboardEmpty");
 const aboutView = document.getElementById("aboutView");
 const scheduleView = document.getElementById("scheduleView");
 const changelogView = document.getElementById("changelogView");
+const streamMapView = document.getElementById("streamMapView");
 const changelogList = document.getElementById("changelogList");
 
 let activeView = "commands";
@@ -693,6 +694,9 @@ function switchView(view) {
   aboutView.hidden = view !== "about";
   scheduleView.hidden = view !== "schedule";
   changelogView.hidden = view !== "changelog";
+  streamMapView.hidden = view !== "streammap";
+
+  if (view === "streammap") yuraOpenStreamMap();
 
   if (view === "leaderboard") {
     startLeaderboardPolling();
@@ -2023,155 +2027,34 @@ function yuraHideStreamMapView(updateHistory=true) {
   }
 }
 
-function yuraInstallStreamMapNavLink() {
-  const old = document.querySelector("[data-yura-stream-map-nav='1']");
-  if (old) old.remove();
-
-  const levels = document.querySelector("[data-yura-levels-nav='1']");
-  if (!levels) return false;
-
-  const clone = levels.cloneNode(true);
-  clone.setAttribute("data-yura-stream-map-nav","1");
-  clone.removeAttribute("data-yura-levels-nav");
-  clone.removeAttribute("data-view");
-  clone.removeAttribute("href");
-  clone.removeAttribute("aria-current");
-  clone.classList.remove("active","is-active","selected");
-
-  clone.innerHTML = clone.innerHTML
-    .replace(/Levels/g,"Mapa streama")
-    .replace(/EXP/gi,"GUIDE");
-
-  clone.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    yuraShowStreamMapView(true);
-  }, true);
-
-  const navRoot = levels.parentElement;
-  if (navRoot)
-    navRoot.insertBefore(clone, navRoot.firstElementChild);
-  else
-    levels.insertAdjacentElement("beforebegin", clone);
-  return true;
-}
-
-function yuraInstallLevelsNavLink() {
-  const old = document.querySelector("[data-yura-levels-nav='1']");
-  if (old) {
-    // Replace stale historical clones/handlers instead of trusting them.
-    old.remove();
-  }
-
-  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
-  const ranking = candidates.find(el => {
-    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
-    return /^Ranking\b/i.test(text) || /\bRanking\s+TOP\s*10\b/i.test(text);
-  });
-  if (!ranking) return false;
-
-  const clone = ranking.cloneNode(true);
-  clone.setAttribute("data-yura-levels-nav","1");
-  clone.removeAttribute("data-view");
-  clone.removeAttribute("href");
-  clone.removeAttribute("aria-current");
-  clone.classList.remove("active","is-active","selected");
-
-  clone.innerHTML = clone.innerHTML
-    .replace(/Ranking/g,"Levels")
-    .replace(/TOP\s*10/gi,"EXP");
-
-  clone.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    if (yuraStreamMapPanel) yuraHideStreamMapView(false);
-    yuraShowLevelsView(true);
-  }, true);
-
-  ranking.insertAdjacentElement("afterend", clone);
-  return true;
-}
-
-document.addEventListener("click", event => {
-  if (!yuraStreamMapPanel) return;
-  const item = event.target?.closest?.("a,button,[data-view]");
-  if (!item || item.matches("[data-yura-stream-map-nav='1']")) return;
-  const text = String(item.textContent || "").replace(/\s+/g," ").trim();
-  if (/^(Komendy|Ranking|Levels|O mnie|Harmonogram)\b/i.test(text))
-    window.setTimeout(() => yuraHideStreamMapView(true),0);
-}, false);
-
-document.addEventListener("click", event => {
-  if (!yuraLevelsPanel) return;
-  const item = event.target?.closest?.("a,button,[data-view]");
-  if (!item || item.matches("[data-yura-levels-nav='1']")) return;
-  const text = String(item.textContent || "").replace(/\s+/g," ").trim();
-  if (/^(Komendy|Ranking|O mnie|Harmonogram)\b/i.test(text)) {
-    window.setTimeout(() => yuraHideLevelsView(true), 0);
-  }
-}, false);
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && yuraLevelsPanel) yuraLevelsLoad(true);
-});
-
-window.addEventListener("popstate", () => {
-  const view = new URL(window.location.href).searchParams.get("yuraView");
-  if (view === "levels") {
-    if (yuraStreamMapPanel) yuraHideStreamMapView(false);
-    yuraShowLevelsView(false);
-  } else if (view === "streammap") {
-    if (yuraLevelsPanel) yuraHideLevelsView(false);
-    yuraShowStreamMapView(false);
-  } else {
-    yuraHideLevelsView(false);
-    yuraHideStreamMapView(false);
-  }
-});
-
-function yuraRemovePublicChangelogNav() {
-  const candidates = [...document.querySelectorAll("a,button,[data-view]")];
-  for (const el of candidates) {
-    const text = String(el.textContent || "").replace(/\s+/g," ").trim();
-    if (/^Changelog(?:\s|$)/i.test(text)) {
-      el.remove();
-    }
+// Public navigation is defined once in index.html. The former runtime-generated
+// Levels/Mapa buttons could hide the active view and break mobile navigation.
+// LEVEL remains available in Ranking (GAINS / LEVEL / POINTS).
+function yuraOpenStreamMap() {
+  if (!streamMapView) return;
+  yuraStreamMapEnsureStyle();
+  if (!yuraStreamMapPanel) {
+    const panel = document.createElement("div");
+    panel.id = "yura-stream-map-native-view";
+    panel.innerHTML = yuraStreamMapMarkup(yuraStreamMapDefaults());
+    streamMapView.appendChild(panel);
+    yuraStreamMapPanel = panel;
+    yuraStreamMapLoad();
   }
 }
 
-function yuraBootLevelsNative() {
-  yuraRemovePublicChangelogNav();
-
-  const restoreRequestedView = () => {
-    const view = new URL(window.location.href).searchParams.get("yuraView");
-    if (view === "levels")
-      window.setTimeout(() => yuraShowLevelsView(false),50);
-    else if (view === "streammap")
-      window.setTimeout(() => yuraShowStreamMapView(false),50);
-  };
-
-  const installAll = () => {
-    const levelsReady = yuraInstallLevelsNavLink();
-    const mapReady = levelsReady && yuraInstallStreamMapNavLink();
-    return levelsReady && mapReady;
-  };
-
-  if (!installAll()) {
-    const observer = new MutationObserver(() => {
-      yuraRemovePublicChangelogNav();
-      if (installAll()) {
-        observer.disconnect();
-        restoreRequestedView();
-      }
-    });
-    observer.observe(document.documentElement,{childList:true,subtree:true});
-    window.setTimeout(() => observer.disconnect(),30000);
-  } else {
-    restoreRequestedView();
+// Keep older shared URL links working without restoring a separate Levels tile.
+function yuraRestorePublicDeepLink() {
+  const route = new URL(window.location.href).searchParams.get("yuraView");
+  if (route === "streammap") {
+    switchView("streammap");
+  } else if (route === "levels") {
+    switchView("leaderboard");
+    // The Ranking tabs script is loaded immediately AFTER app.js.
+    window.setTimeout(() => {
+      document.querySelector('.yura-ranking-tab[data-rank-mode="level"]')?.click();
+    }, 0);
   }
 }
-
-yuraBootLevelsNative();
-const yuraChangelogNavObserver = new MutationObserver(() => yuraRemovePublicChangelogNav());
-yuraChangelogNavObserver.observe(document.documentElement,{childList:true,subtree:true});
-window.setTimeout(() => yuraChangelogNavObserver.disconnect(),30000);
+window.addEventListener("popstate", yuraRestorePublicDeepLink);
+yuraRestorePublicDeepLink();
