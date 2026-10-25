@@ -262,6 +262,7 @@ const leaderboardSearchInput = document.getElementById("leaderboardSearchInput")
 const leaderboardEligibilityToggle = document.getElementById("leaderboardEligibilityToggle");
 const leaderboardEligibilityLabel = document.getElementById("leaderboardEligibilityLabel");
 const leaderboardPodium = document.getElementById("leaderboardPodium");
+const leaderboardTopSide = document.getElementById("leaderboardTopSide");
 const leaderboardList = document.getElementById("leaderboardList");
 const leaderboardRows = document.getElementById("leaderboardRows");
 const leaderboardEmpty = document.getElementById("leaderboardEmpty");
@@ -386,6 +387,7 @@ function renderLeaderboard(data) {
     leaderboardStatus.textContent = "LIVE DATA";
     leaderboardStatus.classList.add("is-live");
     leaderboardPodium.hidden = true;
+    if (leaderboardTopSide) leaderboardTopSide.hidden = true;
     leaderboardList.hidden = true;
     leaderboardEmpty.hidden = false;
     return;
@@ -395,7 +397,8 @@ function renderLeaderboard(data) {
   leaderboardStatus.classList.add("is-live");
   leaderboardEmpty.hidden = true;
 
-  // The leader gets one full-width featured card; #2 and onward stay in the table.
+  // Kubon-style layout: featured #1, compact #2/#3 on the right,
+  // and places #4–#10 in the ranking table below.
   const leader = entries[0];
   const leaderIsMatch = query && matchNames.has(leader.name);
   leaderboardPodium.innerHTML = `
@@ -405,18 +408,43 @@ function renderLeaderboard(data) {
           <span>LIDER RANKINGU • #1</span>
           ${movementMarkup(leader)}
         </div>
-        <strong class="podium-name">${esc(leader.name)}</strong>
-      </div>
-      <div class="podium-leader-stat">
-        <div class="podium-points">${formatPoints(leader.points)}</div>
-        <div class="podium-unit">Y.U.R.A. POINTS</div>
+        <div class="podium-leader-identity">
+          <strong class="podium-name">${esc(leader.name)}</strong>
+          <div class="podium-leader-stat">
+            <div class="podium-points">${formatPoints(leader.points)}</div>
+            <div class="podium-unit">Y.U.R.A. POINTS</div>
+          </div>
+        </div>
       </div>
       <div class="podium-rank" aria-hidden="true">01</div>
     </article>
   `;
   leaderboardPodium.hidden = false;
 
-  const remaining = entries.slice(1);
+  const runners = entries.slice(1, 3);
+  if (leaderboardTopSide) {
+    leaderboardTopSide.innerHTML = runners.map(entry => {
+      const isMatch = query && matchNames.has(entry.name);
+      return `
+        <article class="leaderboard-runner ${isMatch ? "is-match" : ""}" data-rank="${entry.rank}" data-name="${esc(entry.name)}">
+          <div class="leaderboard-runner-header">
+            <span class="leaderboard-runner-rank">MIEJSCE #${entry.rank}</span>
+            ${movementMarkup(entry)}
+          </div>
+          <div class="leaderboard-runner-body">
+            <strong class="leaderboard-runner-name">${esc(entry.name)}</strong>
+            <div class="leaderboard-runner-score">
+              <strong class="leaderboard-points">${formatPoints(entry.points)}</strong>
+              <span class="podium-unit">Y.U.R.A. POINTS</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+    leaderboardTopSide.hidden = runners.length === 0;
+  }
+
+  const remaining = entries.slice(3);
   if (remaining.length) {
     leaderboardRows.innerHTML = remaining.map(entry => {
       const isMatch = query && matchNames.has(entry.name);
