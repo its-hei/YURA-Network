@@ -2254,3 +2254,100 @@ body > .shell{display:block}
   .topbar{padding-inline:max(16px,calc((100% - 1080px)/2))}
   footer.site-footer{width:min(1080px,calc(100% - 32px))}
 }
+
+
+/* Readable typography refresh — inspired by the Kubon reference. */
+:root{
+  --font-ui:"Inter",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --font-display:"Barlow Condensed","Arial Narrow","Segoe UI",sans-serif;
+}
+body{font-family:var(--font-ui);font-size:14px;line-height:1.55}
+button,input,select,textarea{font-family:inherit}
+
+h1{
+  font-family:var(--font-display);
+  font-size:clamp(38px,4.3vw,50px);
+  font-weight:800;
+  line-height:1.05;
+  letter-spacing:-.015em;
+}
+.hero p{font-size:15px;line-height:1.5}
+.eyebrow{font-size:11px;letter-spacing:.1em}
+.status-chip{font-size:11px;letter-spacing:.04em}
+.creator-name{font-size:15px;font-weight:800;letter-spacing:0}
+.creator-twitch-link{font-size:13px}
+.top-navigation .side-item{font-size:14px;font-weight:600;letter-spacing:0}
+.tab{font-size:13px;font-weight:600}
+.search-box input,.leaderboard-search-box input{font-size:14px}
+
+th,.leaderboard-list-head{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.06em;
+}
+.group-label{font-size:12px;font-weight:800;letter-spacing:.055em}
+.group-count,.group-state{font-family:var(--font-ui);font-size:11px;letter-spacing:0}
+.command{font-size:14px;font-weight:700}
+.alias-count,.badge{font-size:11px}
+.aliases,.usage{font-size:12px;letter-spacing:0}
+.description{font-size:13px;line-height:1.6}
+.meta-label{font-size:11px;font-weight:700;letter-spacing:.05em}
+.leaderboard-meta strong{font-family:var(--font-ui);font-size:13px;font-variant-numeric:tabular-nums}
+.eligibility-toggle,.refresh-button{font-size:12px;letter-spacing:0}
+.podium-rank{font-family:var(--font-display);font-weight:800}
+.podium-kicker,.podium-unit{font-size:11px;letter-spacing:.07em}
+.podium-name{font-size:clamp(20px,2.4vw,28px);font-weight:800}
+.podium-points,.leaderboard-points{font-family:var(--font-ui);font-weight:800;font-variant-numeric:tabular-nums}
+.leaderboard-rank{font-family:var(--font-ui);font-size:14px;font-variant-numeric:tabular-nums}
+.leaderboard-name{font-size:15px;font-weight:600}
+.leaderboard-empty p{font-size:13px}
+.empty-code{font-size:11px;letter-spacing:.07em}
+
+.vip-candidate-label,.monthly-vip-kicker{font-family:var(--font-ui);font-size:11px;letter-spacing:.06em}
+.vip-candidate-points{font-family:var(--font-ui);font-size:13px}
+.monthly-vip-copy p{font-size:13px;line-height:1.65}
+.changelog-version{font-family:var(--font-ui);font-size:12px}
+.changelog-latest{font-size:10px;letter-spacing:.04em}
+.changelog-header time{font-family:var(--font-ui);font-size:11px}
+.changelog-content h2{font-size:20px;font-weight:750}
+.changelog-content ul{font-size:13px;line-height:1.7}
+
+.about-ident h2{font-size:23px;font-weight:800;line-height:1.2;letter-spacing:-.025em}
+.about-copy{font-size:14px;line-height:1.75}
+.system-card-label,.about-link-card span{
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+}
+.system-card strong{font-size:15px;font-weight:750}
+.system-card p{font-size:12px;line-height:1.6}
+.about-link-card strong{font-size:13px}
+
+.schedule-code,.schedule-state,.notice-label{
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+}
+.schedule-window-card strong{
+  font-family:var(--font-display);
+  font-size:32px;
+  font-weight:800;
+  letter-spacing:0;
+}
+.schedule-window-card p,.schedule-notice p{font-size:13px;line-height:1.6}
+.day-name{font-size:11px;letter-spacing:.06em}
+.day-card strong{font-family:var(--font-ui);font-size:14px;font-weight:750}
+.day-note{font-family:var(--font-ui);font-size:10px;letter-spacing:0}
+.schedule-notice strong{font-size:14px}
+.schedule-notice a{font-family:var(--font-ui);font-size:12px}
+footer.site-footer{font-size:12px;letter-spacing:0}
+
+@media(max-width:620px){
+  h1{font-size:clamp(32px,8.5vw,40px);line-height:1.05}
+  .top-navigation .side-item{font-size:12px}
+  .hero p{font-size:13px}
+  .eyebrow,.meta-label{font-size:10px}
+  .system-card p{font-size:12px}
+}
