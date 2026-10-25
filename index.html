@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=105">
+  <link rel="stylesheet" href="styles.css?v=106">
   <link rel="stylesheet" href="yura-ranking-tabs.css?v=99">
 </head>
 <body>
@@ -25,7 +25,7 @@
 
 
     <nav class="side-nav top-navigation" aria-label="Nawigacja">
-          <button class="side-item" type="button" data-view="about">
+          <button class="side-item active" type="button" data-view="about">
             O mnie
             
           </button>
@@ -33,9 +33,9 @@
             Mapa streama
             
           </button>
-          <button class="side-item active" type="button" data-view="commands">Komendy</button>
+          <button class="side-item" type="button" data-view="commands">Komendy</button>
           <button class="side-item" type="button" data-view="leaderboard">
-            Y. U. R. A
+            Y.U.R.A.
             
           </button>
           <button class="side-item" type="button" data-view="schedule">
@@ -48,7 +48,7 @@
   <main class="shell">
 
 
-    <section class="content view-panel" id="commandsView">
+    <section class="content view-panel" id="commandsView" hidden>
       <div class="hero">
         <div>
           <div class="eyebrow">PUBLIC TERMINAL</div>
@@ -97,7 +97,7 @@
       <div class="hero">
         <div>
           <div class="eyebrow">Y.U.R.A. POINT NETWORK</div>
-          <h1>Y. U. R. A</h1>
+          <h1>Y.U.R.A.</h1>
           <p>Ranking punktów Y.U.R.A.</p>
         </div>
         <div class="status-chip leaderboard-status" id="leaderboardStatus">WAITING FOR DATA</div>
@@ -162,7 +162,7 @@
         <p>Gdy Y.U.R.A. opublikuje ranking, dane pojawią się tutaj automatycznie.</p>
       </div>
     </section>
-    <section class="content view-panel" id="aboutView" hidden>
+    <section class="content view-panel" id="aboutView">
       <div class="hero">
         <div>
           <div class="eyebrow">SYSTEM PROFILE</div>
@@ -381,7 +381,7 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=mobile96"></script>
+  <script src="app.js?v=mobile97"></script>
   <script src="yura-ranking-tabs.js?v=99"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
