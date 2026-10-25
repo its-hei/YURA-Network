@@ -273,3 +273,21 @@
 @media(prefers-reduced-motion:reduce){
   #leaderboardView .podium-leader-art{transition:none}
 }
+
+/* Verified monthly EXP progress, visible only in GAINS. */
+#leaderboardView .leaderboard-monthly-exp{
+  display:block;
+  font-family:var(--font-ui);
+  color:#b4bfcd;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.5;
+  letter-spacing:0;
+}
+#leaderboardView:not(:has(.yura-ranking-tab.active[data-rank-mode="gains"])) .leaderboard-monthly-exp{display:none}
+#leaderboardView .podium-leader-stat .leaderboard-monthly-exp{flex-basis:100%;color:#e2b974}
+#leaderboardView .leaderboard-score-cell{display:grid;gap:2px;text-align:right;min-width:0}
+#leaderboardView .leaderboard-runner-score .leaderboard-monthly-exp{font-size:10px;line-height:1.4}
+@media(max-width:620px){
+  #leaderboardView .leaderboard-monthly-exp{font-size:10px}
+}
