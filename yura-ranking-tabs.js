@@ -238,9 +238,9 @@
     };
     const converted=rows.map(convert);
     renderLeaderboard({entries:converted, updatedAt:data.updatedAt || new Date().toISOString()});
-    document.dispatchEvent(new CustomEvent('yura:ranking-data',{
-      detail:{mode:selected,rows:converted,data,dated:gainsSnapshotActive}
-    }));
+    const gainsDetail={mode:selected,rows:converted,data,dated:gainsSnapshotActive};
+    window.yuraGainsLastDetail=gainsDetail;
+    document.dispatchEvent(new CustomEvent('yura:ranking-data',{detail:gainsDetail}));
     const label=document.getElementById('leaderboardStatus');
     if (label && !gainsSnapshotActive) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
     updateLabels();
