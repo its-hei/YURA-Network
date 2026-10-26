@@ -657,3 +657,51 @@
   }
   #leaderboardView .podium-leader-identity{max-width:98%}
 }
+
+/* Full-card leader portrait v4: reveal the photograph across the entire panel. */
+#leaderboardView .podium-card.rank-1{
+  isolation:isolate;
+  background:#101318;
+}
+#leaderboardView .podium-leader-art{position:absolute;inset:0;z-index:0;overflow:hidden}
+#leaderboardView .podium-leader-avatar{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 48%;
+  filter:brightness(.93) saturate(1.05);
+  padding:0;
+  transform:none;
+  border-radius:0;
+  box-shadow:none;
+}
+#leaderboardView .podium-leader-art::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:linear-gradient(90deg,
+    rgba(9,12,17,.82) 0%,
+    rgba(9,12,17,.62) 21%,
+    rgba(9,12,17,.22) 44%,
+    rgba(9,12,17,.03) 70%,
+    rgba(9,12,17,.02) 100%);
+}
+#leaderboardView .podium-leader-art.is-pokemon .podium-leader-avatar{
+  object-fit:contain;
+  object-position:center;
+  filter:drop-shadow(0 7px 23px rgba(0,0,0,.3));
+}
+@media(max-width:700px){
+  #leaderboardView .podium-leader-avatar{width:100%;height:100%;object-position:center}
+  #leaderboardView .podium-leader-art::after{
+    background:linear-gradient(90deg,
+      rgba(9,12,17,.84) 0%,
+      rgba(9,12,17,.60) 33%,
+      rgba(9,12,17,.15) 68%,
+      transparent 100%);
+  }
+}
