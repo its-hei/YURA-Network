@@ -378,22 +378,6 @@ function leaderboardHydrateLeaderAvatar(entry) {
   });
 }
 
-function leaderboardHydrateOtherAvatars(entries) {
-  for (const entry of entries.slice(1)) {
-    const image = leaderboardView?.querySelector('.leaderboard-user-avatar[data-rank="' + entry.rank + '"]');
-    const login = leaderboardTwitchLogin(entry);
-    if (!image || !login) continue;
-    image.classList.toggle('is-pokemon', Boolean(leaderboardPokemonArtwork(entry)));
-    leaderboardResolveAvatar(entry,login).then(url => {
-      if (!url || !image.isConnected) return;
-      image.onload = () => {
-        if (image.isConnected && image.naturalWidth > 0) image.classList.add('is-loaded');
-      };
-      image.onerror = () => image.classList.remove('is-loaded');
-      image.src = url;
-    });
-  }
-}
 function renderLeaderboard(data) {
   const sourceEntries = Array.isArray(data?.entries)
     ? data.entries
@@ -516,10 +500,7 @@ function renderLeaderboard(data) {
             ${movementMarkup(entry)}
           </div>
           <div class="leaderboard-runner-body">
-            <span class="leaderboard-runner-person">
-              <img class="leaderboard-user-avatar" data-rank="${entry.rank}" alt="" loading="lazy" decoding="async">
-              <strong class="leaderboard-runner-name">${esc(entry.name)}</strong>
-            </span>
+            <strong class="leaderboard-runner-name">${esc(entry.name)}</strong>
             <div class="leaderboard-runner-score">
               <strong class="leaderboard-points">${formatPoints(entry.points)}</strong>
               <span class="podium-unit">Y.U.R.A. POINTS</span>
@@ -539,7 +520,6 @@ function renderLeaderboard(data) {
         <div class="leaderboard-row ${isMatch ? "is-match" : ""}" data-rank="${entry.rank}" data-name="${esc(entry.name)}">
           <span class="leaderboard-rank">${rankMark(entry.rank)}</span>
           <strong class="leaderboard-name">
-            <img class="leaderboard-user-avatar" data-rank="${entry.rank}" alt="" loading="lazy" decoding="async">
             <span>${esc(entry.name)}</span>
             ${movementMarkup(entry)}
           </strong>
@@ -555,7 +535,6 @@ function renderLeaderboard(data) {
     leaderboardList.hidden = true;
   }
 
-  leaderboardHydrateOtherAvatars(entries);
 
   if (query) {
     if (matches.length) {
