@@ -51,6 +51,34 @@
   const originalRender = renderLeaderboard;
   const originalEligible = document.getElementById('leaderboardEligibilityToggle');
   const originalEligibleLabel = document.getElementById('leaderboardEligibilityLabel');
+  const rolesHint = document.createElement('p');
+  rolesHint.className = 'ranking-roles-hint';
+  rolesHint.id = 'rankingRolesHint';
+  rolesHint.hidden = false;
+  rolesHint.textContent = 'Sprawdzanie rang Twitch…';
+  originalEligible?.after(rolesHint);
+  function updateRoleStatus(data){
+    const roles=data?.twitchRoles;
+    if (!roles) {
+      rolesHint.textContent='Rangi Twitch: Cloud nie udostępnia jeszcze synchronizacji VIP/MOD.';
+      rolesHint.classList.add('needs-sync');
+    } else if (roles.status==='fresh') {
+      const iso=roles.vips?.syncedAt || roles.moderators?.syncedAt;
+      const date=iso?new Date(iso):null;
+      const local=date&&!Number.isNaN(date.getTime())?
+        date.toLocaleTimeString('pl-PL',{timeZone:'Europe/Warsaw',hour:'2-digit',minute:'2-digit'}):'';
+      rolesHint.textContent='Rangi Twitch zsynchronizowane'+(local?' • '+local:'')+'.';
+      rolesHint.classList.remove('needs-sync');
+    } else {
+      const vipOk=roles.vips?.status==='fresh';
+      const modOk=roles.moderators?.status==='fresh';
+      rolesHint.textContent='Rangi Twitch niepełne: '+
+        (!vipOk&&!modOk?'VIP i moderatorzy':!vipOk?'VIP':'moderatorzy')+
+        ' wymagają synchronizacji/autoryzacji.';
+      rolesHint.classList.add('needs-sync');
+    }
+    rolesHint.hidden = selected!=='gains';
+  }
   const activeVipLogin = data => {
     const holder = data?.monthlyVip?.current || data?.records?.currentMonthlyVip || null;
     const confirmed = holder && typeof holder==='object' &&
@@ -192,6 +220,7 @@
     // The two VIP programs belong to different ranking tabs.
     if (vipRule) vipRule.hidden = selected !== 'gains';
     if (oddsPanel) oddsPanel.hidden = selected !== 'points';
+    rolesHint.hidden = selected !== 'gains';
     if (originalEligible) {
       originalEligible.hidden = selected !== 'gains';
       if (selected==='gains') {
@@ -266,6 +295,7 @@
       };
     };
     const converted=rows.map(convert);
+    if(selected==='gains')updateRoleStatus(data);
     renderLeaderboard({entries:converted, updatedAt:data.updatedAt || new Date().toISOString()});
     const gainsDetail={mode:selected,rows:converted,data,dated:gainsSnapshotActive};
     window.yuraGainsLastDetail=gainsDetail;
