@@ -1,219 +1,208 @@
-/* Public GAINS views: a complete top ten and confirmed historical winners.
-   Kept separate from LEVELS / POINTS and from the Cloud account economy. */
+/* GAINS presentation: Kubon-style top showcase, metric banner and
+   Ranking/Zwycięzcy tabs INSIDE the lower standings card.
+   The existing leaderboard layout always remains mounted and visible. */
 (() => {
   'use strict';
-  const host=document.getElementById('leaderboardView');
-  const layout=host?.querySelector('.leaderboard-layout');
-  if (!host || !layout || document.getElementById('gainsViews')) return;
+  const host = document.getElementById('leaderboardView');
+  const layout = host?.querySelector('.leaderboard-layout');
+  const mainCol = layout?.querySelector('.leaderboard-main-col');
+  if (!host || !layout || !mainCol || document.getElementById('gainsViews')) return;
 
-  const root=document.createElement('div');
-  root.className='gains-views';
-  root.id='gainsViews';
-  root.hidden=true;
-  root.innerHTML=[
-    '<div class="gains-subnav" role="tablist" aria-label="Podstrony GAINS">',
-      '<button type="button" class="gains-subtab active" data-subtab="ranking" role="tab" aria-selected="true">Ranking</button>',
-      '<button type="button" class="gains-subtab" data-subtab="winners" role="tab" aria-selected="false">Zwycięzcy</button>',
-    '</div>',
-    '<section id="gainsRankingPane" class="gains-pane">',
-      '<div class="gains-title-row">',
-        '<div><span class="gains-eyebrow">GAINS / MIESIĘCZNY EXP</span>',
-          '<h2>TOP 10 widzów</h2><p>Ranking EXP zdobytego w aktualnym miesiącu.</p></div>',
-        '<span id="gainsDataStamp" class="gains-data-stamp">WCZYTYWANIE…</span>',
-      '</div>',
-      '<div class="gains-toolbar">',
-        '<label class="gains-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Szukaj w TOP 10..." aria-label="Szukaj widza w rankingu GAINS"></label>',
-        '<button type="button" class="gains-filter" aria-pressed="false">KANDYDACI VIP</button>',
-      '</div>',
-      '<div class="gains-board" id="gainsRankingRows" aria-label="Ranking GAINS od 1 do 10">',
-        '<div class="gains-empty"><strong>Wczytywanie GAINS…</strong></div>',
-      '</div>',
-      '<div class="gains-metrics">',
-        '<div class="gains-metric"><span>REKORD GAINS OD POCZĄTKU ZAPISÓW</span><strong id="gainsBestValue">—</strong><p id="gainsBestDetail">Brak potwierdzonych danych.</p></div>',
-        '<div class="gains-metric"><span>AKTUALNY VIP Z POPRZEDNIEGO MIESIĄCA</span><strong id="gainsCurrentVip">—</strong><p id="gainsCurrentVipDetail">Pierwszy okres rozpoczął się 25.10.2026.</p></div>',
-      '</div>',
-    '</section>',
-    '<section id="gainsWinnersPane" class="gains-pane" hidden>',
-      '<div class="gains-title-row"><div><span class="gains-eyebrow">HISTORIA GAINS</span>',
-      '<h2>Zwycięzcy miesięcy</h2><p>Avatar, nick i liczba wygranych zakończonych miesięcy.</p>',
-      '</div></div>',
-      '<div class="gains-board gains-winners-board" id="gainsWinnerRows"></div>',
-    '</section>'
-  ].join('');
-  layout.before(root);
-  const ranking=root.querySelector('#gainsRankingPane');
-  const winners=root.querySelector('#gainsWinnersPane');
-  const rankingRows=root.querySelector('#gainsRankingRows');
-  const winnerRows=root.querySelector('#gainsWinnerRows');
-  const search=root.querySelector('.gains-search input');
-  const filter=root.querySelector('.gains-filter');
-  let subtab='ranking',onlyCandidates=false;
-  let gainRows=[],rankingData=null,dated=false,missing=false;
-  const fmt=new Intl.NumberFormat('pl-PL');
-  const nick=e=>String(e?.login||e?.name||'').trim().toLowerCase();
-  const validLogin=e=>/^[a-z0-9_]{2,25}$/.test(nick(e));
-  const set=(selector,value)=>{const node=root.querySelector(selector);if(node)node.textContent=value;};
+  const board = document.createElement('section');
+  board.id = 'gainsViews';
+  board.className = 'gains-table-panel';
+  board.setAttribute('aria-label','Miesięczny ranking EXP i zwycięzcy');
+  board.hidden = true;
+  board.innerHTML =
+    '<div class="gains-table-toolbar">' +
+      '<div class="gains-table-tabs" role="tablist" aria-label="Widoki GAINS">' +
+        '<button type="button" class="gains-table-tab active" data-gains-view="ranking" role="tab" aria-selected="true">' +
+          'Ranking <span class="gains-tab-count" id="gainsRankingCount">0</span></button>' +
+        '<button type="button" class="gains-table-tab" data-gains-view="winners" role="tab" aria-selected="false">' +
+          'Zwycięzcy <span class="gains-tab-count" id="gainsWinnersCount">0</span></button>' +
+      '</div>' +
+      '<span class="gains-table-sort" id="gainsTableSort">↓ EXP malejąco</span>' +
+    '</div>' +
+    '<div class="gains-table-columns">' +
+      '<span>#</span><span>UŻYTKOWNIK</span><span id="gainsTableScoreHead">ZDOBYTY EXP</span>' +
+    '</div>' +
+    '<div class="gains-table-list" id="gainsTableList" aria-live="polite">' +
+      '<div class="gains-table-empty"><strong>Wczytywanie GAINS…</strong></div>' +
+    '</div>';
+  mainCol.prepend(board);
+  const rowsHost = board.querySelector('#gainsTableList');
+  const countRanking = board.querySelector('#gainsRankingCount');
+  const countWinners = board.querySelector('#gainsWinnersCount');
+  const sort = board.querySelector('#gainsTableSort');
+  const scoreHead = board.querySelector('#gainsTableScoreHead');
+  const search = document.getElementById('leaderboardSearchInput');
+  const candidateButton = document.getElementById('leaderboardEligibilityToggle');
+  const fmt = new Intl.NumberFormat('pl-PL');
+  let section = 'ranking';
+  let rankingRows = [];
+  let liveData = null;
+  let missing = false;
+  const identity = row => String(row?.login || row?.name || '').trim().toLowerCase();
+  const validLogin = row => /^[a-z0-9_]{2,25}$/.test(identity(row));
+  const display = row => String(row?.name || row?.displayName || row?.login || '—');
 
-  function avatarNode(entry){
-    const shell=document.createElement('span');
-    shell.className='gains-avatar-shell';
-    const initials=document.createElement('span');
-    initials.className='gains-avatar-placeholder';
-    initials.textContent=String(entry.name||entry.login||'?').slice(0,2).toUpperCase();
-    shell.appendChild(initials);
-    const img=document.createElement('img');
-    img.className='gains-avatar';
-    img.alt='';
-    img.loading='lazy';
-    img.decoding='async';
-    shell.appendChild(img);
-    if(validLogin(entry) && typeof leaderboardResolveAvatar==='function'){
-      if(typeof leaderboardPokemonArtwork==='function' && leaderboardPokemonArtwork(entry))
-        img.classList.add('is-pokemon');
-      leaderboardResolveAvatar(entry,nick(entry)).then(url=>{
-        if(!url||!img.isConnected)return;
-        img.onload=()=>{if(img.isConnected&&img.naturalWidth>0){img.classList.add('loaded');initials.hidden=true;}};
-        img.onerror=()=>img.classList.remove('loaded');
-        img.src=url;
-      }).catch(()=>{});
+  function makeImage(row) {
+    const shell = document.createElement('span');
+    shell.className = 'gains-board-avatar';
+    const initials = document.createElement('span');
+    initials.className = 'gains-board-initials';
+    initials.textContent = display(row).slice(0,2).toUpperCase();
+    shell.append(initials);
+    const img = document.createElement('img');
+    img.className = 'gains-board-photo';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    shell.append(img);
+    if (validLogin(row) && typeof leaderboardResolveAvatar === 'function') {
+      if (typeof leaderboardPokemonArtwork === 'function' && leaderboardPokemonArtwork(row))
+        img.classList.add('pokemon');
+      leaderboardResolveAvatar(row, identity(row)).then(url => {
+        if (!url || !img.isConnected) return;
+        img.onload = () => {
+          if (!img.isConnected || img.naturalWidth < 1) return;
+          img.classList.add('loaded');
+          initials.hidden = true;
+        };
+        img.onerror = () => img.classList.remove('loaded');
+        img.src = url;
+      }).catch(() => {});
     }
     return shell;
   }
-  function entryNode(entry,rank,isWinner){
-    const element=document.createElement('div');
-    element.className='gains-entry'+(rank===1?' leader':'')+(isWinner?' winner':'');
-    const pos=document.createElement('span');
-    pos.className='gains-place';
-    pos.textContent=String(rank).padStart(2,'0');
-    const name=document.createElement('div');
-    name.className='gains-person';
-    const title=document.createElement('strong');
-    title.textContent=String(entry.name||entry.login||'—');
-    name.appendChild(title);
-    if(!isWinner && entry.isMonthlyVipExcluded===true){
-      const hint=document.createElement('small');hint.textContent='Poza konkursem VIP';name.appendChild(hint);
+  function createRow(entry, rank, winner) {
+    const el = document.createElement('div');
+    el.className = 'gains-board-row' + (rank===1?' leader':'') + (winner?' winner':'');
+    const pos = document.createElement('span');
+    pos.className = 'gains-board-position';
+    pos.textContent = String(rank).padStart(2,'0');
+
+    const person = document.createElement('span');
+    person.className = 'gains-board-person';
+    const name = document.createElement('strong');
+    name.textContent = display(entry);
+    person.append(name);
+    if (!winner && entry.isMonthlyVipExcluded === true) {
+      const info = document.createElement('small');
+      info.textContent = 'Poza konkursem VIP';
+      person.append(info);
     }
-    const score=document.createElement('div');
-    score.className='gains-score';
-    const amount=document.createElement('strong');
-    amount.textContent=isWinner?fmt.format(Number(entry.wins)):('+'+fmt.format(Math.max(0,Number(entry.points)||0)));
-    const unit=document.createElement('small');
-    unit.textContent=isWinner?(Number(entry.wins)===1?'WYGRANY MIESIĄC':'WYGRANE MIESIĄCE'):'EXP';
-    score.append(amount,unit);
-    element.append(pos,avatarNode(entry),name,score);
-    return element;
+
+    const measure = document.createElement('span');
+    measure.className = 'gains-board-value';
+    const val = document.createElement('strong');
+    val.textContent = winner
+      ? fmt.format(Number(entry.wins))
+      : '+' + fmt.format(Math.max(0,Number(entry.points)||0));
+    const unit = document.createElement('small');
+    const wins = Number(entry.wins)||0;
+    unit.textContent = winner
+      ? (wins === 1?'WYGRANY MIESIĄC':wins < 5?'WYGRANE MIESIĄCE':'WYGRANYCH MIESIĘCY')
+      : 'EXP';
+    measure.append(val,unit);
+    el.append(pos,makeImage(entry),person,measure);
+    return el;
   }
-  function empty(parent,heading,description){
-    const node=document.createElement('div');
-    node.className='gains-empty';
-    const strong=document.createElement('strong');strong.textContent=heading;
-    const p=document.createElement('p');p.textContent=description;
-    node.append(strong,p);
-    parent.replaceChildren(node);
+  function showEmpty(title, explanation) {
+    const box = document.createElement('div');
+    box.className = 'gains-table-empty';
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    const p = document.createElement('p');
+    p.textContent = explanation;
+    box.append(strong,p);
+    rowsHost.replaceChildren(box);
   }
-  function drawRanking(){
-    if(!gainRows.length){
-      empty(rankingRows,missing?'Cloud nie przekazuje miesięcznego EXP':'Brak wyników GAINS',
-        'Ranking będzie widoczny, kiedy zweryfikowane miesięczne EXP będzie dostępne.');
+  function currentMonth() {
+    const parts = new Intl.DateTimeFormat('en-GB',{year:'numeric',month:'2-digit',timeZone:'Europe/Warsaw'}).formatToParts(new Date());
+    return parts.find(p=>p.type==='year').value + '-' + parts.find(p=>p.type==='month').value;
+  }
+  function confirmedWinners() {
+    const monthly = liveData?.monthlyVip;
+    const current = currentMonth();
+    // The API's winners summary is authoritative; if month detail is supplied,
+    // reject unfinished months. Never derive a winner from the current TOP 1.
+    if (Array.isArray(monthly?.winners)) {
+      return monthly.winners.filter(x=>{
+        if (!x || !(x.login || x.name)) return false;
+        if (x.month && String(x.month) >= current) return false;
+        return Number.isSafeInteger(Number(x.wins)) && Number(x.wins)>0;
+      }).map(x=>({...x,wins:Number(x.wins)}))
+        .sort((a,b)=>b.wins-a.wins || display(a).localeCompare(display(b),'pl'));
+    }
+    const records = Array.isArray(monthly?.history)?monthly.history:[];
+    const map = new Map();
+    for (const item of records) {
+      const month = String(item?.wonMonth || item?.won_month || '');
+      const who = identity(item);
+      if (item?.status !== 'granted' || !validLogin(item) ||
+          !/^\d{4}-\d{2}$/.test(month) || month >= current) continue;
+      const prior = map.get(who) || {login:who,name:display(item),wins:0,months:[]};
+      if (!prior.months.includes(month)) { prior.months.push(month); prior.wins++; }
+      map.set(who,prior);
+    }
+    return [...map.values()].sort((a,b)=>b.wins-a.wins||display(a).localeCompare(display(b),'pl'));
+  }
+  function render() {
+    const all = rankingRows.slice().sort((a,b)=>Number(b.points)-Number(a.points));
+    const eligible = typeof state !== 'undefined' && state.leaderboardHidePrivileged;
+    const topTen = (eligible ? all.filter(x=>x.isMonthlyVipExcluded!==true) : all).slice(0,10);
+    const champions = confirmedWinners();
+    countRanking.textContent = String(topTen.length);
+    countWinners.textContent = String(champions.length);
+    const viewingWinners = section === 'winners';
+    sort.textContent = viewingWinners ? '↓ Liczba zwycięstw' : '↓ EXP malejąco';
+    scoreHead.textContent = viewingWinners ? 'WYGRANE MIESIĄCE' : 'ZDOBYTY EXP';
+
+    const term = (search?.value||'').trim().toLocaleLowerCase('pl-PL');
+    const entries = viewingWinners ? champions : topTen;
+    const shown = term
+      ? entries.filter(row=>display(row).toLocaleLowerCase('pl-PL').includes(term))
+      : entries;
+    if (!shown.length) {
+      if (term) showEmpty('Nie znaleziono widza','Spróbuj zmienić wyszukiwaną nazwę.');
+      else if (viewingWinners) showEmpty('Oczekujemy na pierwszego zwycięzcę',
+        'Pierwszy okres GAINS rozpoczął się 25 października 2026. Wygrane miesiące pojawią się tu dopiero po zakończeniu okresu i potwierdzeniu nagrody.');
+      else showEmpty(missing?'Cloud nie przekazuje miesięcznego EXP':'Brak wyników GAINS',
+        'Wyniki pojawią się po opublikowaniu zweryfikowanego miesięcznego EXP.');
       return;
     }
-    const all=onlyCandidates?gainRows.filter(e=>e.isMonthlyVipExcluded!==true):gainRows;
-    const top=all.slice(0,10);
-    const term=search.value.trim().toLocaleLowerCase('pl-PL');
-    const visible=term?top.filter(e=>String(e.name||e.login).toLocaleLowerCase('pl-PL').includes(term)):top;
-    if(!visible.length){
-      empty(rankingRows,'Nie znaleziono widza','Zmień wyszukiwanie lub filtr kandydatów VIP.');
-      return;
+    rowsHost.replaceChildren(...shown.map(row=>createRow(row,entries.indexOf(row)+1,viewingWinners)));
+  }
+  function syncVisibility() {
+    const gainsActive = host.querySelector('.yura-ranking-tab.active')?.dataset.rankMode === 'gains';
+    board.hidden = !gainsActive;
+    host.classList.toggle('gains-table-active',gainsActive);
+    // Crucial: never hide the #1/#2/#3 hero panels, record banner or sidebar.
+    layout.hidden = false;
+    for (const button of board.querySelectorAll('.gains-table-tab')) {
+      const active = button.dataset.gainsView === section;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-selected',String(active));
     }
-    const nodes=visible.map(entry=>entryNode(entry,top.indexOf(entry)+1,false));
-    rankingRows.replaceChildren(...nodes);
   }
-  function historicalWinners(data){
-    const api=data?.monthlyVip;
-    if(Array.isArray(api?.winners)){
-      return api.winners.filter(item=>item && (item.login||item.name) &&
-        Number.isSafeInteger(Number(item.wins)) && Number(item.wins)>0)
-        .map(item=>({...item,wins:Number(item.wins)}))
-        .sort((a,b)=>b.wins-a.wins||String(a.name||a.login).localeCompare(String(b.name||b.login),'pl'));
-    }
-    // Some Worker versions expose raw granted award history instead.
-    const history=Array.isArray(api?.history)?api.history:[];
-    const grouped=new Map();
-    for(const award of history){
-      const month=String(award?.wonMonth||award?.won_month||'');
-      const login=String(award?.login||'').toLowerCase();
-      if(award?.status!=='granted'||!validLogin({login})||!/^\d{4}-\d{2}$/.test(month))continue;
-      const previous=grouped.get(login)||{login,name:award.name||award.display_name||login,wins:0,months:[]};
-      if(!previous.months.includes(month)){previous.months.push(month);previous.wins++;}
-      grouped.set(login,previous);
-    }
-    return [...grouped.values()].sort((a,b)=>b.wins-a.wins||String(a.name).localeCompare(String(b.name),'pl'));
-  }
-  function drawWinners(){
-    const rows=historicalWinners(rankingData);
-    if(!rows.length){
-      empty(winnerRows,'Oczekujemy na pierwszego zwycięzcę',
-        'Pierwszy okres GAINS trwa od 25 do 31 października 2026. Tu pojawią się wyłącznie potwierdzone wygrane zakończonych miesięcy, nie aktualni liderzy.');
-      return;
-    }
-    winnerRows.replaceChildren(...rows.map((entry,i)=>entryNode(entry,i+1,true)));
-  }
-  function drawMetrics(){
-    const record=rankingData?.records?.bestMonthlyGain;
-    const snapshot=dated?gainRows[0]:null;
-    const metric=record||snapshot;
-    const value=record?.exp??(snapshot?.points??null);
-    set('#gainsBestValue',value!==null&&Number.isFinite(Number(value))?
-      '+'+fmt.format(Number(value))+' EXP':'—');
-    set('#gainsBestDetail',metric?
-      String(metric.name||metric.login||'')+' • '+(record?.month||'odczyt 26.10 (nie wynik końcowy)'):
-      'Rekord pojawi się po zapisaniu miesięcznych wyników.');
-    const current=rankingData?.monthlyVip?.current;
-    const active=current&&current.status==='granted';
-    set('#gainsCurrentVip',active?String(current.name||current.login):'Brak potwierdzonego VIP-a');
-    set('#gainsCurrentVipDetail',active?'Zwycięzca za '+(current.wonMonth||'poprzedni miesiąc'):
-      'Pierwszy okres GAINS: 25–31.10.2026.');
-  }
-  function sync(){
-    const active=host.querySelector('.yura-ranking-tab.active')?.dataset.rankMode==='gains';
-    root.hidden=!active;
-    layout.hidden=active;
-    ranking.hidden=subtab!=='ranking';
-    winners.hidden=subtab!=='winners';
-    root.querySelectorAll('.gains-subtab').forEach(button=>{
-      const chosen=button.dataset.subtab===subtab;
-      button.classList.toggle('active',chosen);
-      button.setAttribute('aria-selected',String(chosen));
-    });
-  }
-  root.querySelectorAll('.gains-subtab').forEach(btn=>btn.addEventListener('click',()=>{
-    subtab=btn.dataset.subtab;
-    sync();
-    if(subtab==='ranking')drawRanking();else drawWinners();
+  board.querySelectorAll('.gains-table-tab').forEach(button=>button.addEventListener('click',()=>{
+    section = button.dataset.gainsView;
+    syncVisibility();
+    render();
   }));
-  search.addEventListener('input',drawRanking);
-  filter.addEventListener('click',()=>{
-    onlyCandidates=!onlyCandidates;
-    filter.classList.toggle('active',onlyCandidates);
-    filter.setAttribute('aria-pressed',String(onlyCandidates));
-    filter.textContent=onlyCandidates?'POKAŻ WSZYSTKICH':'KANDYDACI VIP';
-    drawRanking();
-  });
-  document.addEventListener('yura:ranking-mode',event=>{sync();});
-  function acceptGainsData(event){
-    if(event.detail?.mode!=='gains')return;
-    gainRows=Array.isArray(event.detail.rows)?event.detail.rows:[];
-    rankingData=event.detail.data;
-    dated=event.detail.dated===true;
-    missing=event.detail.missing===true;
-    set('#gainsDataStamp',dated?'ODCZYT 26.10.2026':'SYNCHRONIZACJA CO 5 MIN');
-    drawRanking();
-    drawWinners();
-    drawMetrics();
-    sync();
+  search?.addEventListener('input',render);
+  candidateButton?.addEventListener('click',()=>{if(section==='ranking')render();});
+  document.addEventListener('yura:ranking-mode',syncVisibility);
+  function acceptData(detail) {
+    if (detail?.mode!=='gains') return;
+    rankingRows = Array.isArray(detail.rows)?detail.rows:[];
+    liveData = detail.data || null;
+    missing = detail.missing===true;
+    render();
+    syncVisibility();
   }
-  document.addEventListener('yura:ranking-data',acceptGainsData);
-  if (window.yuraGainsLastDetail) acceptGainsData({detail:window.yuraGainsLastDetail});
-  drawWinners();
-  sync();
+  document.addEventListener('yura:ranking-data',event=>acceptData(event.detail));
+  if (window.yuraGainsLastDetail) acceptData(window.yuraGainsLastDetail);
+  else { syncVisibility(); render(); }
 })();
