@@ -399,7 +399,7 @@ function renderLeaderboard(data) {
   leaderboardUpdated.textContent = formatSync(state.leaderboardUpdatedAt);
 
   const eligibleEntries = state.leaderboardHidePrivileged
-    ? sourceEntries.filter(entry => !entry.isMonthlyVipExcluded)
+    ? sourceEntries.filter(entry => !entry.isMonthlyVipExcluded && !entry.isVip && !entry.isModerator)
     : sourceEntries;
 
   const entries = eligibleEntries
@@ -432,13 +432,13 @@ function renderLeaderboard(data) {
     if (leaderboardEligibilityLabel) {
       leaderboardEligibilityLabel.textContent =
         state.leaderboardHidePrivileged
-          ? "WSZYSCY"
-          : "KANDYDACI VIP";
+          ? "POKAŻ WSZYSTKICH"
+          : "UKRYJ VIP-ÓW I MODÓW";
     }
 
     leaderboardEligibilityToggle.title =
       state.leaderboardHidePrivileged
-        ? "Wróć do pełnego rankingu"
+        ? "Pokaż również stałych VIP-ów i moderatorów"
         : "Pokaż ranking kandydatów do miesięcznego VIP-a";
   }
 
