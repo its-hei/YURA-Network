@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-10",
+  "verifiedDate": "2026-10-26",
+  "baselineUtc": "2026-10-25T11:54:18.342Z",
+  "source": "Cloudflare D1 Console — miesięczny przyrost EXP, ORDER BY monthly_gain_exp DESC LIMIT 10",
+  "note": "Jednorazowy potwierdzony odczyt. Wartości nie aktualizują się automatycznie; po udostępnieniu monthlyExp strona przełącza się na API.",
+  "entries": [
+    {
+      "login": "wielki_gekon_expiciel",
+      "name": "wielki_gekon_expiciel",
+      "baseExp": 22290,
+      "exp": 23420,
+      "monthlyExp": 1130
+    },
+    {
+      "login": "wildskar_",
+      "name": "wildskar_",
+      "baseExp": 11580,
+      "exp": 12270,
+      "monthlyExp": 690
+    },
+    {
+      "login": "hikari_katari",
+      "name": "hikari_katari",
+      "baseExp": 5740,
+      "exp": 6110,
+      "monthlyExp": 370
+    },
+    {
+      "login": "humiihu",
+      "name": "humiihu",
+      "baseExp": 3330,
+      "exp": 3330,
+      "monthlyExp": 0
+    },
+    {
+      "login": "yurasei",
+      "name": "yurasei",
+      "baseExp": 310,
+      "exp": 310,
+      "monthlyExp": 0
+    },
+    {
+      "login": "kbagins",
+      "name": "kbagins",
+      "baseExp": 2170,
+      "exp": 2170,
+      "monthlyExp": 0
+    },
+    {
+      "login": "ttv_bullit",
+      "name": "ttv_bullit",
+      "baseExp": 2130,
+      "exp": 2130,
+      "monthlyExp": 0
+    },
+    {
+      "login": "neverblameme",
+      "name": "neverblameme",
+      "baseExp": 8550,
+      "exp": 8550,
+      "monthlyExp": 0
+    },
+    {
+      "login": "senviasty",
+      "name": "senviasty",
+      "baseExp": 10500,
+      "exp": 10500,
+      "monthlyExp": 0
+    },
+    {
+      "login": "nelhael",
+      "name": "nelhael",
+      "baseExp": 0,
+      "exp": 0,
+      "monthlyExp": 0
+    }
+  ]
+}
