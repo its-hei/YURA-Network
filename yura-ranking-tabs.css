@@ -892,3 +892,236 @@
   #leaderboardView .gains-avatar-shell{width:36px;height:36px;min-width:36px}
   #leaderboardView .gains-score strong{font-size:15px}
 }
+
+
+/* GAINS v2: Kubon-style standings tabs INSIDE table, hero panels retained. */
+#leaderboardView .gains-table-panel[hidden]{display:none!important}
+#leaderboardView.gains-table-active .leaderboard-main-col > #leaderboardList,
+#leaderboardView.gains-table-active .leaderboard-main-col > #leaderboardEmpty{
+  display:none!important;
+}
+#leaderboardView .gains-table-panel{
+  min-width:0;
+  border:1px solid #2b343f;
+  border-radius:12px;
+  background:linear-gradient(155deg,#11171d,#0d1117);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+#leaderboardView .gains-table-toolbar{
+  display:flex;
+  min-height:66px;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 16px;
+  border-bottom:1px solid #303843;
+  background:#10151b;
+}
+#leaderboardView .gains-table-tabs{
+  display:flex;align-items:stretch;gap:22px;min-width:0;
+}
+#leaderboardView .gains-table-tab{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  position:relative;
+  min-height:64px;
+  padding:0 3px;
+  border:0;
+  border-bottom:2px solid transparent;
+  border-radius:0;
+  background:transparent;
+  color:#9caebe;
+  cursor:pointer;
+  font:600 13px/1.2 var(--font-ui,Inter,system-ui,sans-serif);
+  letter-spacing:0;
+}
+#leaderboardView .gains-table-tab.active{
+  border-bottom-color:var(--accent);
+  color:#ffb251;
+  background:transparent;
+}
+#leaderboardView .gains-table-tab:hover{color:#f3e2c9}
+#leaderboardView .gains-table-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+#leaderboardView .gains-tab-count{
+  padding:3px 7px;
+  color:#99abba;
+  background:#252c30;
+  border-radius:5px;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+  font-weight:750;
+}
+#leaderboardView .gains-table-tab.active .gains-tab-count{
+  background:rgba(242,140,24,.15);
+  color:#ffbf67;
+}
+#leaderboardView .gains-table-sort{
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+  color:#a1b0c2;
+  font-size:11px;
+  white-space:nowrap;
+}
+#leaderboardView .gains-table-columns,
+#leaderboardView .gains-board-row{
+  display:grid;
+  grid-template-columns:39px 44px minmax(0,1fr) minmax(84px,auto);
+  column-gap:14px;
+  align-items:center;
+}
+#leaderboardView .gains-table-columns{
+  min-height:45px;
+  padding:0 17px;
+  border-bottom:1px solid #2b323c;
+  color:#8799aa;
+  background:#0e1319;
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.055em;
+}
+#leaderboardView .gains-table-columns span:nth-child(2){grid-column:2 / 4}
+#leaderboardView .gains-table-columns span:nth-child(3){grid-column:4;text-align:right}
+#leaderboardView .gains-table-list{min-width:0}
+#leaderboardView .gains-board-row{
+  min-height:79px;
+  padding:13px 17px;
+  border-bottom:1px solid #262e38;
+  transition:background .15s ease;
+}
+#leaderboardView .gains-board-row:last-child{border-bottom:0}
+#leaderboardView .gains-board-row:hover{background:rgba(255,255,255,.025)}
+#leaderboardView .gains-board-row.leader{
+  min-height:91px;
+  background:linear-gradient(90deg,rgba(242,140,24,.12),rgba(242,140,24,.018) 70%);
+}
+#leaderboardView .gains-board-position{
+  font:800 16px/1 var(--font-display,Inter,system-ui,sans-serif);
+  color:#97a7ba;
+  font-variant-numeric:tabular-nums;
+}
+#leaderboardView .gains-board-row.leader .gains-board-position{
+  color:#ff9d37;
+  font-size:23px;
+}
+#leaderboardView .gains-board-avatar{
+  display:grid;
+  place-items:center;
+  width:44px;height:44px;
+  overflow:hidden;
+  position:relative;
+  border:1px solid #384657;
+  border-radius:9px;
+  background:#1a2330;
+}
+#leaderboardView .gains-board-row.leader .gains-board-avatar{
+  border-color:rgba(242,140,24,.51);
+  box-shadow:0 0 0 2px rgba(242,140,24,.07);
+}
+#leaderboardView .gains-board-initials{
+  display:grid;
+  place-items:center;
+  width:100%;height:100%;
+  font-size:14px;
+  font-weight:800;
+  color:#b4c2d5;
+  line-height:1;
+}
+#leaderboardView .gains-board-initials[hidden]{display:none!important}
+#leaderboardView .gains-board-photo{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  display:none;
+  object-fit:cover;
+}
+#leaderboardView .gains-board-photo.loaded{display:block}
+#leaderboardView .gains-board-photo.pokemon{
+  object-fit:contain;
+  padding:3px;
+}
+#leaderboardView .gains-board-person{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+#leaderboardView .gains-board-person strong{
+  font:800 15px/1.3 var(--font-ui,Inter,system-ui,sans-serif);
+  color:#f1f4f8;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .gains-board-person small{
+  color:#a99bc1;
+  font-size:10px;
+  line-height:1.3;
+}
+#leaderboardView .gains-board-value{
+  justify-self:end;
+  display:grid;
+  gap:2px;
+  text-align:right;
+  min-width:0;
+  font-variant-numeric:tabular-nums;
+}
+#leaderboardView .gains-board-value strong{
+  font:800 clamp(18px,2vw,25px)/1.08 var(--font-display,Inter,system-ui,sans-serif);
+  color:#eef3f8;
+}
+#leaderboardView .gains-board-row.leader .gains-board-value strong{color:#ffb45a;font-size:clamp(24px,2.6vw,31px)}
+#leaderboardView .gains-board-value small{
+  color:#a5b1c0;
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.04em;
+}
+#leaderboardView .gains-table-empty{
+  display:grid;
+  gap:8px;
+  padding:32px 23px;
+}
+#leaderboardView .gains-table-empty strong{color:#eef1f5;font-size:16px}
+#leaderboardView .gains-table-empty p{
+  margin:0;
+  color:#aab7c4;
+  font-size:13px;
+  line-height:1.6;
+}
+@media(max-width:700px){
+  #leaderboardView .gains-table-toolbar{padding:0 12px;min-height:58px}
+  #leaderboardView .gains-table-tab{min-height:58px;font-size:12px}
+  #leaderboardView .gains-table-tabs{gap:13px}
+  #leaderboardView .gains-table-sort{font-size:10px}
+  #leaderboardView .gains-table-columns,
+  #leaderboardView .gains-board-row{
+    grid-template-columns:27px 39px minmax(0,1fr) auto;
+    column-gap:9px;
+  }
+  #leaderboardView .gains-table-columns{padding:0 10px;font-size:9px}
+  #leaderboardView .gains-board-row{padding:10px;min-height:72px}
+  #leaderboardView .gains-board-row.leader{min-height:78px}
+  #leaderboardView .gains-board-avatar{width:39px;height:39px}
+  #leaderboardView .gains-board-person strong{font-size:12px}
+  #leaderboardView .gains-board-value strong{font-size:19px}
+  #leaderboardView .gains-board-row.leader .gains-board-value strong{font-size:23px}
+  #leaderboardView .gains-board-value small{font-size:9px;letter-spacing:0}
+  #leaderboardView .gains-board-position{font-size:13px}
+  #leaderboardView .gains-board-row.leader .gains-board-position{font-size:19px}
+}
+@media(max-width:380px){
+  #leaderboardView .gains-table-toolbar{gap:5px;padding:0 9px}
+  #leaderboardView .gains-table-tabs{gap:9px}
+  #leaderboardView .gains-table-tab{gap:4px;font-size:11px}
+  #leaderboardView .gains-table-sort{font-size:9px}
+  #leaderboardView .gains-table-columns,
+  #leaderboardView .gains-board-row{
+    grid-template-columns:21px 33px minmax(0,1fr) auto;
+    gap:7px;
+  }
+  #leaderboardView .gains-board-row{padding:10px 7px}
+  #leaderboardView .gains-board-avatar{width:33px;height:33px}
+  #leaderboardView .gains-board-value strong{font-size:16px}
+  #leaderboardView .gains-board-row.leader .gains-board-value strong{font-size:19px}
+}
