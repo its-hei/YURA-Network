@@ -61,6 +61,26 @@
         pokemonId:Number(item.pokemonId??item.pokemon_id),
         pokemonName:String(item.pokemonName||item.pokemon_name||'').trim()
       })).sort((a,b)=>a.name.localeCompare(b.name,'pl'));
+      // The old ranking exposes Pokémon IDs but not species names.
+      // Retrieve names in one cacheable request instead of dozens of lookups.
+      if(entries.some(item=>!item.pokemonName)){
+        try{
+          const dexRes=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025',{cache:'force-cache'});
+          if(dexRes.ok){
+            const dex=await dexRes.json();
+            const names=new Map((dex.results||[]).map(row=>{
+              const found=String(row.url||'').match(/\/pokemon\/(\d+)\/?$/);
+              return [found?Number(found[1]):0,String(row.name||'').replace(/-/g,' ')];
+            }).filter(([id,name])=>Number.isInteger(id)&&id>0&&name));
+            for(const item of entries){
+              if(!item.pokemonName && names.has(item.pokemonId)){
+                const label=names.get(item.pokemonId);
+                item.pokemonName=label.charAt(0).toUpperCase()+label.slice(1);
+              }
+            }
+          }
+        }catch{}
+      }
       loaded=true;checkedAt=Date.now();
     })().finally(()=>{inflight=null});
     return inflight;
