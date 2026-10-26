@@ -1748,7 +1748,7 @@ footer{
    ============================== */
 .about-layout{
   display:grid;
-  grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);
+  grid-template-columns:minmax(0,1fr);
   gap:14px;
 }
 
