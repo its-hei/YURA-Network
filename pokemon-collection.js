@@ -8,7 +8,9 @@
   const list=root.querySelector('#pokemonCollectionRows');
   const more=root.querySelector('#pokemonCollectionMore');
   const counter=root.querySelector('#pokemonCollectionCount');
-  const endpoint='https://yura-cloud.heiyeshi.workers.dev/api/ranking';
+  const cloud='https://yura-cloud.heiyeshi.workers.dev';
+  const endpoint=cloud+'/api/pokemon/collection';
+  const legacyEndpoint=cloud+'/api/ranking';
   const sprites='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
   const batchSize=18;
   let entries=[],checkedAt=0,inflight=null,displayed=0,query='',loaded=false;
@@ -30,12 +32,22 @@
     if(inflight)return inflight;
     message('Ładowanie kolekcji…','Pobieramy tylko przypisania Pokémonów, bez prywatnych danych.');
     inflight=(async()=>{
-      const response=await fetch(endpoint,{cache:'no-store'});
-      if(!response.ok)throw Error('HTTP '+response.status);
-      const data=await response.json();
-      if(!Array.isArray(data.gains))throw Error('nieobsługiwany format Cloud');
+      // The dedicated endpoint includes EVERY assigned Pokémon and its species
+      // name; the old ranking remains a read-only fallback until Cloud is updated.
+      let response=await fetch(endpoint,{cache:'no-store'});
+      let data=null;
+      if(response.ok){
+        data=await response.json();
+        if(!Array.isArray(data?.entries))throw Error('nieobsługiwany format kolekcji Cloud');
+      }else if(response.status===404){
+        response=await fetch(legacyEndpoint,{cache:'no-store'});
+        if(!response.ok)throw Error('HTTP '+response.status);
+        data=await response.json();
+        if(!Array.isArray(data?.gains))throw Error('nieobsługiwany format starego Cloud');
+      }else throw Error('HTTP '+response.status);
+      const source=Array.isArray(data.entries)?data.entries:data.gains;
       const seen=new Set();
-      entries=data.gains.filter(item=>{
+      entries=source.filter(item=>{
         const user=norm(item?.login||item?.name);
         const id=Number(item?.pokemonId ?? item?.pokemon_id);
         if(!/^[a-z0-9_]{2,25}$/.test(user)||
