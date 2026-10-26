@@ -343,24 +343,69 @@ function leaderboardPokemonArtwork(entry) {
   if (!Number.isInteger(id) || id < 1 || id > 1025) return null;
   return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + id + '.png';
 }
+// Consolidate the top-ten avatar requests into one Cloud -> Twitch Helix call.
+// Individual DecAPI requests remain an emergency fallback for old Cloud builds.
+const leaderboardAvatarRequestQueue = new Map();
+let leaderboardAvatarBatchScheduled = false;
 function leaderboardResolveAvatar(entry, login) {
-  const pokemon = leaderboardPokemonArtwork(entry);
-  if (pokemon) return Promise.resolve(pokemon);
-  const direct = [
+  const pokemon=leaderboardPokemonArtwork(entry);
+  if(pokemon)return Promise.resolve(pokemon);
+  const direct=[
     entry?.profile_image_url,entry?.profileImageUrl,entry?.avatarUrl,
     entry?.avatar_url,entry?.avatar,entry?.profilePicture
   ].map(leaderboardSafeTwitchImage).find(Boolean);
-  if (direct) return Promise.resolve(direct);
-  const cached = leaderboardLeaderAvatarCache.get(login);
-  if (cached && Date.now() - cached.checkedAt < LEADERBOARD_AVATAR_TTL_MS) return cached.promise;
-  const promise = fetch(`https://decapi.me/twitch/avatar/${encodeURIComponent(login)}`)
-    .then(async response => {
-      if (!response.ok) throw new Error(`Twitch avatar HTTP ${response.status}`);
-      return leaderboardSafeTwitchImage(await response.text());
-    })
-    .catch(() => null);
+  if(direct)return Promise.resolve(direct);
+  const cached=leaderboardLeaderAvatarCache.get(login);
+  if(cached && Date.now()-cached.checkedAt<LEADERBOARD_AVATAR_TTL_MS)
+    return cached.promise;
+
+  const promise=new Promise(resolve=>{
+    leaderboardAvatarRequestQueue.set(login,resolve);
+    if(!leaderboardAvatarBatchScheduled){
+      leaderboardAvatarBatchScheduled=true;
+      Promise.resolve().then(leaderboardFlushAvatarBatch);
+    }
+  });
   leaderboardLeaderAvatarCache.set(login,{checkedAt:Date.now(),promise});
   return promise;
+}
+async function leaderboardFlushAvatarBatch(){
+  leaderboardAvatarBatchScheduled=false;
+  const queue=[...leaderboardAvatarRequestQueue.entries()];
+  leaderboardAvatarRequestQueue.clear();
+  if(!queue.length)return;
+  // Cloud caps each batch at 20 logins.
+  for(let i=0;i<queue.length;i+=20){
+    const batch=queue.slice(i,i+20);
+    const names=batch.map(([login])=>login);
+    let avatarData=null;
+    try{
+      const base=typeof YURA_CLOUD_BASE==='string'?YURA_CLOUD_BASE:
+        'https://yura-cloud.heiyeshi.workers.dev';
+      const response=await fetch(
+        base+'/api/avatars?logins='+encodeURIComponent(names.join(',')),
+        {cache:'default'}
+      );
+      if(response.ok){
+        const data=await response.json();
+        if(data && data.avatars && typeof data.avatars==='object')
+          avatarData=data.avatars;
+      }
+    }catch(error){
+      console.warn('Batch avatars unavailable; falling back to direct profile lookup',error);
+    }
+    await Promise.all(batch.map(async([login,resolve])=>{
+      let found=leaderboardSafeTwitchImage(avatarData?.[login]);
+      // This compatibility fallback stops being needed after Cloud v3.3.102 is deployed.
+      if(!found && !avatarData){
+        try{
+          const response=await fetch('https://decapi.me/twitch/avatar/'+encodeURIComponent(login));
+          if(response.ok)found=leaderboardSafeTwitchImage(await response.text());
+        }catch{}
+      }
+      resolve(found||null);
+    }));
+  }
 }
 function leaderboardHydrateLeaderAvatar(entry) {
   const image = leaderboardPodium?.querySelector(".podium-leader-avatar");
