@@ -1224,3 +1224,13 @@
   #leaderboardView .gains-last-winner-identity strong{font-size:17px}
   #leaderboardView .gains-last-winner-points{font-size:30px}
 }
+
+/* Twitch Helix role synchronization status under GAINS filter. */
+#leaderboardView .ranking-roles-hint[hidden]{display:none!important}
+#leaderboardView .ranking-roles-hint{
+  margin:9px 2px 0;
+  color:#87c5a9;
+  font-size:11px;
+  line-height:1.55;
+}
+#leaderboardView .ranking-roles-hint.needs-sync{color:#dfa76e}
