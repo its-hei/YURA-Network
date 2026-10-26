@@ -10,6 +10,41 @@
   let gainsCandidatesOnly = false;
   let pending = false;
   let lastRanking = null;
+  let verifiedSnapshot = null;
+  let snapshotRequest = null;
+  let gainsSnapshotActive = false;
+  const currentWarsawMonth = () => {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone:'Europe/Warsaw', year:'numeric', month:'2-digit'
+    }).formatToParts(new Date());
+    return parts.find(part => part.type==='year').value + '-' +
+      parts.find(part => part.type==='month').value;
+  };
+  async function getVerifiedSnapshot() {
+    if (!snapshotRequest) {
+      snapshotRequest = fetch('./gains-exp-2026-10.json?v=1',{cache:'no-store'})
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+          if (!data || data.month!=='2026-10' || !Array.isArray(data.entries) ||
+              !data.entries.every(row => row.login && Number.isFinite(Number(row.baseExp)) &&
+                Number.isFinite(Number(row.exp)) && Number.isFinite(Number(row.monthlyExp)) &&
+                Number(row.monthlyExp)>=0 &&
+                Number(row.exp)-Number(row.baseExp)===Number(row.monthlyExp))) return null;
+          verifiedSnapshot = data;
+          return data;
+        }).catch(() => null);
+    }
+    return snapshotRequest;
+  }
+  function getSnapshotFor(data) {
+    if (!verifiedSnapshot || verifiedSnapshot.month!==data?.month ||
+        verifiedSnapshot.month!==currentWarsawMonth()) return null;
+    const rows = Array.isArray(data.gains)?data.gains:[];
+    // Prefer genuine live EXP once the Cloud Worker exposes it.
+    if (rows.length && rows.every(row => row.monthlyExp!=null &&
+        Number.isFinite(Number(row.monthlyExp)) && Number(row.monthlyExp)>=0)) return null;
+    return verifiedSnapshot;
+  }
   const originalLoad = loadLeaderboard;
   const originalRender = renderLeaderboard;
   const originalEligible = document.getElementById('leaderboardEligibilityToggle');
@@ -69,6 +104,39 @@
   const milestoneValue = document.getElementById('leaderboardMilestoneValue');
   const milestoneCaption = document.getElementById('leaderboardMilestoneCaption');
   const plNumber = n => new Intl.NumberFormat('pl-PL').format(Number(n));
+  const cadenceValue = host.querySelector('.leaderboard-sync-stats .leaderboard-meta strong');
+  const updatedLabel = document.getElementById('leaderboardUpdated');
+  const liveBadge = document.getElementById('leaderboardStatus');
+  const currentVipBox = document.getElementById('leaderboardCurrentVip');
+  const currentVipName = document.getElementById('leaderboardCurrentVipName');
+  const currentVipNote = document.getElementById('leaderboardCurrentVipNote');
+  function applyDatedSnapshotLabel() {
+    const dated = selected==='gains' && gainsSnapshotActive && verifiedSnapshot;
+    if (cadenceValue) cadenceValue.textContent = dated ? 'ODCZYT' : '5 MIN';
+    if (!dated) return;
+    if (liveBadge) {
+      liveBadge.textContent = 'GAINS • ODCZYT 26.10';
+      liveBadge.classList.remove('is-live');
+    }
+    if (updatedLabel) updatedLabel.textContent = '26.10.2026 • baza D1';
+  }
+  function renderCurrentVip(data) {
+    if (!currentVipBox) return;
+    currentVipBox.hidden = selected!=='gains';
+    if (selected!=='gains') return;
+    // The current month's GAINS leader is a candidate for NEXT month, never the current VIP.
+    const winner = data?.monthlyVip?.current || data?.records?.currentMonthlyVip || null;
+    const login = typeof winner==='string'?winner:
+      (winner?.name || winner?.displayName || winner?.login || '');
+    if (login) {
+      if (currentVipName) currentVipName.textContent = login;
+      if (currentVipNote) currentVipNote.textContent = 'Zwycięzca GAINS z poprzedniego miesiąca.';
+    } else {
+      if (currentVipName) currentVipName.textContent = 'Brak potwierdzonego zwycięzcy';
+      if (currentVipNote) currentVipNote.textContent =
+        'Pierwszy zapis GAINS rozpoczął się 25.10.2026. Zwycięzca października będzie dotyczył listopada.';
+    }
+  }
   function renderMilestone() {
     if (!milestone) return;
     milestone.hidden = selected === 'level';
@@ -76,11 +144,15 @@
     const data = lastRanking?.records;
     if (selected === 'gains') {
       const record = data?.bestMonthlyGain;
-      if (milestoneTitle) milestoneTitle.textContent = 'Rekord GAINS • od początku zapisów';
-      if (milestoneValue) milestoneValue.textContent = record && Number.isFinite(Number(record.exp))
-        ? '+' + plNumber(record.exp) + ' EXP' : '—';
-      if (milestoneCaption) milestoneCaption.textContent = record
-        ? [record.name,record.month].filter(Boolean).join(' • ')
+      const topVerified = gainsSnapshotActive ? verifiedSnapshot?.entries?.[0] : null;
+      if (milestoneTitle) milestoneTitle.textContent = topVerified
+        ? 'Najwyższy potwierdzony GAINS • 26.10' : 'Rekord GAINS • od początku zapisów';
+      if (milestoneValue) milestoneValue.textContent = topVerified
+        ? '+' + plNumber(topVerified.monthlyExp) + ' EXP'
+        : record && Number.isFinite(Number(record.exp)) ? '+' + plNumber(record.exp) + ' EXP' : '—';
+      if (milestoneCaption) milestoneCaption.textContent = topVerified
+        ? topVerified.name + ' • październik 2026 • odczyt, nie wynik końcowy'
+        : record ? [record.name,record.month].filter(Boolean).join(' • ')
         : data ? 'Brak zapisanych miesięcznych wyników EXP.' : 'Rekord pojawi się po aktualizacji Y.U.R.A. Cloud.';
     } else {
       const count = data?.permanentVipWinners;
@@ -95,7 +167,9 @@
 
   function updateLabels() {
     if (title) title.textContent = selected === 'gains'
-      ? 'Miesięczny przyrost EXP — największy zdobyty EXP wygrywa, nie najwyższy poziom.'
+      ? (gainsSnapshotActive
+        ? 'Potwierdzony ranking EXP z 26.10.2026. To zapisany odczyt, nie wynik na żywo.'
+        : 'Miesięczny przyrost EXP — największy zdobyty EXP wygrywa, nie najwyższy poziom.')
       : selected === 'level' ? 'Łączny poziom EXP od początku aktywności na kanale.'
       : 'Aktualne saldo YURA Points (może rosnąć i maleć przez gamble).';
     if (listHeader) listHeader.textContent = selected === 'gains' ? 'Zdobyty EXP' : selected === 'level' ? 'Poziom' : 'Punkty';
@@ -106,6 +180,8 @@
     if (oddsPanel) oddsPanel.hidden = selected !== 'points';
     if (originalEligible) originalEligible.hidden = selected !== 'gains';
     renderMilestone();
+    renderCurrentVip(lastRanking);
+    applyDatedSnapshotLabel();
   }
   // Preserve GAINS / LEVELS units whenever the search, VIP filter or live sync
   // redraws the ranking (including the #2/#3 side card).
@@ -123,9 +199,18 @@
   renderLeaderboard = function(data) {
     originalRender(data);
     applyRankingUnits();
+    applyDatedSnapshotLabel();
   };
   function showRanking(data) {
-    const rows = Array.isArray(data?.[selected]) ? data[selected] : [];
+    const snapshot = selected==='gains'?getSnapshotFor(data):null;
+    gainsSnapshotActive = Boolean(snapshot);
+    const apiRows = Array.isArray(data?.[selected]) ? data[selected] : [];
+    const byLogin = new Map((data?.gains || []).map(row => [
+      String(row.login || row.name || '').toLowerCase(),row
+    ]));
+    const rows = snapshot ? snapshot.entries.map(row => ({
+      ...byLogin.get(String(row.login).toLowerCase()),...row
+    })) : apiRows;
     if (selected === 'gains' && rows.some(row => row.monthlyExp == null || !Number.isFinite(Number(row.monthlyExp)))) {
       renderLeaderboard({entries:[],updatedAt:data.updatedAt});
       const warning = document.getElementById('leaderboardStatus');
@@ -148,7 +233,8 @@
     };
     renderLeaderboard({entries:rows.map(convert), updatedAt:data.updatedAt || new Date().toISOString()});
     const label=document.getElementById('leaderboardStatus');
-    if (label) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
+    if (label && !gainsSnapshotActive) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
+    updateLabels();
   }
   async function fetchRanking() {
     if (pending || document.hidden) return;
@@ -161,7 +247,9 @@
       const result=await response.json();
       if (!Array.isArray(result.gains)||!Array.isArray(result.level)||!Array.isArray(result.points)) throw new Error('ranking schema missing');
       lastRanking=result;
+      if (selected==='gains') await getVerifiedSnapshot();
       renderMilestone();
+      renderCurrentVip(result);
       if (selected!=='points') showRanking(result);
     } catch (error) {
       const label=document.getElementById('leaderboardStatus');
