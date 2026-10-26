@@ -185,6 +185,7 @@
     renderMilestone();
     renderCurrentVip(lastRanking);
     applyDatedSnapshotLabel();
+    document.dispatchEvent(new CustomEvent('yura:ranking-mode',{detail:{mode:selected,data:lastRanking,dated:gainsSnapshotActive}}));
   }
   // Preserve GAINS / LEVELS units whenever the search, VIP filter or live sync
   // redraws the ranking (including the #2/#3 side card).
@@ -218,6 +219,7 @@
       renderLeaderboard({entries:[],updatedAt:data.updatedAt});
       const warning = document.getElementById('leaderboardStatus');
       if (warning) warning.textContent = 'GAINS EXP • BRAK DANYCH';
+      document.dispatchEvent(new CustomEvent('yura:ranking-data',{detail:{mode:selected,rows:[],data,dated:false,missing:true}}));
       return;
     }
     const convert = row => {
@@ -234,7 +236,11 @@
       rankDelta: 0,isNew:false
       };
     };
-    renderLeaderboard({entries:rows.map(convert), updatedAt:data.updatedAt || new Date().toISOString()});
+    const converted=rows.map(convert);
+    renderLeaderboard({entries:converted, updatedAt:data.updatedAt || new Date().toISOString()});
+    document.dispatchEvent(new CustomEvent('yura:ranking-data',{
+      detail:{mode:selected,rows:converted,data,dated:gainsSnapshotActive}
+    }));
     const label=document.getElementById('leaderboardStatus');
     if (label && !gainsSnapshotActive) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
     updateLabels();
