@@ -2450,3 +2450,95 @@ footer.site-footer{font-size:12px;letter-spacing:0}
 @media (max-width:350px){
   .topbar .top-navigation .side-item{font-size:11px;padding-inline:2px}
 }
+
+
+/* Stream Map: same clean hierarchy and full-width card layout as About. */
+#streamMapView .yura-stream-map{min-width:0}
+#streamMapView .yura-stream-map .hero{margin-bottom:14px}
+#streamMapView .yura-stream-map .hero .eyebrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#abb5c3;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.4;
+  letter-spacing:.13em;
+}
+#streamMapView .yura-stream-map .hero .eyebrow::before{
+  content:"";
+  display:block;
+  flex:0 0 23px;
+  width:23px;
+  height:2px;
+  background:var(--accent);
+}
+#streamMapView .yura-stream-map-guide{width:100%;min-width:0}
+#streamMapView .yura-stream-map-heading{padding-bottom:18px;border-bottom:1px solid #252b34}
+#streamMapView .yura-stream-map-heading strong{
+  color:#fff;
+  font-size:20px;
+  font-weight:800;
+  line-height:1.25;
+}
+#streamMapView .yura-stream-map-heading p{
+  margin:7px 0 0;
+  color:#a4afbd;
+  font-size:14px;
+  line-height:1.65;
+}
+#streamMapView .yura-stream-map-items{display:grid}
+#streamMapView .yura-stream-map-item{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr);
+  align-items:start;
+  gap:12px;
+  padding:19px 0;
+  border-bottom:1px solid #252b34;
+}
+#streamMapView .yura-stream-map-number{
+  color:var(--accent);
+  font-family:var(--font-ui);
+  font-size:12px;
+  font-weight:800;
+  line-height:1.6;
+  font-variant-numeric:tabular-nums;
+}
+#streamMapView .yura-stream-map-item-copy{min-width:0;display:grid;gap:5px}
+#streamMapView .yura-stream-map-item h2{
+  margin:0 0 4px;
+  color:#fff;
+  font-family:var(--font-ui);
+  font-size:17px;
+  font-weight:800;
+  line-height:1.3;
+}
+#streamMapView .yura-stream-map-item p{
+  margin:0;
+  color:#a4afbd;
+  font-size:13px;
+  line-height:1.65;
+  overflow-wrap:anywhere;
+}
+#streamMapView .yura-stream-map-item p strong{
+  color:#dce3e9;
+  font-weight:700;
+}
+#streamMapView .yura-stream-map-note{
+  margin:20px 0 0;
+  color:#a4afbd;
+  font-size:13px;
+  line-height:1.7;
+}
+#streamMapView .yura-stream-map-note strong{color:#e8edf3;font-weight:800}
+#streamMapView .yura-stream-map-links{margin-top:14px}
+@media(max-width:620px){
+  #streamMapView .yura-stream-map .hero .eyebrow{font-size:10px;gap:8px}
+  #streamMapView .yura-stream-map .hero .eyebrow::before{flex-basis:20px;width:20px}
+  #streamMapView .yura-stream-map-heading strong{font-size:18px}
+  #streamMapView .yura-stream-map-heading p{font-size:13px}
+  #streamMapView .yura-stream-map-item{grid-template-columns:30px minmax(0,1fr);gap:8px;padding:16px 0}
+  #streamMapView .yura-stream-map-item h2{font-size:16px}
+  #streamMapView .yura-stream-map-item p,
+  #streamMapView .yura-stream-map-note{font-size:12px}
+}
