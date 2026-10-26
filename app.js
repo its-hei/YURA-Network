@@ -399,7 +399,7 @@ function renderLeaderboard(data) {
   leaderboardUpdated.textContent = formatSync(state.leaderboardUpdatedAt);
 
   const eligibleEntries = state.leaderboardHidePrivileged
-    ? sourceEntries.filter(entry => !entry.isMonthlyVipExcluded && !entry.isVip && !entry.isModerator)
+    ? sourceEntries.filter(entry => !entry.isMonthlyVipExcluded)
     : sourceEntries;
 
   const entries = eligibleEntries
