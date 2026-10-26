@@ -76,7 +76,7 @@
     const data = lastRanking?.records;
     if (selected === 'gains') {
       const record = data?.bestMonthlyGain;
-      if (milestoneTitle) milestoneTitle.textContent = 'Rekord GAINS • cała historia';
+      if (milestoneTitle) milestoneTitle.textContent = 'Rekord GAINS • od początku zapisów';
       if (milestoneValue) milestoneValue.textContent = record && Number.isFinite(Number(record.exp))
         ? '+' + plNumber(record.exp) + ' EXP' : '—';
       if (milestoneCaption) milestoneCaption.textContent = record
