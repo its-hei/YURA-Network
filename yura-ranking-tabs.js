@@ -133,8 +133,9 @@
       if (currentVipNote) currentVipNote.textContent = 'Zwycięzca GAINS z poprzedniego miesiąca.';
     } else {
       if (currentVipName) currentVipName.textContent = 'Brak potwierdzonego zwycięzcy';
-      if (currentVipNote) currentVipNote.textContent =
-        'Pierwszy zapis GAINS rozpoczął się 25.10.2026. Zwycięzca października będzie dotyczył listopada.';
+      if (currentVipNote) currentVipNote.textContent = currentWarsawMonth()==='2026-10'
+        ? 'Pierwszy zapis GAINS rozpoczął się 25.10.2026. Zwycięzca października będzie dotyczył listopada.'
+        : 'Brak zweryfikowanego zwycięzcy poprzedniego miesiąca w publicznych danych Cloud.';
     }
   }
   function renderMilestone() {
@@ -252,10 +253,17 @@
       renderCurrentVip(result);
       if (selected!=='points') showRanking(result);
     } catch (error) {
-      const label=document.getElementById('leaderboardStatus');
-      if(label) label.textContent='GAINS / LEVEL OFFLINE';
-      if(selected!=='points') originalRender({entries:[],updatedAt:null});
-      console.warn('YURA monthly gains cannot be verified:',error);
+      // A dated D1 snapshot may still be shown if the public API is unavailable.
+      const snapshot=selected==='gains'?await getVerifiedSnapshot():null;
+      if (snapshot && snapshot.month===currentWarsawMonth()) {
+        lastRanking={month:snapshot.month,gains:[],level:[],points:[],updatedAt:null};
+        showRanking(lastRanking);
+      } else {
+        const label=document.getElementById('leaderboardStatus');
+        if(label) label.textContent='GAINS / LEVEL OFFLINE';
+        if(selected!=='points') originalRender({entries:[],updatedAt:null});
+      }
+      console.warn('YURA live gains unavailable; dated snapshot used where possible:',error);
     } finally { pending=false; }
   }
   // Reuse the existing 5-minute polling lifecycle, including hidden-tab suspension.
