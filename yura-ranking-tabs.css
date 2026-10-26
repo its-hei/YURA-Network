@@ -509,3 +509,55 @@
   font-size:12px;
   line-height:1.6;
 }
+
+/* Prepared Pokémon / Twitch ranking portraits (data-driven, no untrusted preference writes). */
+#leaderboardView .leaderboard-runner-person{
+  display:flex;
+  flex:1;
+  min-width:0;
+  align-items:center;
+  gap:10px;
+}
+#leaderboardView .leaderboard-runner-name{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .leaderboard-name{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+#leaderboardView .leaderboard-name > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#leaderboardView .leaderboard-user-avatar{
+  display:none;
+  width:35px;
+  height:35px;
+  min-width:35px;
+  object-fit:cover;
+  border:1px solid #303a46;
+  border-radius:9px;
+  background:#171f28;
+}
+#leaderboardView .leaderboard-user-avatar.is-loaded{display:block}
+#leaderboardView .leaderboard-user-avatar.is-pokemon{
+  object-fit:contain;
+  padding:2px;
+  border-color:rgba(242,140,24,.29);
+  background:rgba(242,140,24,.045);
+}
+#leaderboardView .podium-leader-art.is-pokemon .podium-leader-avatar{
+  object-fit:contain;
+  object-position:center;
+  padding:8px;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.4));
+}
+@media(max-width:620px){
+  #leaderboardView .leaderboard-user-avatar{
+    width:28px;
+    height:28px;
+    min-width:28px;
+    border-radius:7px;
+  }
+  #leaderboardView .leaderboard-runner-person{gap:8px}
+}
