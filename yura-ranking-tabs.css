@@ -483,3 +483,29 @@
   #leaderboardView .podium-leader-avatar{width:75%;object-position:center 43%}
   #leaderboardView .podium-leader-identity{max-width:91%}
 }
+
+/* Current monthly GAINS VIP status (not the ongoing month's leader). */
+#leaderboardView .leaderboard-current-vip[hidden]{display:none!important}
+#leaderboardView .leaderboard-current-vip{
+  display:grid;
+  gap:10px;
+  border-color:rgba(242,171,66,.28);
+  background:linear-gradient(135deg,rgba(242,140,24,.07),transparent 70%),#10151a;
+}
+#leaderboardView .leaderboard-current-vip .leaderboard-side-heading{
+  margin:0;color:#f0c17e;
+}
+#leaderboardView #leaderboardCurrentVipName{
+  color:#f6f6f7;
+  font-family:var(--font-ui);
+  font-size:16px;
+  font-weight:800;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+#leaderboardView #leaderboardCurrentVipNote{
+  margin:0;
+  color:#a8b3c0;
+  font-size:12px;
+  line-height:1.6;
+}
