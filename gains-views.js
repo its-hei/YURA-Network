@@ -200,7 +200,7 @@
     drawRanking();
   });
   document.addEventListener('yura:ranking-mode',event=>{sync();});
-  document.addEventListener('yura:ranking-data',event=>{
+  function acceptGainsData(event){
     if(event.detail?.mode!=='gains')return;
     gainRows=Array.isArray(event.detail.rows)?event.detail.rows:[];
     rankingData=event.detail.data;
@@ -211,7 +211,9 @@
     drawWinners();
     drawMetrics();
     sync();
-  });
+  }
+  document.addEventListener('yura:ranking-data',acceptGainsData);
+  if (window.yuraGainsLastDetail) acceptGainsData({detail:window.yuraGainsLastDetail});
   drawWinners();
   sync();
 })();
