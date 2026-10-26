@@ -145,8 +145,17 @@
     "command": "!pokemon",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!pokemon \u003Cnazwa\u003E",
-    "description": "Zmienia Pok\u00E9mona przypisanego do konta w rankingu za 15 000 YURA Points. Pierwszego Pok\u00E9mona mo\u017Cna wylosowa\u0107 bezp\u0142atnie po zalogowaniu na stronie Y.U.R.A. Network; tam te\u017C wybierzesz wy\u015Bwietlanie avataru Twitch lub Pok\u00E9mona.",
+    "usage": "!pokemon",
+    "description": "Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
+    "category": "PUNKTY Y.U.R.A.",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokeroll",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!pokeroll",
+    "description": "Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
