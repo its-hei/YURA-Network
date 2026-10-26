@@ -561,3 +561,53 @@
   }
   #leaderboardView .leaderboard-runner-person{gap:8px}
 }
+
+/* Viewer-owned Twitch / Pokémon avatar selection. */
+#leaderboardView .pokemon-avatar-panel{
+  display:grid;
+  gap:13px;
+}
+#leaderboardView .pokemon-avatar-panel .leaderboard-side-heading{margin:0}
+#leaderboardView .pokemon-avatar-status,
+#leaderboardView #pokemonSelectionInfo{
+  margin:0;color:#aab5c1;font-size:12px;line-height:1.55;overflow-wrap:anywhere;
+}
+#leaderboardView .pokemon-connect{
+  width:100%;
+  border:1px solid rgba(169,120,247,.46);
+  color:#f2e9ff;
+  background:rgba(113,63,180,.19);
+  border-radius:9px;
+  padding:11px 13px;
+  cursor:pointer;
+  font-family:var(--font-ui);
+  font-size:12px;
+  font-weight:750;
+}
+#leaderboardView .pokemon-avatar-controls[hidden],
+#leaderboardView .pokemon-connect[hidden],
+#leaderboardView #pokemonCurrentSprite[hidden]{display:none!important}
+#leaderboardView .pokemon-avatar-controls{display:grid;gap:11px}
+#leaderboardView .pokemon-avatar-profile{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:750;color:#f6f7fa;
+}
+#leaderboardView #pokemonCurrentSprite{
+  display:block;width:55px;height:55px;object-fit:contain;
+  border-radius:12px;background:rgba(242,140,24,.08);
+  border:1px solid rgba(242,140,24,.25);
+}
+#leaderboardView .pokemon-avatar-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#leaderboardView .pokemon-avatar-switch button{
+  padding:10px 8px;border:1px solid #2c3440;border-radius:8px;
+  background:#111820;color:#a9b5c2;font-weight:700;font-size:12px;
+  cursor:pointer;line-height:1.25;
+}
+#leaderboardView .pokemon-avatar-switch button.active{
+  border-color:rgba(242,140,24,.5);
+  background:rgba(242,140,24,.12);color:#f8b66a;
+}
+#leaderboardView .pokemon-avatar-panel button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+#leaderboardView .pokemon-avatar-panel button:disabled{opacity:.55;cursor:wait}
