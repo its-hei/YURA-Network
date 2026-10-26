@@ -1797,10 +1797,16 @@ footer{
   border-radius:10px;
 }
 
-.about-ident h2{
-  margin:5px 0 0;
-  color:#fff;
-  font-size:24px;
+.about-ident-name{
+  display:block;
+  min-width:0;
+  color:var(--accent);
+  font-family:var(--font-ui,Inter,system-ui,sans-serif);
+  font-size:18px;
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:.06em;
+  overflow-wrap:anywhere;
 }
 
 .about-copy{
@@ -2105,10 +2111,16 @@ footer{
 
 @media(max-width:460px){
   .about-ident{
-    align-items:flex-start;
-    flex-direction:column;
+    align-items:center;
+    flex-direction:row;
+    gap:14px;
   }
-
+  .about-avatar-wrap{
+    width:74px;
+    height:74px;
+    flex-basis:74px;
+  }
+  .about-ident-name{font-size:16px}
   .schedule-week{
     grid-template-columns:1fr;
   }
