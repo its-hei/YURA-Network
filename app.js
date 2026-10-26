@@ -1877,7 +1877,7 @@ let yuraStreamMapHiddenChildren = [];
 
 function yuraStreamMapDefaults() {
   return {
-    title:"Mapa streama",
+    title:"Mapa",
     subtitle:"Jak dzialaja punkty, EXP, level i nagrody na kanale.",
     intro:"Na streamie dzialaja trzy rozne systemy. Kazdy ma inne zastosowanie i nie zastepuja sie wzajemnie.",
     twitchTitle:"Punkty Twitch (TTV)",
@@ -1936,7 +1936,7 @@ function yuraStreamMapMarkup(data) {
       <div class="hero">
         <div>
           <div class="eyebrow">PRZEWODNIK KANAŁU</div>
-          <h1>Mapa streama</h1>
+          <h1>Mapa</h1>
           <p>Najważniejsze informacje o punktach i poziomach na kanale.</p>
         </div>
       </div>
