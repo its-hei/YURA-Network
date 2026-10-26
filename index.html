@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=111">
-  <link rel="stylesheet" href="yura-ranking-tabs.css?v=110">
+  <link rel="stylesheet" href="yura-ranking-tabs.css?v=111">
 </head>
 <body>
   <div class="ambient"></div>
@@ -138,22 +138,6 @@
           </div>
 
           <aside class="leaderboard-side-col" aria-label="Narzędzia i zasady rankingu">
-            <section class="leaderboard-side-card pokemon-avatar-panel" id="pokemonAvatarPanel">
-              <h2 class="leaderboard-side-heading">Twój wygląd w rankingu</h2>
-              <p id="pokemonAvatarStatus" class="pokemon-avatar-status">Połącz Twitch, aby wybrać avatar lub Pokémona.</p>
-              <button type="button" class="pokemon-connect" id="pokemonConnectTwitch">Połącz konto Twitch</button>
-              <div id="pokemonAvatarControls" class="pokemon-avatar-controls" hidden>
-                <div class="pokemon-avatar-profile">
-                  <img id="pokemonCurrentSprite" alt="Twój Pokémon" hidden>
-                  <span id="pokemonAccount"></span>
-                </div>
-                <div class="pokemon-avatar-switch">
-                  <button type="button" id="pokemonShowTwitch">Avatar Twitch</button>
-                  <button type="button" id="pokemonShowPokemon">Pokémon</button>
-                </div>
-                <p id="pokemonSelectionInfo"></p>
-              </div>
-            </section>
             <section class="leaderboard-side-card">
               <h2 class="leaderboard-side-heading">Wyszukiwanie</h2>
               <label class="search-box leaderboard-search-box">
@@ -399,7 +383,6 @@
   <!-- Core site logic: independent from analytics/counter -->
   <script src="app.js?v=mobile106"></script>
   <script src="yura-ranking-tabs.js?v=108"></script>
-  <script src="pokemon-avatars.js?v=1"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
