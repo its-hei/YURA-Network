@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=111">
-  <link rel="stylesheet" href="yura-ranking-tabs.css?v=104">
+  <link rel="stylesheet" href="yura-ranking-tabs.css?v=105">
 </head>
 <body>
   <div class="ambient"></div>
@@ -109,6 +109,14 @@
             <div class="podium" id="leaderboardPodium" hidden></div>
           </div>
           <aside class="leaderboard-top-side" id="leaderboardTopSide" aria-label="Miejsca drugie i trzecie" hidden></aside>
+        </div>
+
+        <div class="leaderboard-milestone" id="leaderboardMilestone" hidden role="status" aria-live="polite">
+          <div class="leaderboard-milestone-info">
+            <span class="leaderboard-milestone-title" id="leaderboardMilestoneTitle"></span>
+            <span class="leaderboard-milestone-caption" id="leaderboardMilestoneCaption"></span>
+          </div>
+          <strong class="leaderboard-milestone-value" id="leaderboardMilestoneValue">—</strong>
         </div>
 
         <div class="leaderboard-bottom-grid">
@@ -367,8 +375,8 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=mobile102"></script>
-  <script src="yura-ranking-tabs.js?v=103"></script>
+  <script src="app.js?v=mobile103"></script>
+  <script src="yura-ranking-tabs.js?v=104"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
