@@ -22,6 +22,13 @@
     return parts.find(part => part.type==='year').value + '-' +
       parts.find(part => part.type==='month').value;
   };
+  const displayMonthName = monthKey => {
+    const key = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(monthKey||'')) ?
+      String(monthKey) : currentWarsawMonth();
+    const date = new Date(key + '-01T12:00:00Z');
+    return new Intl.DateTimeFormat('pl-PL',{month:'long',timeZone:'Europe/Warsaw'})
+      .format(date).toLocaleUpperCase('pl-PL');
+  };
   async function getVerifiedSnapshot() {
     if (!snapshotRequest) {
       snapshotRequest = fetch('./gains-exp-2026-10.json?v=1',{cache:'no-store'})
@@ -152,11 +159,13 @@
   function applyDatedSnapshotLabel() {
     const dated = selected==='gains' && gainsSnapshotActive && verifiedSnapshot;
     if (cadenceValue) cadenceValue.textContent = dated ? 'ODCZYT' : '5 MIN';
-    if (!dated) return;
-    if (liveBadge) {
-      liveBadge.textContent = 'GAINS • ODCZYT 26.10';
-      liveBadge.classList.remove('is-live');
+    if (liveBadge && selected==='gains') {
+      liveBadge.textContent = displayMonthName(
+        dated ? verifiedSnapshot.month : lastRanking?.month
+      );
+      if (dated) liveBadge.classList.remove('is-live');
     }
+    if (!dated) return;
     if (updatedLabel) updatedLabel.textContent = '26.10.2026 • baza D1';
   }
   function renderCurrentVip(data) {
@@ -301,7 +310,8 @@
     window.yuraGainsLastDetail=gainsDetail;
     document.dispatchEvent(new CustomEvent('yura:ranking-data',{detail:gainsDetail}));
     const label=document.getElementById('leaderboardStatus');
-    if (label && !gainsSnapshotActive) label.textContent = selected === 'gains' ? `GAINS ${data.month || ''}` : `${selected.toUpperCase()} • LIVE`;
+    if (label && !gainsSnapshotActive) label.textContent = selected === 'gains'
+      ? displayMonthName(data.month) : `${selected.toUpperCase()} • LIVE`;
     updateLabels();
   }
   async function fetchRanking() {
