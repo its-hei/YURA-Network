@@ -291,3 +291,108 @@
 @media(max-width:620px){
   #leaderboardView .leaderboard-monthly-exp{font-size:10px}
 }
+
+
+/* Ranking refinements: soft portrait composition and record banner. */
+#leaderboardView .podium-leader-art{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  isolation:isolate;
+  background:transparent;
+}
+#leaderboardView .podium-leader-avatar-backdrop{
+  position:absolute;
+  inset:-18%;
+  display:block;
+  width:136%;
+  height:136%;
+  max-width:none;
+  object-fit:cover;
+  object-position:center;
+  opacity:.46;
+  transform:scale(1.02);
+  filter:blur(32px) saturate(.75) brightness(.65);
+}
+#leaderboardView .podium-leader-avatar{
+  position:absolute;
+  inset:auto 4% auto auto;
+  top:50%;
+  right:4%;
+  display:block;
+  width:min(43%,255px);
+  height:min(92%,255px);
+  max-width:none;
+  object-fit:contain;
+  object-position:center;
+  transform:translateY(-50%);
+  filter:saturate(.9) brightness(.90) contrast(1.07);
+  -webkit-mask-image:radial-gradient(ellipse 68% 69% at center,#000 44%,rgba(0,0,0,.9) 57%,transparent 98%);
+  mask-image:radial-gradient(ellipse 68% 69% at center,#000 44%,rgba(0,0,0,.9) 57%,transparent 98%);
+}
+#leaderboardView .podium-leader-art::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    linear-gradient(90deg,#11161c 0%,rgba(17,22,28,.96) 20%,rgba(17,22,28,.82) 39%,rgba(17,22,28,.24) 75%,rgba(17,22,28,.22) 100%),
+    linear-gradient(0deg,rgba(10,13,17,.30),transparent 80%);
+}
+#leaderboardView .podium-leader-identity{max-width:71%;position:relative;z-index:2}
+#leaderboardView .podium-kicker{position:relative;z-index:2}
+#leaderboardView .podium-name{text-shadow:0 2px 16px rgba(0,0,0,.55)}
+#leaderboardView .leaderboard-milestone[hidden]{display:none!important}
+#leaderboardView .leaderboard-milestone{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  padding:20px 23px;
+  border:1px solid rgba(242,171,66,.35);
+  border-radius:12px;
+  background:
+    radial-gradient(ellipse at 88% 48%,rgba(255,179,62,.1),transparent 38%),
+    linear-gradient(100deg,rgba(242,140,24,.09),rgba(22,24,18,.84) 58%,rgba(25,23,17,.85)),
+    #11161c;
+}
+#leaderboardView .leaderboard-milestone-info{display:grid;gap:7px;min-width:0}
+#leaderboardView .leaderboard-milestone-title{
+  color:#f4be6a;
+  font-size:15px;
+  font-weight:800;
+  line-height:1.3;
+}
+#leaderboardView .leaderboard-milestone-caption{
+  color:#a7b3c0;
+  font-size:12px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .leaderboard-milestone-value{
+  color:#f6bf68;
+  font-family:var(--font-display);
+  font-size:clamp(28px,3.4vw,45px);
+  font-weight:800;
+  line-height:1;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:700px){
+  #leaderboardView .podium-leader-avatar{width:48%;height:85%;right:1%}
+  #leaderboardView .podium-leader-identity{max-width:82%}
+  #leaderboardView .podium-leader-art::after{
+    background:linear-gradient(90deg,#11161c 0%,rgba(17,22,28,.96) 18%,rgba(17,22,28,.78) 48%,rgba(17,22,28,.3) 100%);
+  }
+  #leaderboardView .leaderboard-milestone{
+    grid-template-columns:minmax(0,1fr);
+    gap:12px;
+    padding:17px;
+  }
+  #leaderboardView .leaderboard-milestone-value{text-align:left;font-size:32px}
+}
+@media(max-width:390px){
+  #leaderboardView .podium-leader-avatar{right:-4%;width:53%}
+  #leaderboardView .podium-leader-identity{max-width:89%}
+}
