@@ -397,83 +397,89 @@
   #leaderboardView .podium-leader-identity{max-width:89%}
 }
 
-
-/* Clean leader avatar v2: one unblurred square portrait, no oversized wallpaper. */
+/* Leader avatar v3: image fills the right of the card, like the first version.
+   A single clean photo, with the gradient on top rather than blurred duplication. */
 #leaderboardView .podium-card.rank-1{
   isolation:isolate;
   background:
-    radial-gradient(ellipse at 83% 50%,rgba(242,140,24,.075),transparent 51%),
-    linear-gradient(120deg,#11161c 0%,#10151b 70%,#15191e 100%);
+    radial-gradient(ellipse at 85% 30%,rgba(242,140,24,.07),transparent 55%),
+    #11161c;
 }
 #leaderboardView .podium-leader-art{
   position:absolute;
   inset:0;
   z-index:0;
-  pointer-events:none;
   overflow:hidden;
-  background:none;
+  pointer-events:none;
+  background:transparent;
 }
 #leaderboardView .podium-leader-avatar-backdrop{display:none!important}
-#leaderboardView .podium-leader-art::before{
-  content:"";
-  position:absolute;
-  top:50%;
-  right:10px;
-  width:210px;
-  height:210px;
-  max-width:45%;
-  transform:translateY(-50%);
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(242,140,24,.10),transparent 73%);
-}
-#leaderboardView .podium-leader-art::after{content:none}
+#leaderboardView .podium-leader-art::before{content:none}
 #leaderboardView .podium-leader-avatar{
   position:absolute;
-  inset:auto;
-  top:50%;
-  right:24px;
-  width:min(28%,162px);
-  height:auto;
-  aspect-ratio:1;
+  display:block;
+  top:0;
+  right:0;
+  bottom:auto;
+  left:auto;
+  width:65%;
+  height:100%;
+  min-height:0;
   max-width:none;
+  aspect-ratio:auto;
   object-fit:cover;
-  object-position:center;
-  transform:translateY(-50%);
-  border:1px solid rgba(242,140,24,.33);
-  border-radius:22px;
+  object-position:center 44%;
+  transform:none;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
   opacity:1;
-  filter:none;
-  box-shadow:0 14px 34px rgba(0,0,0,.43),0 0 0 5px rgba(255,255,255,.015);
+  filter:brightness(.85) saturate(.92);
   -webkit-mask-image:none;
   mask-image:none;
+}
+#leaderboardView .podium-leader-art::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:linear-gradient(90deg,
+    #11161c 0%,
+    rgba(17,22,28,.98) 24%,
+    rgba(17,22,28,.86) 39%,
+    rgba(17,22,28,.44) 59%,
+    rgba(17,22,28,.08) 83%,
+    rgba(17,22,28,.12) 100%);
+}
+#leaderboardView .podium-leader-main,
+#leaderboardView .podium-kicker{
+  position:relative;
+  z-index:2;
 }
 #leaderboardView .podium-leader-identity{
   position:relative;
   z-index:2;
-  max-width:calc(100% - 190px);
+  max-width:78%;
 }
-#leaderboardView .podium-kicker{position:relative;z-index:2}
 #leaderboardView .podium-name{
   overflow-wrap:anywhere;
-  text-shadow:none;
+  text-shadow:0 2px 14px rgba(0,0,0,.5);
 }
-#leaderboardView .podium-card.rank-1:has(.podium-leader-art.is-loaded) .podium-rank{
-  opacity:.5;
-}
+#leaderboardView .podium-card.rank-1:has(.podium-leader-art.is-loaded) .podium-rank{opacity:.14}
 @media(max-width:700px){
   #leaderboardView .podium-leader-avatar{
-    width:min(32%,135px);
-    right:14px;
-    border-radius:18px;
+    width:70%;
+    height:100%;
+    object-position:center 43%;
   }
-  #leaderboardView .podium-leader-identity{max-width:calc(100% - 140px)}
-  #leaderboardView .podium-leader-art::before{right:0;max-width:50%}
+  #leaderboardView .podium-leader-identity{max-width:87%}
+  #leaderboardView .podium-leader-art::after{
+    background:linear-gradient(90deg,#11161c 0%,
+      rgba(17,22,28,.98) 24%,rgba(17,22,28,.82) 48%,
+      rgba(17,22,28,.29) 76%,rgba(17,22,28,.13) 100%);
+  }
 }
 @media(max-width:400px){
-  #leaderboardView .podium-leader-avatar{
-    width:min(30%,108px);
-    right:12px;
-    border-radius:14px;
-  }
-  #leaderboardView .podium-leader-identity{max-width:calc(100% - 112px)}
+  #leaderboardView .podium-leader-avatar{width:75%;object-position:center 43%}
+  #leaderboardView .podium-leader-identity{max-width:91%}
 }
