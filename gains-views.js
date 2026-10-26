@@ -53,14 +53,14 @@
       '<span class="gains-last-winner-label">WYNIK ZWYCIĘSKIEGO MIESIĄCA</span>' +
       '<strong class="gains-last-winner-points" id="gainsWinnerWinningExp">—</strong>' +
       '<span class="gains-last-winner-detail" id="gainsWinnerWinningNote">Brak potwierdzonego wyniku zakończonego miesiąca.</span>' +
-      '<span class="gains-last-winner-live" id="gainsWinnerCurrentGain"></span>' +
+      '<span class="gains-last-winner-live" id="gainsWinnerCurrentRank"></span>' +
     '</div>';
   topSide?.after(vipCard);
   const winnerName = vipCard.querySelector('#gainsWinnerName');
   const winnerSource = vipCard.querySelector('#gainsWinnerSource');
   const winnerWinningExp = vipCard.querySelector('#gainsWinnerWinningExp');
   const winnerWinningNote = vipCard.querySelector('#gainsWinnerWinningNote');
-  const winnerCurrentGain = vipCard.querySelector('#gainsWinnerCurrentGain');
+  const winnerCurrentRank = vipCard.querySelector('#gainsWinnerCurrentRank');
   const winnerAvatar = vipCard.querySelector('#gainsWinnerAvatar');
   const winnerInitials = vipCard.querySelector('#gainsWinnerInitials');
   let winnerImageLogin = '';
@@ -96,12 +96,13 @@
     winnerWinningNote.textContent = hasWinningExp
       ? 'Potwierdzony wynik zakończonego miesiąca.'
       : 'Wynik zwycięstwa nie jest jeszcze udostępniany przez Cloud.';
-    const present = rankingRows.find(row=>identity(row)===winnerLogin);
-    const hasPresent = present && Number.isFinite(Number(present.points));
-    winnerCurrentGain.textContent = hasPresent
-      ? 'Aktualny GAINS: +'+fmt.format(Math.max(0,Number(present.points)))+
-        ' EXP'+(datedSnapshot?' • odczyt 26.10':'')+' (to nie wynik wygranej).'
-      : '';
+    // Placement always refers to the unfiltered list (VIPs and moderators included).
+    const allRanks = rankingRows.slice().sort((a,b)=>Number(b.points)-Number(a.points));
+    const fullPlace = allRanks.findIndex(row=>identity(row)===winnerLogin);
+    winnerCurrentRank.textContent = fullPlace>=0
+      ? 'Obecne miejsce w pełnym rankingu: #'+fmt.format(fullPlace+1)+
+        (datedSnapshot?' • odczyt 26.10':'')
+      : 'Obecne miejsce: brak w dostępnych danych rankingu';
     const portrait = rankingRows.find(row=>identity(row)===winnerLogin) || winner;
     const imageKey=winnerLogin+':'+String(portrait.avatarMode||'')+':'+String(portrait.pokemonId||'');
     if (winnerImageLogin!==imageKey) {
@@ -245,7 +246,7 @@
   }
   function render() {
     const all = rankingRows.slice().sort((a,b)=>Number(b.points)-Number(a.points));
-    const eligible = typeof state !== 'undefined' && state.leaderboardHidePrivileged;
+    const eligible = state.leaderboardHidePrivileged;
     const topTen = (eligible ? all.filter(x=>x.isMonthlyVipExcluded!==true) : all).slice(0,10);
     const champions = confirmedWinners();
     countRanking.textContent = String(topTen.length);
@@ -289,7 +290,11 @@
     render();
   }));
   search?.addEventListener('input',render);
-  candidateButton?.addEventListener('click',()=>{if(section==='ranking')render();});
+  candidateButton?.addEventListener('click',()=>{
+    // app.js toggles state before our listener runs; refresh both table and winner rank.
+    render();
+    drawWinnerPanel();
+  });
   document.addEventListener('yura:ranking-mode',syncVisibility);
   function acceptData(detail) {
     if (detail?.mode!=='gains') return;
