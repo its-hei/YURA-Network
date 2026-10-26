@@ -247,21 +247,22 @@
       const display = String(row.name || '').trim().toLowerCase();
       const fallback = (typeof leaderboardMetadataByName !== 'undefined')
         ? (leaderboardMetadataByName.get(login) || leaderboardMetadataByName.get(display) || {}) : {};
+      const isMonthlyVip = row.isManagedMonthlyVip === true ||
+        login === activeVipLogin(data);
+      const isMod = row.isModerator === true || fallback.isModerator === true;
+      const isPermanentVip = row.isPermanentVip === true || (
+        !isMonthlyVip && (row.isTwitchVip === true || row.isVip === true ||
+          fallback.isVip === true));
+      const excluded = isMod || isPermanentVip || (
+        !isMonthlyVip && (row.isMonthlyVipExcluded === true ||
+          fallback.isMonthlyVipExcluded === true));
       return {
-      ...row,points: selected === 'gains' ? Math.max(0,Number(row.monthlyExp))
-        : selected === 'level' ? Number(row.level || 0) : Number(row.points || 0),
-      isVip: row.isVip === true || row.isPermanentVip === true || fallback.isVip === true,
-      isModerator: row.isModerator === true || fallback.isModerator === true,
-      isMonthlyVipExcluded: selected === 'gains' ? (
-        row.isMonthlyVipExcluded === true ||
-        row.isVip === true || row.isPermanentVip === true ||
-        row.isModerator === true || row.isManagedMonthlyVip === true ||
-        fallback.isMonthlyVipExcluded === true ||
-        fallback.isVip === true || fallback.isModerator === true ||
-        fallback.isManagedMonthlyVip === true ||
-        login === activeVipLogin(data)
-      ) : false,
-      rankDelta: 0,isNew:false
+        ...row,points: selected === 'gains' ? Math.max(0,Number(row.monthlyExp))
+          : selected === 'level' ? Number(row.level || 0) : Number(row.points || 0),
+        isVip: row.isVip === true || row.isTwitchVip === true || fallback.isVip === true,
+        isPermanentVip, isModerator:isMod, isManagedMonthlyVip:isMonthlyVip,
+        isMonthlyVipExcluded: selected === 'gains' ? excluded : false,
+        rankDelta:0,isNew:false
       };
     };
     const converted=rows.map(convert);
