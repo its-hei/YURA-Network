@@ -363,6 +363,8 @@ function leaderboardHydrateLeaderAvatar(entry) {
       if (image.isConnected && image.naturalWidth > 0) art?.classList.add("is-loaded");
     };
     image.onerror = () => art?.classList.remove("is-loaded");
+    const backdrop = art?.querySelector(".podium-leader-avatar-backdrop");
+    if (backdrop) backdrop.src = url;
     image.src = url;
   });
 }
@@ -457,6 +459,7 @@ function renderLeaderboard(data) {
   leaderboardPodium.innerHTML = `
     <article class="podium-card rank-1 ${leaderIsMatch ? "is-match" : ""}" data-rank="1" data-name="${esc(leader.name)}">
       <div class="podium-leader-art" aria-hidden="true">
+        <img class="podium-leader-avatar-backdrop" alt="" loading="eager" decoding="async">
         <img class="podium-leader-avatar" alt="" loading="eager" decoding="async">
       </div>
       <div class="podium-leader-main">
@@ -1939,7 +1942,7 @@ function yuraStreamMapMarkup(data) {
         </div>
 
         <p class="yura-stream-map-note">
-          <strong>GAINS</strong> to przyrost zdobytych poziomów EXP w danym miesiącu.
+          <strong>GAINS</strong> to EXP zdobyty w danym miesiącu.
           <strong>LEVELS</strong> pokazuje poziom, a <strong>POINTS</strong> saldo Y.U.R.A. Points.
           Punkty Twitch, punkty Y.U.R.A. i EXP nie są tą samą walutą.
         </p>
