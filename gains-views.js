@@ -30,6 +30,100 @@
       '<div class="gains-table-empty"><strong>Wczytywanie GAINS…</strong></div>' +
     '</div>';
   mainCol.prepend(board);
+
+  // GAINS replaces the old #2/#3 side stack with ONE two-section VIP card.
+  // The original #2/#3 stack remains untouched for LEVELS and POINTS.
+  const topSide = document.getElementById('leaderboardTopSide');
+  const vipCard = document.createElement('aside');
+  vipCard.id = 'gainsLastWinnerCard';
+  vipCard.className = 'gains-last-winner-card';
+  vipCard.setAttribute('aria-label','Ostatni zwycięzca miesięcznego VIP-a');
+  vipCard.hidden = true;
+  vipCard.innerHTML =
+    '<div class="gains-last-winner-top">' +
+      '<div class="gains-last-winner-kicker"><span aria-hidden="true">★</span> OSTATNI ZWYCIĘZCA VIP</div>' +
+      '<div class="gains-last-winner-person">' +
+        '<span class="gains-last-winner-avatar"><span id="gainsWinnerInitials">GE</span>' +
+          '<img id="gainsWinnerAvatar" alt="" loading="lazy" decoding="async"></span>' +
+        '<div class="gains-last-winner-identity"><strong id="gainsWinnerName">wielki_gekon_expiciel</strong>' +
+          '<small id="gainsWinnerSource">Wskazany przez właściciela kanału</small></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="gains-last-winner-result">' +
+      '<span class="gains-last-winner-label">WYNIK ZWYCIĘSKIEGO MIESIĄCA</span>' +
+      '<strong class="gains-last-winner-points" id="gainsWinnerWinningExp">—</strong>' +
+      '<span class="gains-last-winner-detail" id="gainsWinnerWinningNote">Brak potwierdzonego wyniku zakończonego miesiąca.</span>' +
+      '<span class="gains-last-winner-live" id="gainsWinnerCurrentGain"></span>' +
+    '</div>';
+  topSide?.after(vipCard);
+  const winnerName = vipCard.querySelector('#gainsWinnerName');
+  const winnerSource = vipCard.querySelector('#gainsWinnerSource');
+  const winnerWinningExp = vipCard.querySelector('#gainsWinnerWinningExp');
+  const winnerWinningNote = vipCard.querySelector('#gainsWinnerWinningNote');
+  const winnerCurrentGain = vipCard.querySelector('#gainsWinnerCurrentGain');
+  const winnerAvatar = vipCard.querySelector('#gainsWinnerAvatar');
+  const winnerInitials = vipCard.querySelector('#gainsWinnerInitials');
+  let winnerImageLogin = '';
+  let datedSnapshot = false;
+
+  function drawWinnerPanel(){
+    const month = currentMonth();
+    const data = liveData?.monthlyVip || null;
+    const granted = data?.current?.status==='granted' ? data.current : null;
+    const past = Array.isArray(data?.history) ? data.history
+      .filter(item=>item?.status==='granted' &&
+        /^\\d{4}-\\d{2}$/.test(String(item.wonMonth||item.won_month||'')) &&
+        String(item.wonMonth||item.won_month)<month)
+      .sort((a,b)=>String(b.wonMonth||b.won_month).localeCompare(String(a.wonMonth||a.won_month)))[0]
+      : null;
+    // User-confirmed current VIP; use a verified Cloud winner once available.
+    const winner = granted || past || {
+      login:'wielki_gekon_expiciel',name:'wielki_gekon_expiciel',
+      source:'Wskazany przez właściciela kanału'
+    };
+    const winnerLogin = identity(winner);
+    winnerName.textContent = display(winner);
+    winnerSource.textContent = granted || past
+      ? 'Miesięczny VIP • zwycięzca za '+String(winner.wonMonth||winner.won_month||'poprzedni miesiąc')
+      : 'Obecny VIP • wskazany przez właściciela kanału';
+    const winningRaw = winner.gainedExp ?? winner.gained_exp ??
+      winner.winningExp ?? winner.winning_exp ?? null;
+    const hasWinningExp = winningRaw!==null &&
+      Number.isFinite(Number(winningRaw)) && Number(winningRaw)>=0 &&
+      Boolean(granted||past);
+    winnerWinningExp.textContent = hasWinningExp
+      ? '+'+fmt.format(Number(winningRaw))+' EXP' : '—';
+    winnerWinningNote.textContent = hasWinningExp
+      ? 'Potwierdzony wynik zakończonego miesiąca.'
+      : 'Wynik zwycięstwa nie jest jeszcze udostępniany przez Cloud.';
+    const present = rankingRows.find(row=>identity(row)===winnerLogin);
+    const hasPresent = present && Number.isFinite(Number(present.points));
+    winnerCurrentGain.textContent = hasPresent
+      ? 'Aktualny GAINS: +'+fmt.format(Math.max(0,Number(present.points)))+
+        ' EXP'+(datedSnapshot?' • odczyt 26.10':'')+' (to nie wynik wygranej).'
+      : '';
+    if (winnerImageLogin!==winnerLogin) {
+      winnerImageLogin=winnerLogin;
+      winnerAvatar.classList.remove('is-loaded');
+      winnerAvatar.removeAttribute('src');
+      winnerInitials.hidden=false;
+      winnerInitials.textContent=display(winner).slice(0,2).toUpperCase();
+      const portrait = rankingRows.find(row=>identity(row)===winnerLogin) || winner;
+      if (validLogin(portrait) && typeof leaderboardResolveAvatar==='function') {
+        leaderboardResolveAvatar(portrait,winnerLogin).then(url=>{
+          if (!url || !winnerAvatar.isConnected || winnerImageLogin!==winnerLogin) return;
+          winnerAvatar.onload=()=>{
+            if (winnerAvatar.isConnected && winnerAvatar.naturalWidth>0){
+              winnerAvatar.classList.add('is-loaded');winnerInitials.hidden=true;
+            }
+          };
+          winnerAvatar.onerror=()=>winnerAvatar.classList.remove('is-loaded');
+          winnerAvatar.src=url;
+        }).catch(()=>{});
+      }
+    }
+  }
+
   const rowsHost = board.querySelector('#gainsTableList');
   const countRanking = board.querySelector('#gainsRankingCount');
   const countWinners = board.querySelector('#gainsWinnersCount');
@@ -180,6 +274,8 @@
     host.classList.toggle('gains-table-active',gainsActive);
     // Crucial: never hide the #1/#2/#3 hero panels, record banner or sidebar.
     layout.hidden = false;
+    vipCard.hidden = !gainsActive;
+    if (gainsActive) drawWinnerPanel();
     for (const button of board.querySelectorAll('.gains-table-tab')) {
       const active = button.dataset.gainsView === section;
       button.classList.toggle('active',active);
@@ -199,7 +295,9 @@
     rankingRows = Array.isArray(detail.rows)?detail.rows:[];
     liveData = detail.data || null;
     missing = detail.missing===true;
+    datedSnapshot = detail.dated===true;
     render();
+    drawWinnerPanel();
     syncVisibility();
   }
   document.addEventListener('yura:ranking-data',event=>acceptData(event.detail));
