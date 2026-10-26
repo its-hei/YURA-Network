@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=111">
+  <link rel="stylesheet" href="styles.css?v=112">
   <link rel="stylesheet" href="yura-ranking-tabs.css?v=114">
 </head>
 <body>
@@ -38,6 +38,7 @@
             Y.U.R.A.
             
           </button>
+          <button class="side-item" type="button" data-view="statistics">Statystyki</button>
           <button class="side-item" type="button" data-view="schedule">
             Harmonogram
             
@@ -239,6 +240,53 @@
       </div>
     </section>
 
+    <section class="content view-panel statistics-view" id="statisticsView" hidden>
+      <div class="hero stats-hero">
+        <div>
+          <div class="eyebrow">Y.U.R.A. / CHANNEL ANALYTICS</div>
+          <h1>Statystyki</h1>
+          <p>Aktywność kanału, wiadomości widzów i historia zabaw za Y.U.R.A. Points.</p>
+        </div>
+        <div class="status-chip" id="statsStatus">OCZEKIWANIE NA CLOUD</div>
+      </div>
+      <div class="stats-summary">
+        <article class="stats-kpi"><span>WIADOMOŚCI</span><strong id="statsTotalMessages">—</strong><small>zarejestrowane przez Y.U.R.A.</small></article>
+        <article class="stats-kpi"><span>AKTYWNI WIDZOWIE</span><strong id="statsActiveViewers">—</strong><small>minimum 10 wiadomości</small></article>
+        <article class="stats-kpi"><span>FOLLOWERS</span><strong id="statsTotalFollowers">—</strong><small>z ostatniej synchronizacji</small></article>
+        <article class="stats-kpi"><span>GAMBLE ALL</span><strong id="statsAllGambles">—</strong><small>łącznie rozegranych losowań</small></article>
+      </div>
+      <div class="stats-main-heading">
+        <div><div class="eyebrow">PUBLICZNA AKTYWNOŚĆ</div><h2>Statystyki widzów</h2>
+          <p>Pokazujemy wyłącznie użytkowników, którzy napisali co najmniej 10 wiadomości.</p></div>
+        <span class="stats-livestate" id="statsChannelLive">BRAK DANYCH</span>
+      </div>
+      <div class="stats-toolbar">
+        <div class="stats-scope-tabs">
+          <button class="stats-scope active" data-scope="all" aria-pressed="true">Wszyscy</button>
+          <button class="stats-scope" data-scope="gamble" aria-pressed="false">Gamble all</button>
+        </div>
+        <label class="stats-search"><span aria-hidden="true">⌕</span>
+          <input id="statsSearch" type="search" placeholder="Szukaj widza…" autocomplete="off"></label>
+        <label class="stats-sort-label">Sortuj:
+          <select id="statsSort">
+            <option value="messages">Wiadomości</option>
+            <option value="gambleAllWins">Wygrane gamble all</option>
+            <option value="gambleAllLosses">Przegrane gamble all</option>
+          </select>
+        </label>
+      </div>
+      <div class="stats-table">
+        <div class="stats-table-head">
+          <span>UŻYTKOWNIK</span><span>WIADOMOŚCI</span><span>DŁUGOŚĆ FOLLOWA</span>
+          <span>WYGRANE ALL</span><span>PRZEGRANE ALL</span><span>WIN RATE</span>
+        </div>
+        <div id="statsViewerRows">
+          <div class="stats-empty">Wczytywanie statystyk Y.U.R.A.…</div>
+        </div>
+      </div>
+      <p class="stats-coverage" id="statsCoverage">Dane pochodzą z zapisów Y.U.R.A. Cloud. Brakujące wartości pozostają puste.</p>
+    </section>
+
     <section class="content view-panel" id="scheduleView" hidden>
       <div class="hero">
         <div>
@@ -384,6 +432,7 @@
   <script src="app.js?v=mobile106"></script>
   <script src="yura-ranking-tabs.js?v=110"></script>
   <script src="gains-views.js?v=4"></script>
+  <script src="statistics.js?v=1"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
