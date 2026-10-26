@@ -126,8 +126,10 @@
     if (selected!=='gains') return;
     // The current month's GAINS leader is a candidate for NEXT month, never the current VIP.
     const winner = data?.monthlyVip?.current || data?.records?.currentMonthlyVip || null;
-    const login = typeof winner==='string'?winner:
-      (winner?.name || winner?.displayName || winner?.login || '');
+    // Display only an explicitly confirmed active winner, not a mere candidate.
+    const confirmed = winner && typeof winner==='object' &&
+      ['granted','active'].includes(String(winner.status || '').toLowerCase());
+    const login = confirmed ? (winner.name || winner.displayName || winner.login || '') : '';
     if (login) {
       if (currentVipName) currentVipName.textContent = login;
       if (currentVipNote) currentVipNote.textContent = 'Zwycięzca GAINS z poprzedniego miesiąca.';
