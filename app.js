@@ -335,8 +335,8 @@ function leaderboardTwitchLogin(entry) {
   const name = String(entry?.login || entry?.name || "").trim().replace(/^@/, "").toLowerCase();
   return /^[a-z0-9_]{2,25}$/.test(name) ? name : null;
 }
-// Read-only support for a future authenticated Twitch / Pokémon preference.
-// Selecting and charging 15k YURA points will be handled by YURA Cloud later.
+// Public portrait: Y.U.R.A. Cloud assigns Pokémon through Twitch chat.
+// !pokemon is free on first use; !pokeroll costs 5,000 Y.U.R.A. Points.
 function leaderboardPokemonArtwork(entry) {
   if (String(entry?.avatarMode ?? entry?.avatar_mode ?? '').toLowerCase() !== 'pokemon') return null;
   const id = Number(entry?.pokemonId ?? entry?.pokemon_id);
