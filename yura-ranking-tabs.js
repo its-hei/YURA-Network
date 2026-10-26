@@ -7,7 +7,9 @@
   if (!host || typeof renderLeaderboard !== 'function' || typeof loadLeaderboard !== 'function') return;
   const modes = ['gains', 'level', 'points'];
   let selected = 'gains';
-  let gainsCandidatesOnly = false;
+  // GAINS initially shows only eligible viewers; VIPs and moderators are hidden.
+  let gainsCandidatesOnly = true;
+  state.leaderboardHidePrivileged = true;
   let pending = false;
   let lastRanking = null;
   let verifiedSnapshot = null;
@@ -48,6 +50,15 @@
   const originalLoad = loadLeaderboard;
   const originalRender = renderLeaderboard;
   const originalEligible = document.getElementById('leaderboardEligibilityToggle');
+  const originalEligibleLabel = document.getElementById('leaderboardEligibilityLabel');
+  const activeVipLogin = data => {
+    const holder = data?.monthlyVip?.current || data?.records?.currentMonthlyVip || null;
+    const confirmed = holder && typeof holder==='object' &&
+      ['granted','active'].includes(String(holder.status || '').toLowerCase());
+    const login = confirmed ? String(holder.login || holder.name || holder.displayName || '').toLowerCase() : '';
+    // Channel owner confirms Gekon is the current VIP for October 2026.
+    return login || (currentWarsawMonth()==='2026-10' ? 'wielki_gekon_expiciel' : '');
+  };
   const title = host.querySelector('.hero p');
   const listHeader = host.querySelector('.leaderboard-list-head span:last-child');
   const vipRule = host.querySelector('.monthly-vip-rule');
@@ -181,7 +192,16 @@
     // The two VIP programs belong to different ranking tabs.
     if (vipRule) vipRule.hidden = selected !== 'gains';
     if (oddsPanel) oddsPanel.hidden = selected !== 'points';
-    if (originalEligible) originalEligible.hidden = selected !== 'gains';
+    if (originalEligible) {
+      originalEligible.hidden = selected !== 'gains';
+      if (selected==='gains') {
+        originalEligible.setAttribute('aria-pressed',String(state.leaderboardHidePrivileged));
+        originalEligible.title = state.leaderboardHidePrivileged
+          ? 'Pokaż również VIP-ów i moderatorów' : 'Ukryj VIP-ów i moderatorów';
+        if (originalEligibleLabel) originalEligibleLabel.textContent =
+          state.leaderboardHidePrivileged ? 'POKAŻ WSZYSTKICH' : 'UKRYJ VIP-ÓW I MODÓW';
+      }
+    }
     renderMilestone();
     renderCurrentVip(lastRanking);
     applyDatedSnapshotLabel();
@@ -230,9 +250,17 @@
       return {
       ...row,points: selected === 'gains' ? Math.max(0,Number(row.monthlyExp))
         : selected === 'level' ? Number(row.level || 0) : Number(row.points || 0),
-      isVip: fallback.isVip === true || row.isPermanentVip === true,
-      isModerator: fallback.isModerator === true,
-      isMonthlyVipExcluded: selected === 'gains' ? (row.isMonthlyVipExcluded === true || fallback.isMonthlyVipExcluded === true || fallback.isVip === true || fallback.isModerator === true) : false,
+      isVip: row.isVip === true || row.isPermanentVip === true || fallback.isVip === true,
+      isModerator: row.isModerator === true || fallback.isModerator === true,
+      isMonthlyVipExcluded: selected === 'gains' ? (
+        row.isMonthlyVipExcluded === true ||
+        row.isVip === true || row.isPermanentVip === true ||
+        row.isModerator === true || row.isManagedMonthlyVip === true ||
+        fallback.isMonthlyVipExcluded === true ||
+        fallback.isVip === true || fallback.isModerator === true ||
+        fallback.isManagedMonthlyVip === true ||
+        login === activeVipLogin(data)
+      ) : false,
       rankDelta: 0,isNew:false
       };
     };
