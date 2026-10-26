@@ -2542,3 +2542,278 @@ footer.site-footer{font-size:12px;letter-spacing:0}
   #streamMapView .yura-stream-map-item p,
   #streamMapView .yura-stream-map-note{font-size:12px}
 }
+
+
+/* Commands page — aligned with the About/Stream Map design, responsive card rows. */
+#commandsView .hero{padding-bottom:22px}
+#commandsView .commands-toolbar{
+  align-items:center;
+  gap:14px;
+  padding:0 0 18px;
+  border-bottom:1px solid var(--line);
+}
+#commandsView .tabs{gap:8px}
+#commandsView .tab{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:40px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#10151a;
+  color:#aeb8c6;
+  font-family:var(--font-ui);
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:0;
+  transition:border-color .15s ease,background .15s ease,color .15s ease;
+}
+#commandsView .tab span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  padding:2px 6px;
+  border-radius:5px;
+  background:rgba(255,255,255,.06);
+  color:#8d9baa;
+  font-size:11px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+#commandsView .tab.active{
+  border-color:rgba(242,140,24,.5);
+  background:rgba(242,140,24,.11);
+  color:#f5f6f9;
+}
+#commandsView .tab.active span{color:var(--accent);background:rgba(242,140,24,.10)}
+#commandsView .tab:focus-visible,
+#commandsView .search-box:focus-within{
+  outline:2px solid rgba(242,140,24,.52);
+  outline-offset:2px;
+}
+#commandsView .search-box{
+  min-width:min(100%,295px);
+  min-height:41px;
+  border:1px solid #2d343e;
+  background:#10151a;
+  color:#99a6b5;
+  border-radius:9px;
+}
+#commandsView .search-box input{font-size:13px}
+#commandsView .table-wrap{
+  margin-top:16px;
+  border-color:#252d37;
+  border-radius:12px;
+  background:#10151a;
+}
+#commandsView thead{background:#0d1116}
+#commandsView th{
+  color:#92a0b0;
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.055em;
+}
+#commandsView .group-row td{
+  padding:10px 17px;
+  border-color:#26303a;
+  background:linear-gradient(90deg,rgba(242,140,24,.055),transparent 66%),#0e1319;
+}
+#commandsView .group-label{
+  color:var(--accent);
+  font-family:var(--font-ui);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.045em;
+}
+#commandsView .group-count,
+#commandsView .group-state{
+  color:#97a2b1;
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0;
+}
+#commandsView .command-row td{border-color:#27303a}
+#commandsView .command.copy-command{
+  color:#f2f4f7;
+  font-family:var(--font-ui);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+#commandsView .aliases{font-family:var(--font-ui);font-size:12px}
+#commandsView .badge{
+  padding:5px 9px;
+  border-radius:7px;
+  font-family:var(--font-ui);
+  font-size:11px;
+  font-weight:700;
+}
+#commandsView .usage{
+  color:#e4e9f0;
+  font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+  font-size:12px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+#commandsView .description{
+  color:#aab6c6;
+  font-family:var(--font-ui);
+  font-size:13px;
+  line-height:1.65;
+  overflow-wrap:anywhere;
+}
+#commandsView .empty-state{background:#10151a}
+
+/* Narrow viewports: swap the overflowing 680px table for a card per command.
+   Keep real table markup, group collapse, filters and click-to-copy unchanged. */
+@media(max-width:760px){
+  #commandsView .commands-toolbar{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+  }
+  #commandsView .tabs{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    width:100%;
+  }
+  #commandsView .tab{
+    width:100%;
+    min-width:0;
+    min-height:41px;
+    padding:8px 4px;
+    gap:4px;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  #commandsView .tab span{font-size:10px;padding:2px 5px}
+  #commandsView .search-box{
+    width:100%;
+    min-width:0;
+    max-width:none;
+    min-height:44px;
+    margin:0;
+  }
+  #commandsView .search-box input{min-width:0}
+  #commandsView .table-wrap{
+    margin-top:15px;
+    padding:0;
+    border:0;
+    border-radius:0;
+    overflow:visible;
+    background:transparent;
+    box-shadow:none;
+  }
+  #commandsView table,
+  #commandsView tbody{
+    display:block;
+    width:100%;
+    min-width:0;
+    border:0;
+  }
+  #commandsView thead{display:none}
+  #commandsView .group-row{
+    display:block;
+    margin:22px 0 10px;
+  }
+  #commandsView .group-row:first-child{margin-top:0}
+  #commandsView .group-row td{
+    display:block;
+    width:100%;
+    min-width:0;
+    padding:11px 13px;
+    border:1px solid #303741;
+    border-left:3px solid var(--accent);
+    border-radius:9px;
+    background:#10151a;
+  }
+  #commandsView .group-label{font-size:12px;letter-spacing:.04em}
+  #commandsView .group-state{font-size:10px}
+  #commandsView .group-chevron{font-size:18px}
+  #commandsView .command-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    column-gap:10px;
+    row-gap:0;
+    width:100%;
+    min-width:0;
+    margin:0 0 10px;
+    padding:15px 14px;
+    border:1px solid #2a313d;
+    border-radius:12px;
+    background:#10151a;
+    box-shadow:var(--shadow);
+  }
+  #commandsView .command-row[hidden]{display:none!important}
+  #commandsView .command-row:hover{background:#141a22}
+  #commandsView .command-row td,
+  #commandsView .command-row td:first-child{
+    display:block;
+    width:auto;
+    min-width:0;
+    padding:0;
+    border:0;
+    background:transparent;
+  }
+  #commandsView .command-row td:first-child{
+    grid-column:1;
+    grid-row:1;
+    align-self:start;
+  }
+  #commandsView .command-row td:nth-child(2){
+    grid-column:2;
+    grid-row:1;
+    justify-self:end;
+    align-self:start;
+  }
+  #commandsView .command-row td:nth-child(3){
+    grid-column:1/-1;
+    grid-row:2;
+    padding-top:11px;
+    margin-top:14px;
+    border-top:1px solid #29313b;
+  }
+  #commandsView .command-main{gap:7px}
+  #commandsView .command.copy-command{
+    font-size:15px;
+    line-height:1.45;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+  #commandsView .aliases{margin-top:6px;gap:2px;font-size:12px;line-height:1.5}
+  #commandsView .alias-count{font-size:10px}
+  #commandsView .badge{font-size:10px;padding:5px 7px;white-space:nowrap}
+  #commandsView .usage{
+    display:block;
+    color:#f0b06b;
+    font-size:12px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+  #commandsView .description{
+    margin-top:6px;
+    color:#b2bcc9;
+    font-size:13px;
+    line-height:1.65;
+  }
+  #commandsView .loading-row{
+    display:block;
+    padding:20px 14px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#10151a;
+  }
+  #commandsView .loading-row td{display:block;padding:0;text-align:center;border:0}
+}
+@media(max-width:370px){
+  #commandsView .tab{font-size:11px}
+  #commandsView .tab span{font-size:10px;padding:2px 4px}
+  #commandsView .command-row{padding:13px 11px;column-gap:6px}
+}
