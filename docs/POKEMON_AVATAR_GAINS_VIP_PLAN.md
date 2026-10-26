@@ -1,45 +1,25 @@
-# Y.U.R.A. — ranking avatars, Pokémon and monthly GAINS VIP
+# Pokémon system — Twitch chat only (Y.U.R.A. v3.3.99)
 
-**Status:** specification only. Do not implement in Y.U.R.A. Desktop or Cloud until user explicitly authorizes the next version. Public website currently supports read-only `avatarMode` and `pokemonId` when a trusted backend supplies those fields.
+## User experience
+- `!pokemon`: on the first use, randomly assigns one supported Pokémon to that Twitch account **for free**; later uses display the Pokémon already assigned.
+- `!pokeroll`: rerolls a **different** random Pokémon for **5,000 Y.U.R.A. Points**. A viewer must first use `!pokemon`.
+- Nothing is selected or purchased on the website; no OAuth or login is required.
+- The identity comes from authenticated Twitch EventSub chat, `chatter_user_id`.
+- Successful first assignment or paid reroll sets `pokemon_profiles.avatar_mode='pokemon'` so the public leaderboard can display the Pokémon.
+- Pokémon artwork is visible **only for the ranking #1 card**. Other positions show nicknames without avatars.
 
-## 1. Identity and avatar choice (website)
+## Security and accounting
+- PokeAPI species lookup is validated before storing; if unavailable, no new assignment or charge is made.
+- A new `pokemon_rerolls` ledger with a unique Twitch message ID records purchases at 5,000 points.
+- Cloudflare D1 executes debit, receipt, transaction history and assignment together in a transaction.
+- A duplicated Twitch chat event must never charge twice.
+- The old 15,000-point receipts remain preserved in the existing `pokemon_purchases` table. Migration 0009 introduces the new cost separately without wiping existing balances or Pokémon.
 
-- Each viewer may choose how **their own** identity appears in rankings: **Twitch avatar** (default) or a **Pokémon**.
-- This is a persistent **account-level** preference, not a cosmetic browser-wide switch.
-- Require authenticated Twitch identity (OAuth + verified session). Do not accept a freely typed login as authorization to change somebody else's public avatar.
-- Store in Cloud database keyed by Twitch user ID: `avatar_mode` (`twitch` or `pokemon`), `pokemon_id` (numeric Pokédex ID), and update timestamp.
-- When a viewer chooses Pokémon for the first time, assign **one randomly chosen supported Pokémon** and save the assignment. Do not rerandomize on every page load.
-- The website should support selecting Twitch/Pokémon display for that viewer without any points charge. Changing which Pokémon is assigned costs points (below).
-- Public ranking API returns only safe display fields, e.g. `avatarMode: "pokemon"`, `pokemonId: 25`. Never expose OAuth tokens.
-- Frontend fallback: when the preference or sprite is missing/invalid, use the ordinary Twitch avatar.
-- Render the chosen visual consistently in GAINS / LEVELS / POINTS, including #1, #2/#3, and #4–#10.
+## Monthly GAINS and VIP
+- GAINS is current-month earned EXP from the monthly checkpoint, not LEVELS gained.
+- The previous completed month's eligible winner becomes current monthly VIP after actual grant; current leader is not automatically current VIP.
+- The first captured baseline was 2026-10-25. Any dated fallback rank must be clearly labeled as dated, not live.
 
-## 2. `!pokemon <name>` on Twitch — costs 15,000 Y.U.R.A. Points
-
-- Example `!pokemon pikachu` selects Pikachu as the viewer's Pokémon and activates Pokémon mode.
-- Validate Pokémon name against the Pokédex (case-insensitive, account for approved aliases/forms).
-- Charge **15,000 Y.U.R.A. Points**, not native Twitch points and not EXP.
-- Check sufficient balance and atomically charge+update the assignment in a database transaction. On insufficient funds, invalid name, unknown viewer, duplicate event, or other error: **never charge**.
-- Prevent double charges from repeated delivery of the same Twitch message (idempotency key).
-- Confirm the Pokémon name and price only after the database commit. Cache Pokédex name/ID lookups to avoid unnecessary third-party API load.
-- Switching between already-assigned Pokémon and Twitch avatar on the authenticated website is free; choosing **another** Pokémon via command costs 15,000 points.
-
-## 3. Monthly GAINS and current VIP
-
-- GAINS = verified EXP earned **since the beginning of the active monthly checkpoint**, e.g. `monthlyExp = currentExp - baseExp` (not gained LEVELS).
-- First tracked period: **25–31 October 2026**, with checkpoint 25 October 2026 at 11:54:18 UTC.
-- New month starts at 00:00 Europe/Warsaw. Start a new EXP baseline without resetting lifetime EXP or LEVEL.
-- Freeze the completed month before switching to the next period, preserve historical GAINS.
-- **Current GAINS VIP** is the eligible winner of the **previous completed month**, after confirmation / successful assignment of the Twitch VIP role. Do not show the current leader as already holding that role.
-- If previous-month results or award confirmation are unavailable, show a transparent unavailable status, not a fabricated username.
-- Permanent VIPs and moderators are not eligible for the monthly GAINS contest.
-- Cloud should provide structured verified `currentMonthlyVip` details (name/login, wonMonth, activeMonth, status), rather than guessing from the current month's leaderboard.
-
-## 4. Current frontend publication
-
-- Static D1-verified snapshot: `gains-exp-2026-10.json`, measured 26 Oct 2026. 1,130 / 690 / 370 EXP for the top three.
-- It must be explicitly labeled **dated**, not live; never refresh its timestamp to pretend the values update.
-- Only display it for October 2026 when `/api/ranking` lacks `monthlyExp`; prefer verified live monthly EXP automatically after the Cloud update.
-- The website can render a future Pokémon preference from the ranking API but does not currently support saving selections or taking Y.U.R.A. points.
-
-**Next Y.U.R.A. version is deferred until the user requests it.**
+## Deployment
+- Cloud must be updated to **Y.U.R.A. Cloud v3.3.99**, including D1 migration 0009; a public website commit by itself cannot activate the new Twitch chat commands.
+- Y.U.R.A. Desktop v3.3.99 includes the updated commands metadata. Windows/.NET SDK required to compile.
