@@ -72,7 +72,7 @@
     const granted = data?.current?.status==='granted' ? data.current : null;
     const past = Array.isArray(data?.history) ? data.history
       .filter(item=>item?.status==='granted' &&
-        /^\\d{4}-\\d{2}$/.test(String(item.wonMonth||item.won_month||'')) &&
+        /^\d{4}-\d{2}$/.test(String(item.wonMonth||item.won_month||'')) &&
         String(item.wonMonth||item.won_month)<month)
       .sort((a,b)=>String(b.wonMonth||b.won_month).localeCompare(String(a.wonMonth||a.won_month)))[0]
       : null;
@@ -102,16 +102,17 @@
       ? 'Aktualny GAINS: +'+fmt.format(Math.max(0,Number(present.points)))+
         ' EXP'+(datedSnapshot?' • odczyt 26.10':'')+' (to nie wynik wygranej).'
       : '';
-    if (winnerImageLogin!==winnerLogin) {
-      winnerImageLogin=winnerLogin;
+    const portrait = rankingRows.find(row=>identity(row)===winnerLogin) || winner;
+    const imageKey=winnerLogin+':'+String(portrait.avatarMode||'')+':'+String(portrait.pokemonId||'');
+    if (winnerImageLogin!==imageKey) {
+      winnerImageLogin=imageKey;
       winnerAvatar.classList.remove('is-loaded');
       winnerAvatar.removeAttribute('src');
       winnerInitials.hidden=false;
       winnerInitials.textContent=display(winner).slice(0,2).toUpperCase();
-      const portrait = rankingRows.find(row=>identity(row)===winnerLogin) || winner;
       if (validLogin(portrait) && typeof leaderboardResolveAvatar==='function') {
         leaderboardResolveAvatar(portrait,winnerLogin).then(url=>{
-          if (!url || !winnerAvatar.isConnected || winnerImageLogin!==winnerLogin) return;
+          if (!url || !winnerAvatar.isConnected || winnerImageLogin!==imageKey) return;
           winnerAvatar.onload=()=>{
             if (winnerAvatar.isConnected && winnerAvatar.naturalWidth>0){
               winnerAvatar.classList.add('is-loaded');winnerInitials.hidden=true;
