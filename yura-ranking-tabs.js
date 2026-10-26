@@ -64,30 +64,59 @@
     vipRule.after(details);
   }
   const oddsPanel = host.querySelector('.yura-vip-odds');
+  const milestone = document.getElementById('leaderboardMilestone');
+  const milestoneTitle = document.getElementById('leaderboardMilestoneTitle');
+  const milestoneValue = document.getElementById('leaderboardMilestoneValue');
+  const milestoneCaption = document.getElementById('leaderboardMilestoneCaption');
+  const plNumber = n => new Intl.NumberFormat('pl-PL').format(Number(n));
+  function renderMilestone() {
+    if (!milestone) return;
+    milestone.hidden = selected === 'level';
+    if (selected === 'level') return;
+    const data = lastRanking?.records;
+    if (selected === 'gains') {
+      const record = data?.bestMonthlyGain;
+      if (milestoneTitle) milestoneTitle.textContent = 'Rekord GAINS • cała historia';
+      if (milestoneValue) milestoneValue.textContent = record && Number.isFinite(Number(record.exp))
+        ? '+' + plNumber(record.exp) + ' EXP' : '—';
+      if (milestoneCaption) milestoneCaption.textContent = record
+        ? [record.name,record.month].filter(Boolean).join(' • ')
+        : data ? 'Brak zapisanych miesięcznych wyników EXP.' : 'Rekord pojawi się po aktualizacji Y.U.R.A. Cloud.';
+    } else {
+      const count = data?.permanentVipWinners;
+      if (milestoneTitle) milestoneTitle.textContent = 'Permanentny VIP • !gamble all';
+      if (milestoneValue) milestoneValue.textContent = Number.isInteger(count) && count >= 0
+        ? plNumber(count) : '—';
+      if (milestoneCaption) milestoneCaption.textContent = Number.isInteger(count) && count >= 0
+        ? 'Liczba osób, którym Twitch przyznał VIP-a po wygranej w losowaniu.'
+        : 'Licznik pojawi się po aktualizacji Y.U.R.A. Cloud.';
+    }
+  }
 
   function updateLabels() {
     if (title) title.textContent = selected === 'gains'
-      ? 'Miesięczny przyrost poziomów EXP — największy przyrost wygrywa, nie najwyższy poziom.'
+      ? 'Miesięczny przyrost EXP — największy zdobyty EXP wygrywa, nie najwyższy poziom.'
       : selected === 'level' ? 'Łączny poziom EXP od początku aktywności na kanale.'
       : 'Aktualne saldo YURA Points (może rosnąć i maleć przez gamble).';
-    if (listHeader) listHeader.textContent = selected === 'gains' ? 'Zdobyte poziomy' : selected === 'level' ? 'Poziom' : 'Punkty';
-    if (note) note.textContent = 'Miesięczny VIP: wygrywa osoba z największym przyrostem poziomów EXP (GAINS) w danym miesiącu — nie z najwyższym LEVEL ani saldem POINTS. ' +
+    if (listHeader) listHeader.textContent = selected === 'gains' ? 'Zdobyty EXP' : selected === 'level' ? 'Poziom' : 'Punkty';
+    if (note) note.textContent = 'Miesięczny VIP: wygrywa największy przyrost EXP (GAINS) od początku miesiąca, a nie najwyższy LEVEL ani saldo POINTS. ' +
       'Nagroda obowiązuje przez kolejny miesiąc i może zostać przedłużona po ponownym zwycięstwie. Stali VIP-i i moderatorzy nie są brani pod uwagę.';
     // The two VIP programs belong to different ranking tabs.
     if (vipRule) vipRule.hidden = selected !== 'gains';
     if (oddsPanel) oddsPanel.hidden = selected !== 'points';
     if (originalEligible) originalEligible.hidden = selected !== 'gains';
+    renderMilestone();
   }
   // Preserve GAINS / LEVELS units whenever the search, VIP filter or live sync
   // redraws the ranking (including the #2/#3 side card).
   function applyRankingUnits() {
-    const displayUnit = selected === 'gains' ? 'LEVEL GAIN / THIS MONTH'
+    const displayUnit = selected === 'gains' ? 'EXP W TYM MIESIĄCU'
       : selected === 'level' ? 'TOTAL LEVEL' : 'Y.U.R.A. POINTS';
     for (const el of host.querySelectorAll('.podium-unit')) el.textContent = displayUnit;
     for (const el of host.querySelectorAll('.podium-points, .leaderboard-points')) {
       const value = el.textContent.trim();
       if (!value) continue;
-      if (selected === 'gains' && !value.startsWith('+')) el.textContent = '+' + value + ' LVL';
+      if (selected === 'gains' && !value.startsWith('+')) el.textContent = '+' + value + ' EXP';
       if (selected === 'level' && !value.startsWith('LVL ')) el.textContent = 'LVL ' + value;
     }
   }
@@ -97,13 +126,19 @@
   };
   function showRanking(data) {
     const rows = Array.isArray(data?.[selected]) ? data[selected] : [];
+    if (selected === 'gains' && rows.some(row => row.monthlyExp == null || !Number.isFinite(Number(row.monthlyExp)))) {
+      renderLeaderboard({entries:[],updatedAt:data.updatedAt});
+      const warning = document.getElementById('leaderboardStatus');
+      if (warning) warning.textContent = 'GAINS EXP • BRAK DANYCH';
+      return;
+    }
     const convert = row => {
       const login = String(row.login || row.name || '').trim().toLowerCase();
       const display = String(row.name || '').trim().toLowerCase();
       const fallback = (typeof leaderboardMetadataByName !== 'undefined')
         ? (leaderboardMetadataByName.get(login) || leaderboardMetadataByName.get(display) || {}) : {};
       return {
-      ...row,points: selected === 'gains' ? Number(row.gains || 0)
+      ...row,points: selected === 'gains' ? Math.max(0,Number(row.monthlyExp))
         : selected === 'level' ? Number(row.level || 0) : Number(row.points || 0),
       isVip: fallback.isVip === true || row.isPermanentVip === true,
       isModerator: fallback.isModerator === true,
@@ -126,6 +161,7 @@
       const result=await response.json();
       if (!Array.isArray(result.gains)||!Array.isArray(result.level)||!Array.isArray(result.points)) throw new Error('ranking schema missing');
       lastRanking=result;
+      renderMilestone();
       if (selected!=='points') showRanking(result);
     } catch (error) {
       const label=document.getElementById('leaderboardStatus');
