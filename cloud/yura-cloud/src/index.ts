@@ -1205,13 +1205,12 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
 
   if (key === "jackpot") {
     const stakeRaw=parts[1];
-    const durationRaw=parts[2];
     const validStake=!!stakeRaw && /^\d+$/.test(stakeRaw)
       && Number.isSafeInteger(Number(stakeRaw)) && Number(stakeRaw)>=1 && Number(stakeRaw)<=1000000;
-    const validDuration=!durationRaw || (/^\d+$/.test(durationRaw)
-      && Number.isSafeInteger(Number(durationRaw)) && Number(durationRaw)>=5 && Number(durationRaw)<=3600);
-    if(!validStake || !validDuration || parts.length>3){
-      await sendChat(env,`🎰 @${display} użyj !jackpot <wpisowe> [sekundy], np. !jackpot 1000 60 (1–1 000 000 YURA, 5–3600 s).`);
+    // Length is configured in YURA Desktop and synced to Cloud. A second
+    // chat argument cannot change the streamer's configured duration.
+    if(!validStake || parts.length!==2){
+      await sendChat(env,`🎰 @${display} użyj !jackpot <wpisowe>, np. !jackpot 1000. Czas losowania ustawia streamer w aplikacji YURA.`);
       return;
     }
     const active=await getYuraRaffleState(env);
@@ -1238,7 +1237,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       return;
     }
     const configured=Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60))||60));
-    const duration=durationRaw ? Number(durationRaw) : configured;
+    const duration=configured;
     const endsAtUtc=new Date(Date.now()+duration*1000).toISOString();
     if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
     let newSession=0;
