@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=115">
+  <link rel="stylesheet" href="styles.css?v=116">
   <link rel="stylesheet" href="yura-ranking-tabs.css?v=114">
 </head>
 <body>
@@ -43,6 +43,7 @@
             
           </button>
           <button class="side-item" type="button" data-view="statistics">Staty</button>
+          <button class="side-item" type="button" data-view="pokemon">Pokémon</button>
         </nav>
   </header>
 
@@ -264,7 +265,6 @@
         <div class="stats-scope-tabs">
           <button class="stats-scope active" data-scope="all" aria-pressed="true">Wszyscy</button>
           <button class="stats-scope" data-scope="gamble" aria-pressed="false">Gamble all</button>
-          <button class="stats-scope" data-scope="pokemon" aria-pressed="false">Pokémony</button>
         </div>
         <label class="stats-search"><span aria-hidden="true">⌕</span>
           <input id="statsSearch" type="search" placeholder="Szukaj widza…" autocomplete="off"></label>
@@ -285,21 +285,74 @@
           <div class="stats-empty">Wczytywanie statystyk Y.U.R.A.…</div>
         </div>
       </div>
-      <section class="pokemon-collection" id="statsPokemonCollection" hidden>
-        <div class="pokemon-collection-heading">
-          <div><span class="eyebrow">Y.U.R.A. / POKÉDEX</span>
-            <h2>Kolekcja Pokémonów</h2>
-            <p>Pokémony przypisane do widzów przez komendy na czacie. Bez dodatkowego logowania.</p>
-          </div>
-          <span class="pokemon-collection-count" id="pokemonCollectionCount">—</span>
-        </div>
-        <div id="pokemonCollectionRows" class="pokemon-collection-grid" aria-live="polite">
-          <p class="stats-empty">Otwórz zakładkę Pokémony, aby załadować kolekcję.</p>
-        </div>
-        <button type="button" class="pokemon-collection-more" id="pokemonCollectionMore" hidden>Pokaż kolejne</button>
-        <p class="pokemon-collection-help"><strong>!pokemon</strong> — pierwszy Pokémon za darmo; <strong>!pokeroll</strong> — nowe losowanie za 5 000 Y.U.R.A. Points.</p>
-      </section>
       <p class="stats-coverage" id="statsCoverage">Dane pochodzą z zapisów Y.U.R.A. Cloud. Brakujące wartości pozostają puste.</p>
+    </section>
+
+    <section class="content view-panel pokemon-view" id="pokemonView" hidden>
+      <div class="hero pokemon-hero">
+        <div>
+          <div class="eyebrow">Y.U.R.A. / POKÉMON NETWORK</div>
+          <h1>Pokémon</h1>
+          <p>Pokédex społeczności i trenerzy, którzy zdobyli Pokémony na kanale.</p>
+        </div>
+        <div class="status-chip" id="pokemonStatus" role="status">OCZEKIWANIE NA CLOUD</div>
+      </div>
+
+      <div class="pokemon-toolbar">
+        <div class="pokemon-tabs" role="tablist" aria-label="Zakładki Pokémon">
+          <button class="pokemon-tab active" id="pokemonDexTab" type="button" role="tab"
+                  aria-selected="true" aria-controls="pokemonDexPanel" data-pokemon-mode="dex">Pokédex</button>
+          <button class="pokemon-tab" id="pokemonTrainersTab" type="button" role="tab"
+                  aria-selected="false" aria-controls="pokemonTrainersPanel" data-pokemon-mode="trainers">Pokémon Trainers</button>
+        </div>
+        <label class="pokemon-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="pokemonSearch" type="search" placeholder="Szukaj Pokémona lub numeru…" autocomplete="off" aria-label="Szukaj w Pokémonach">
+        </label>
+      </div>
+
+      <div class="pokemon-overview" aria-label="Podsumowanie kolekcji">
+        <div class="pokemon-overview-card">
+          <span>ODKRYTE GATUNKI</span>
+          <strong id="pokemonSpeciesCount">—</strong>
+        </div>
+        <div class="pokemon-overview-card">
+          <span>POKÉMON TRAINERS</span>
+          <strong id="pokemonTrainersCount">—</strong>
+        </div>
+      </div>
+
+      <section class="pokemon-panel" id="pokemonDexPanel" role="tabpanel" aria-labelledby="pokemonDexTab">
+        <div class="pokemon-panel-head">
+          <div>
+            <div class="eyebrow">POKÉDEX</div>
+            <h2>Odkryte Pokémony</h2>
+            <p>Gatunki aktualnie przypisane do widzów. Ten Pokédex nie oznacza pełnej listy wszystkich gatunków.</p>
+          </div>
+          <span class="pokemon-result-count" id="pokemonDexCount">—</span>
+        </div>
+        <div class="pokemon-dex-grid" id="pokemonDexGrid" aria-live="polite">
+          <p class="pokemon-empty">Otwórz Pokédex, aby pobrać dane z Y.U.R.A. Cloud.</p>
+        </div>
+        <button type="button" class="pokemon-more" id="pokemonDexMore" hidden>Pokaż kolejne</button>
+      </section>
+
+      <section class="pokemon-panel" id="pokemonTrainersPanel" role="tabpanel" aria-labelledby="pokemonTrainersTab" hidden>
+        <div class="pokemon-panel-head">
+          <div>
+            <div class="eyebrow">POKÉMON TRAINERS</div>
+            <h2>Trenerzy Y.U.R.A.</h2>
+            <p>Widzowie i ich aktualnie przypisane Pokémony.</p>
+          </div>
+          <span class="pokemon-result-count" id="pokemonTrainersResultCount">—</span>
+        </div>
+        <div class="pokemon-trainers-grid" id="pokemonTrainersGrid" aria-live="polite">
+          <p class="pokemon-empty">Wybierz Pokémon Trainers, aby zobaczyć trenerów.</p>
+        </div>
+        <button type="button" class="pokemon-more" id="pokemonTrainersMore" hidden>Pokaż kolejnych</button>
+      </section>
+
+      <p class="pokemon-info"><strong>!pokemon</strong> — pierwszy Pokémon za darmo. <strong>!pokeroll</strong> — nowe losowanie za 5 000 Y.U.R.A. Points. Strona wyświetla dane i nie zmienia przypisań.</p>
     </section>
 
     <section class="content view-panel" id="scheduleView" hidden>
@@ -419,11 +472,11 @@
   </footer>
 
   <!-- Core site logic: independent from analytics/counter -->
-  <script src="app.js?v=mobile110"></script>
+  <script src="app.js?v=mobile116"></script>
   <script src="yura-ranking-tabs.js?v=112"></script>
   <script src="gains-views.js?v=5"></script>
-  <script src="statistics.js?v=2"></script>
-  <script src="pokemon-collection.js?v=3"></script>
+  <script src="statistics.js?v=4"></script>
+  <script src="pokemon-collection.js?v=5"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
