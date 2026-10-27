@@ -9,9 +9,6 @@
   const sortControl=root.querySelector('#statsSort');
   const search=root.querySelector('#statsSearch');
   const tabs=Array.from(root.querySelectorAll('.stats-scope'));
-  const standardTable=root.querySelector('#statsViewerTable');
-  const pokemonCollection=root.querySelector('#statsPokemonCollection');
-  const sortWrap=root.querySelector('.stats-sort-label');
   const nf=new Intl.NumberFormat('pl-PL');
   let records=[],loaded=false,selected='all';
   let sort='messages';
@@ -32,7 +29,6 @@
     if(text!==undefined)el.textContent=String(text);return el;
   }
   function render(){
-    if(selected==='pokemon')return;
     const q=search.value.trim().toLocaleLowerCase('pl-PL');
     const matches=records.filter(row=>(selected==='all'||selected==='gamble'&&
       ((Number(row.gambleAllWins)||0)+(Number(row.gambleAllLosses)||0)>0))&&
@@ -59,26 +55,13 @@
   }
   tabs.forEach(button=>button.addEventListener('click',()=>{
     selected=button.dataset.scope;
-    const pokemonMode=selected==='pokemon';
-    if(standardTable)standardTable.hidden=pokemonMode;
-    if(pokemonCollection)pokemonCollection.hidden=!pokemonMode;
-    if(sortWrap)sortWrap.hidden=pokemonMode;
-    search.placeholder=pokemonMode?'Szukaj widza lub Pokémona…':'Szukaj widza…';
-    document.dispatchEvent(new CustomEvent('yura:pokemon-collection',{detail:{
-      active:pokemonMode,query:search.value
-    }}));
     for(const tab of tabs){
       tab.classList.toggle('active',tab===button);
       tab.setAttribute('aria-pressed',String(tab===button));
     }
     render();
   }));
-  search.addEventListener('input',()=>{
-    if(selected==='pokemon')document.dispatchEvent(new CustomEvent('yura:pokemon-collection',{
-      detail:{active:true,query:search.value}
-    }));
-    else render();
-  });
+  search.addEventListener('input',render);
   sortControl.addEventListener('change',()=>{sort=sortControl.value;render()});
   let pending=false;
   async function load(){
