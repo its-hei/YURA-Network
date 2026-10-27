@@ -22,12 +22,12 @@
   const status = root.querySelector('#pokemonStatus');
   const nf = new Intl.NumberFormat('pl-PL');
   const batchSize = 24;
-  const avatarCache = new Map();
-  const avatarPending = new Set();
   let entries = [], species = [], loadedAt = 0, inflight = null;
   let mode = 'dex', shownDex = 0, shownTrainers = 0;
   const norm = x => String(x ?? '').trim().toLocaleLowerCase('pl-PL');
   const fmt = n => nf.format(n);
+  const formatPokemonName = raw => String(raw ?? '').trim().replace(/-/g, ' ')
+    .replace(/(^|\s)(\p{L})/gu, (_, space, letter) => space + letter.toLocaleUpperCase('pl-PL'));
   const generation = id => {
     const n = Number(id);
     const ends = [151,251,386,493,649,721,809,905,1025];
@@ -45,7 +45,7 @@
     const id = Number(raw?.pokemonId);
     if (!Number.isInteger(id) || id < 1 || id > 1025) return null;
     return {
-      pokemonId:id, pokemonName:String(raw?.pokemonName || '').slice(0,80),
+      pokemonId:id, pokemonName:formatPokemonName(String(raw?.pokemonName || '').slice(0,80)),
       at:String(raw?.at || '').slice(0,40),
       type:String(raw?.type || '').slice(0,20),
       approximate:raw?.approximate === true
@@ -62,14 +62,6 @@
     const el = make('div', 'pokemon-empty', main);
     if (detail) el.append(make('p', '', detail));
     target.replaceChildren(el);
-  };
-  const safeAvatar = raw => {
-    if (!raw || typeof raw !== 'string') return '';
-    try {
-      const url = new URL(raw);
-      if (url.protocol !== 'https:' || !/(^|\.)(jtvnw\.net|twitchcdn\.net)$/.test(url.hostname.toLowerCase())) return '';
-      return url.href;
-    } catch { return ''; }
   };
   const artwork = item => {
     const picture = make('div', 'pokemon-artwork');
@@ -116,7 +108,7 @@
           login,
           name: String(row?.name || login).trim().slice(0, 64) || login,
           pokemonId: id,
-          pokemonName: String(row?.pokemonName || '').trim().slice(0, 80),
+          pokemonName: formatPokemonName(String(row?.pokemonName || '').trim().slice(0, 80)),
           joinOrder: Number.isInteger(Number(row?.joinOrder)) && Number(row?.joinOrder) > 0 ? Number(row.joinOrder) : null,
           joinedAt: String(row?.joinedAt || '').slice(0,40),
           joinEstimated: row?.joinEstimated === true,
@@ -135,21 +127,35 @@
             next.forEach(row => {
               if (row.pokemonName || !names.has(row.pokemonId)) return;
               const name = names.get(row.pokemonId).replace(/-/g, ' ');
-              row.pokemonName = name[0].toUpperCase() + name.slice(1);
+              row.pokemonName = formatPokemonName(name);
             });
           }
         } catch { /* Species IDs still remain available. */ }
       }
       next.sort((a, b) => a.pokemonId - b.pokemonId || a.name.localeCompare(b.name, 'pl'));
+      // Pokédex remembers every documented draw, including species no longer owned.
       const grouped = new Map();
-      for (const row of next) {
-        if (!grouped.has(row.pokemonId)) grouped.set(row.pokemonId, {
-          pokemonId: row.pokemonId, pokemonName: row.pokemonName,
-          trainers: []
+      const addSpecies = (id, name) => {
+        if (!Number.isInteger(id) || id < 1 || id > 1025) return null;
+        if (!grouped.has(id)) grouped.set(id, {
+          pokemonId:id, pokemonName:formatPokemonName(name), trainers:[]
         });
-        const item = grouped.get(row.pokemonId);
-        if (!item.pokemonName && row.pokemonName) item.pokemonName = row.pokemonName;
-        item.trainers.push({ login: row.login, name: row.name });
+        const record = grouped.get(id);
+        if (!record.pokemonName && name) record.pokemonName = formatPokemonName(name);
+        return record;
+      };
+      for (const row of next) {
+        addSpecies(row.pokemonId, row.pokemonName).trainers.push({
+          login:row.login, name:row.name
+        });
+        for (const old of row.history) addSpecies(old.pokemonId, old.pokemonName);
+      }
+      // New Cloud payload can include older discoveries that exceed the
+      // displayed per-trainer history limit.
+      if (Array.isArray(payload.discovered)) {
+        for (const old of payload.discovered) {
+          addSpecies(Number(old?.pokemonId), old?.pokemonName);
+        }
       }
       entries = next;
       species = [...grouped.values()].sort((a, b) => a.pokemonId - b.pokemonId);
@@ -175,128 +181,101 @@
     const body = make('div', 'pokemon-dex-card-body');
     const portrait = make('div', 'pokemon-dex-portrait');
     portrait.append(artwork(item));
-    portrait.append(make('span', 'pokemon-dex-trainers', fmt(item.trainers.length) +
-      (item.trainers.length === 1 ? ' trener' : ' trenerów')));
     const info = make('div', 'pokemon-dex-info');
-    info.append(make('strong', 'pokemon-species', item.pokemonName || 'Pokémon #' + item.pokemonId));
-    info.append(make('p', 'pokemon-dex-owners',
-      item.trainers.slice(0, 2).map(person => '@' + person.name).join(', ') +
+    info.append(make('strong', 'pokemon-species',
+      item.pokemonName || 'Pokémon #' + item.pokemonId));
+    if (item.trainers.length) info.append(make('p', 'pokemon-dex-owners',
+      item.trainers.slice(0,2).map(person => '@' + person.name).join(', ') +
       (item.trainers.length > 2 ? ' +' + (item.trainers.length - 2) : '')));
+    else card.classList.add('pokemon-dex-unowned');
+    const foot = make('div', 'pokemon-dex-footer');
+    foot.append(make('span', 'pokemon-dex-trainers', 'Trenerów: ' + fmt(item.trainers.length)));
     body.append(portrait, info);
-    card.append(head, body);
+    card.append(head, body, foot);
     return card;
   };
 
   const trainerHistory = item => {
     const block = make('section', 'pokemon-trainer-history');
+    // The current Pokémon is already present in the collapsed card; the
+    // expanded list should show past draws, even if a species repeats.
+    const previous = item.history.filter((record, index, all) =>
+      !(index === all.length - 1 && record.pokemonId === item.pokemonId));
+    const records = [...previous].reverse();
     const title = make('div', 'pokemon-trainer-history-head');
-    title.append(make('span', '', 'HISTORIA POKÉMONÓW'));
-    title.append(make('span', '', fmt(item.history.length) + (item.history.length === 1 ? ' LOSOWANIE' : ' LOSOWAŃ')));
+    title.append(make('span', '', 'POPRZEDNIE POKÉMONY'));
+    title.append(make('span', '', fmt(records.length)));
     block.append(title);
     const list = make('div', 'pokemon-trainer-history-list');
-    const records = [...item.history].reverse(); // newest first, retain repeated draws
-    const createChip = (record, idx) => {
-      const chip = make('span', 'pokemon-trainer-history-chip' +
-        (record.pokemonId === item.pokemonId && idx === 0 ? ' current' : ''));
+    const createChip = record => {
+      const chip = make('span', 'pokemon-trainer-history-chip');
       chip.append(
         make('small', '', '#' + String(record.pokemonId).padStart(4,'0')),
         make('span', '', record.pokemonName || 'Pokémon #' + record.pokemonId),
         make('small', '', generation(record.pokemonId).label)
       );
-      const at = formatDate(record.at);
-      chip.title = [at, generation(record.pokemonId).region,
+      chip.title = [formatDate(record.at), generation(record.pokemonId).region,
         record.type === 'first' ? 'Pierwsze przypisanie' :
-        record.type === 'purchase' ? 'Starsze płatne losowanie' : 'Ponowne losowanie',
+        record.type === 'purchase' ? 'Starsze płatne losowanie' : 'Losowanie',
         record.approximate ? 'Dane historyczne (niepełne)' : ''].filter(Boolean).join(' · ');
       return chip;
     };
     if (records.length) {
-      const visible = records.slice(0,4);
-      list.append(...visible.map(createChip));
-      if (records.length > visible.length) {
-        const btn = make('button', 'pokemon-history-more',
-          'Pokaż całą historię (+' + fmt(records.length - visible.length) + ')');
-        btn.type = 'button';
-        btn.setAttribute('aria-expanded','false');
-        btn.addEventListener('click', () => {
-          const expanded = btn.getAttribute('aria-expanded') === 'true';
-          list.replaceChildren(...(expanded ? visible : records).map(createChip));
-          btn.setAttribute('aria-expanded',String(!expanded));
-          btn.textContent = expanded ? 'Pokaż mniej' : 'Zwiń historię';
+      const shown = records.slice(0, 8);
+      list.append(...shown.map(createChip));
+      if (records.length > shown.length) {
+        const button = make('button', 'pokemon-history-more',
+          'Pokaż wszystkie (+' + fmt(records.length - shown.length) + ')');
+        button.type = 'button';
+        button.setAttribute('aria-expanded','false');
+        button.addEventListener('click', () => {
+          const expand = button.getAttribute('aria-expanded') !== 'true';
+          list.replaceChildren(...(expand ? records : shown).map(createChip));
+          button.setAttribute('aria-expanded', String(expand));
+          button.textContent = expand ? 'Pokaż mniej' :
+            'Pokaż wszystkie (+' + fmt(records.length - shown.length) + ')';
         });
-        block.append(list,btn);
+        block.append(list,button);
       } else block.append(list);
     } else {
-      block.append(make('div', 'pokemon-trainer-history-note', 'Brak zapisanych losowań.'));
+      block.append(make('div', 'pokemon-trainer-history-note', 'Brak wcześniejszych zapisów.'));
     }
     if (item.joinEstimated)
       block.append(make('small','pokemon-trainer-history-note',
-        'Starsze daty i pierwsze losowania mogą być niepełne.'));
+        'Historia sprzed włączenia zapisu losowań może być niepełna.'));
     return block;
   };
 
   const trainerCard = item => {
-    const card = make('article', 'pokemon-trainer-card');
+    const card = make('details', 'pokemon-trainer-card');
+    const summary = make('summary', 'pokemon-trainer-summary');
     const user = make('div', 'pokemon-trainer-user');
-    const avatar = make('div', 'pokemon-trainer-avatar', item.name.charAt(0).toUpperCase());
-    avatar.dataset.trainerAvatar = item.login;
+    const badge = make('div', 'pokemon-trainer-avatar',
+      item.joinOrder ? '#' + fmt(item.joinOrder) : '?');
+    const date = formatDate(item.joinedAt);
+    badge.title = item.joinEstimated
+      ? 'Kolejność oszacowana z zachowanych danych' + (date ? ' · ' + date : '')
+      : 'Dołączył do kolekcji' + (date ? ' · ' + date : '');
     const who = make('div', 'pokemon-trainer-person');
     who.append(make('strong', '', item.name), make('span', '', '@' + item.login));
-    if (item.joinOrder) {
-      const join = make('span', 'pokemon-trainer-join',
-        'TRENER #' + fmt(item.joinOrder) + (item.joinEstimated ? '*' : ''));
-      const date = formatDate(item.joinedAt);
-      join.title = item.joinEstimated
-        ? 'Kolejność oszacowana na podstawie zachowanych danych' + (date ? ' · ' + date : '')
-        : 'Dołączył ' + (date || 'do kolekcji');
-      who.append(join);
-    }
     const gen = generation(item.pokemonId);
     const genChip = make('span', 'pokemon-gen', gen.label);
     genChip.title = gen.region;
-    user.append(avatar, who, genChip);
+    user.append(badge, who, genChip);
     const assigned = make('div', 'pokemon-trainer-assigned');
     assigned.append(artwork(item));
     const data = make('div', 'pokemon-trainer-pokemon');
     data.append(
-      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
+      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4,'0')),
       make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId)
     );
     assigned.append(data);
-    card.append(user, assigned, trainerHistory(item));
+    summary.append(user, assigned);
+    const details = make('div', 'pokemon-trainer-details');
+    details.append(trainerHistory(item));
+    card.append(summary, details);
     return card;
   };
-
-  function updateAvatars() {
-    root.querySelectorAll('[data-trainer-avatar]').forEach(el => {
-      const url = safeAvatar(avatarCache.get(el.dataset.trainerAvatar));
-      if (!url || el.querySelector('img')) return;
-      const img = document.createElement('img');
-      img.src = url;
-      img.loading = 'lazy';
-      img.alt = '';
-      img.onerror = () => img.remove();
-      el.append(img);
-    });
-  }
-
-  async function fetchAvatars(logins) {
-    const unique = [...new Set(logins)].filter(login => !avatarCache.has(login) && !avatarPending.has(login));
-    for (let i = 0; i < unique.length; i += 20) {
-      const group = unique.slice(i, i + 20);
-      group.forEach(login => avatarPending.add(login));
-      try {
-        const r = await fetch(cloud + '/api/avatars?logins=' + encodeURIComponent(group.join(',')),
-          { cache: 'default' });
-        if (!r.ok) throw new Error('Avatar lookup unavailable');
-        const data = await r.json();
-        group.forEach(login => avatarCache.set(login, safeAvatar(data?.avatars?.[login])));
-        if (visible() && mode === 'trainers') updateAvatars();
-      } catch {
-        group.forEach(login => avatarCache.set(login, ''));
-      } finally { group.forEach(login => avatarPending.delete(login)); }
-    }
-  }
 
   function renderDex(more = false) {
     const term = query();
@@ -337,8 +316,6 @@
     trainersMore.hidden = shownTrainers >= results.length;
     trainersMore.textContent = 'Pokaż kolejnych (' +
       fmt(Math.min(batchSize, results.length - shownTrainers)) + ')';
-    updateAvatars();
-    void fetchAvatars(next.map(person => person.login));
   }
 
   function render() {
