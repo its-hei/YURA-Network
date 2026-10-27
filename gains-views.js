@@ -309,4 +309,139 @@
   document.addEventListener('yura:ranking-data',event=>acceptData(event.detail));
   if (window.yuraGainsLastDetail) acceptData(window.yuraGainsLastDetail);
   else { syncVisibility(); render(); }
+
+  /* LEVELS & POINTS use the same GAINS #1 showcase and TOP 10 table.
+     A dedicated information panel replaces the old #2/#3 stack. */
+  const alternateTable=document.createElement('section');
+  alternateTable.id='rankingUnifiedTable';
+  alternateTable.className='gains-table-panel ranking-unified-table';
+  alternateTable.setAttribute('aria-label','Pełna tabela TOP 10 LEVELS lub POINTS');
+  alternateTable.hidden=true;
+  alternateTable.innerHTML=
+    '<div class="gains-table-toolbar"><div class="gains-table-tabs">'+
+      '<span class="ranking-unified-title" id="rankingUnifiedTitle">TOP 10 LEVELS</span></div>'+
+      '<span class="gains-table-sort" id="rankingUnifiedSort">↓ Poziom malejąco</span></div>'+
+    '<div class="gains-table-columns"><span>#</span><span>UŻYTKOWNIK</span>'+
+      '<span id="rankingUnifiedHead">POZIOM</span></div>'+
+    '<div class="gains-table-list" id="rankingUnifiedRows" aria-live="polite"></div>';
+  mainCol.prepend(alternateTable);
+  const contextCard=document.createElement('aside');
+  contextCard.id='rankingUnifiedInfo';
+  contextCard.className='gains-last-winner-card ranking-unified-info';
+  contextCard.setAttribute('aria-label','Informacje o rankingu LEVELS i POINTS');
+  contextCard.hidden=true;
+  contextCard.innerHTML=
+    '<div class="ranking-unified-info-top">'+
+      '<span class="ranking-unified-info-kicker" id="rankingInfoKicker">O RANKINGU</span>'+
+      '<strong class="ranking-unified-info-heading" id="rankingInfoHeading">Jak działa ranking?</strong>'+
+      '<p class="ranking-unified-info-copy" id="rankingInfoCopy"></p>'+
+    '</div>'+
+    '<div class="ranking-unified-info-bottom">'+
+      '<span class="gains-last-winner-label" id="rankingInfoMetricTitle">WYNIK</span>'+
+      '<strong class="gains-last-winner-points" id="rankingInfoMetric">—</strong>'+
+      '<span class="gains-last-winner-detail" id="rankingInfoDetail"></span>'+
+    '</div>';
+  topSide?.after(contextCard);
+  const alternateList=alternateTable.querySelector('#rankingUnifiedRows');
+  const alternateTitle=alternateTable.querySelector('#rankingUnifiedTitle');
+  const alternateSort=alternateTable.querySelector('#rankingUnifiedSort');
+  const alternateHead=alternateTable.querySelector('#rankingUnifiedHead');
+  let alternateMode='level';
+  let alternateRows=[];
+  const numberFor = (row, mode) => mode==='level'
+    ? Math.max(0,Math.trunc(Number(row.level ?? row.points)||0))
+    : Math.max(0,Math.trunc(Number(row.points)||0));
+  function makeAlternateRow(row,rank,mode){
+    const el=document.createElement('div');
+    el.className='gains-board-row'+(rank===1?' leader':'');
+    el.dataset.rank=String(rank);
+    el.dataset.name=display(row);
+    const place=document.createElement('span');
+    place.className='gains-board-position';
+    place.textContent=String(rank).padStart(2,'0');
+    const person=document.createElement('span');
+    person.className='gains-board-person';
+    const name=document.createElement('strong');
+    name.textContent=display(row);
+    person.append(name);
+    const value=document.createElement('span');
+    value.className='gains-board-value';
+    const strong=document.createElement('strong');
+    strong.textContent=(mode==='level'?'LVL ':'')+fmt.format(numberFor(row,mode));
+    const unit=document.createElement('small');
+    unit.textContent=mode==='level'?'POZIOM':'Y.U.R.A. POINTS';
+    value.append(strong,unit);
+    el.append(place,makeImage(row),person,value);
+    return el;
+  }
+  function renderAlternateInfo(mode,all,ten){
+    const set=(id,value)=>{const el=contextCard.querySelector('#'+id);if(el)el.textContent=value;};
+    const leader=all[0];
+    if(mode==='level'){
+      set('rankingInfoKicker','LEVELS • INFORMACJE');
+      set('rankingInfoHeading','Poziom aktywności');
+      set('rankingInfoCopy','LEVELS pokazuje łączny poziom osiągnięty przez widza od początku aktywności na kanale. W przeciwieństwie do GAINS nie resetuje się co miesiąc.');
+      set('rankingInfoMetricTitle','EXP LIDERA');
+      set('rankingInfoMetric',leader&&Number.isFinite(Number(leader.exp))?fmt.format(Math.max(0,Number(leader.exp)))+' EXP':'—');
+      set('rankingInfoDetail',fmt.format(all.length)+' widzów w rankingu · postęp całkowity.');
+    }else{
+      set('rankingInfoKicker','POINTS • INFORMACJE');
+      set('rankingInfoHeading','Punkty społeczności');
+      set('rankingInfoCopy','POINTS to aktualne saldo Y.U.R.A. Points. Możesz je zdobywać za aktywność, a także wykorzystywać w zabawach na kanale.');
+      set('rankingInfoMetricTitle','SALDO W TOP 10');
+      set('rankingInfoMetric',fmt.format(ten.reduce((sum,item)=>sum+numberFor(item,mode),0)));
+      set('rankingInfoDetail','Permanentny VIP jest dostępny poprzez !gamble all. Liczby mogą się zmieniać po każdej transakcji.');
+    }
+  }
+  function renderAlternate(){
+    const mode=alternateMode;
+    const isLevel=mode==='level';
+    const ten=alternateRows.slice(0,10);
+    alternateTitle.textContent='TOP 10 '+(isLevel?'LEVELS':'POINTS');
+    alternateSort.textContent=isLevel?'↓ Poziom malejąco':'↓ Saldo malejąco';
+    alternateHead.textContent=isLevel?'POZIOM':'PUNKTY';
+    const term=(search?.value||'').trim().toLocaleLowerCase('pl-PL');
+    const rows=term?ten.filter(row=>display(row).toLocaleLowerCase('pl-PL').includes(term)):ten;
+    if(rows.length){
+      alternateList.replaceChildren(...rows.map(row=>makeAlternateRow(row,ten.indexOf(row)+1,mode)));
+    }else{
+      const empty=document.createElement('div');
+      empty.className='gains-table-empty';
+      const label=document.createElement('strong');
+      label.textContent=term?'Nie znaleziono widza':'Brak wyników '+(isLevel?'LEVELS':'POINTS');
+      const desc=document.createElement('p');
+      desc.textContent=term?'Sprawdź nazwę lub wyczyść wyszukiwanie.':'Ranking pojawi się po synchronizacji z YURA Cloud.';
+      empty.append(label,desc);
+      alternateList.replaceChildren(empty);
+    }
+    renderAlternateInfo(mode,alternateRows,ten);
+  }
+  function syncAlternate(){
+    const mode=host.querySelector('.yura-ranking-tab.active')?.dataset.rankMode||'gains';
+    const active=mode==='level'||mode==='points';
+    alternateTable.hidden=!active;
+    contextCard.hidden=!active;
+    host.classList.toggle('ranking-unified-active',active);
+    if(active){alternateMode=mode;renderAlternate();}
+  }
+  search?.addEventListener('input',()=>{
+    const mode=host.querySelector('.yura-ranking-tab.active')?.dataset.rankMode;
+    if(mode==='level'||mode==='points')renderAlternate();
+  });
+  document.addEventListener('yura:ranking-data',event=>{
+    const detail=event.detail;
+    if(detail?.mode!=='level'&&detail?.mode!=='points')return;
+    alternateMode=detail.mode;
+    // Cloud /api/ranking already supplies the authoritative order (incl. tie-breaks).
+    alternateRows=Array.isArray(detail.rows)?detail.rows.filter(x=>
+      x&&(x.login||x.name)&&Number.isFinite(Number(x.points))):[];
+    renderAlternate();
+    syncAlternate();
+  });
+  document.addEventListener('yura:ranking-mode',syncAlternate);
+  if(window.yuraGainsLastDetail?.mode==='level'||window.yuraGainsLastDetail?.mode==='points'){
+    alternateMode=window.yuraGainsLastDetail.mode;
+    alternateRows=window.yuraGainsLastDetail.rows||[];
+  }
+  syncAlternate();
 })();
