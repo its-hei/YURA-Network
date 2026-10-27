@@ -918,6 +918,24 @@ async function randomPokemon(excludeId?:number):Promise<{id:number,name:string}|
   }
   return null;
 }
+// Followers-only participation in Pokémon, verified server-side before any D1 write.
+// Twitch OAuth/API errors fail closed; no assignments and no charges.
+async function pokemonFollowerAccess(env:Env,event:TwitchChatEvent):Promise<'allowed'|'not-following'|'unavailable'> {
+  const id=String(event.chatter_user_id||'').trim();
+  if(!/^\d+$/.test(id))return 'unavailable';
+  if(id===String(env.TWITCH_BROADCASTER_ID||''))return 'allowed';
+  try {
+    const url=new URL('https://api.twitch.tv/helix/channels/followers');
+    url.searchParams.set('broadcaster_id',String(env.TWITCH_BROADCASTER_ID));
+    url.searchParams.set('user_id',id);
+    url.searchParams.set('first','1');
+    const res=await twitchApi(env,url.toString(),{},'broadcaster');
+    if(!res.ok)return 'unavailable';
+    const body:any=await res.json();
+    if(!Array.isArray(body?.data))return 'unavailable';
+    return body.data.some((r:any)=>String(r?.user_id||'')===id)?'allowed':'not-following';
+  }catch{return 'unavailable';}
+}
 async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<{id:number,name:string,created:boolean}|null> {
   const id=String(event.chatter_user_id||'');
   const login=norm(event.chatter_user_login);
@@ -932,11 +950,18 @@ async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<
   }
   const chosen=await randomPokemon();
   if(!chosen)return null;
+  const joinedAt=nowIso();
   const insert=await env.DB.prepare(`INSERT OR IGNORE INTO pokemon_profiles
     (twitch_user_id,login,avatar_mode,pokemon_id,pokemon_name,updated_at_utc)
     VALUES(?1,?2,'pokemon',?3,?4,?5)`)
-    .bind(id,login,chosen.id,chosen.name,nowIso()).run();
-  if(Number(insert.meta?.changes||0)===1)return {...chosen,created:true};
+    .bind(id,login,chosen.id,chosen.name,joinedAt).run();
+  if(Number(insert.meta?.changes||0)===1) {
+    await env.DB.prepare(`INSERT OR IGNORE INTO pokemon_first_assignments
+      (twitch_user_id,login,pokemon_id,pokemon_name,joined_at_utc,estimated)
+      VALUES(?1,?2,?3,?4,?5,0)`)
+      .bind(id,login,chosen.id,chosen.name,joinedAt).run();
+    return {...chosen,created:true};
+  }
   // Concurrent first message: return whichever Pokémon was actually persisted.
   const actual=await env.DB.prepare('SELECT pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1')
     .bind(id).first<any>();
@@ -1205,6 +1230,17 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const row = await getAccount(env, target);
     await sendChat(env, `@${display} ${target}: ${(row?.points ?? 0).toLocaleString("pl-PL")} YURA.`);
     return;
+  }
+  if (key === "pokemon" || key === "pokeroll") {
+    const access=await pokemonFollowerAccess(env,event);
+    if(access==='not-following'){
+      await sendChat(env,`@${display} udział w Pokémon jest tylko dla obserwujących kanał. Kliknij Follow na Twitchu i spróbuj ponownie.`);
+      return;
+    }
+    if(access==='unavailable'){
+      await sendChat(env,`@${display} nie mogę teraz potwierdzić follow na Twitchu. Spróbuj ponownie później — nic nie zostało wylosowane ani pobrane.`);
+      return;
+    }
   }
   if (key === "pokemon") {
     if(parts.length!==1) {
@@ -2638,25 +2674,76 @@ async function loadChannelRoles(env:Env) {
   return loaded;
 }
 
-// Public, read-only Pokémon collection. Chat commands are the only way to
-// assign or reroll a Pokémon; this endpoint has no mutation permissions.
+// Public Pokémon collection with join order and immutable reroll/purchase history.
+// First-assignment dates for legacy users are explicitly marked as estimates.
 async function apiPokemonCollection(env:Env):Promise<Response> {
-  const rows=await env.DB.prepare(`SELECT p.login,
+  const rows=await env.DB.prepare(`SELECT p.twitch_user_id,p.login,
       COALESCE(NULLIF(a.display_name,''),p.login) AS display_name,
-      p.pokemon_id,p.pokemon_name,p.avatar_mode,p.updated_at_utc
+      p.pokemon_id,p.pokemon_name,p.updated_at_utc,
+      j.pokemon_id AS first_pokemon_id,j.pokemon_name AS first_pokemon_name,
+      j.joined_at_utc,j.estimated AS join_estimated
     FROM pokemon_profiles p
+    INNER JOIN pokemon_first_assignments j ON j.twitch_user_id=p.twitch_user_id
     LEFT JOIN accounts a ON a.twitch_user_id=p.twitch_user_id
     WHERE p.pokemon_id BETWEEN 1 AND 1025
-    ORDER BY p.updated_at_utc DESC,p.login COLLATE NOCASE ASC
+    ORDER BY j.joined_at_utc ASC,p.twitch_user_id ASC
     LIMIT 1000`).all<any>();
-  const items=(rows.results||[]).filter((r:any)=>
+  const valid=(rows.results||[]).filter((r:any)=>
     /^[a-z0-9_]{2,25}$/.test(norm(String(r.login||''))) &&
-    !knownBotLogin(String(r.login||''))).map((r:any)=>({
-    login:norm(String(r.login)),name:String(r.display_name||r.login),
-    pokemonId:Number(r.pokemon_id),pokemonName:String(r.pokemon_name||''),
-    updatedAt:String(r.updated_at_utc||'')
-  }));
-  return json({schemaVersion:1,source:'YURA Cloud',updatedAt:nowIso(),
+    !knownBotLogin(String(r.login||'')));
+  const histories=new Map<string,any[]>();
+  const byId=new Map<string,any>();
+  const items=valid.map((r:any,index:number)=>{
+    const id=String(r.twitch_user_id||'');
+    const estimated=Number(r.join_estimated||0)!==0;
+    const entry:any={
+      login:norm(String(r.login)),name:String(r.display_name||r.login),
+      pokemonId:Number(r.pokemon_id),pokemonName:String(r.pokemon_name||''),
+      updatedAt:String(r.updated_at_utc||''),
+      joinedAt:String(r.joined_at_utc||''),
+      joinOrder:index+1,joinEstimated:estimated,history:[] as any[]
+    };
+    byId.set(id,entry);
+    const history:any[]=[];
+    if(!estimated){
+      history.push({pokemonId:Number(r.first_pokemon_id),
+        pokemonName:String(r.first_pokemon_name||''),at:String(r.joined_at_utc||''),
+        type:'first',approximate:false});
+    }
+    histories.set(id,history);
+    return entry;
+  });
+  if(items.length){
+    // No event IDs, charges, OAuth tokens or user IDs enter the public payload.
+    const events=await env.DB.prepare(`SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,event_type
+      FROM (
+        SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
+          'reroll' AS event_type FROM pokemon_rerolls
+        UNION ALL
+        SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
+          'purchase' AS event_type FROM pokemon_purchases
+      )
+      ORDER BY created_at_utc ASC,event_type ASC
+      LIMIT 10000`).all<any>();
+    for(const r of events.results||[]){
+      const h=histories.get(String(r.twitch_user_id||''));
+      const pokemonId=Number(r.pokemon_id);
+      if(!h || !Number.isInteger(pokemonId) || pokemonId<1 || pokemonId>1025)continue;
+      h.push({pokemonId,pokemonName:String(r.pokemon_name||''),
+        at:String(r.created_at_utc||''),type:String(r.event_type||'reroll'),
+        approximate:false});
+    }
+    for(const [id,entry] of byId){
+      const history=histories.get(id)||[];
+      const last=history[history.length-1];
+      if(!last || last.pokemonId!==entry.pokemonId){
+        history.push({pokemonId:entry.pokemonId,pokemonName:entry.pokemonName,
+          at:entry.updatedAt,type:'snapshot',approximate:true});
+      }
+      entry.history=history.slice(-60);
+    }
+  }
+  return json({schemaVersion:2,source:'YURA Cloud',updatedAt:nowIso(),
     count:items.length,entries:items});
 }
 
