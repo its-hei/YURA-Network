@@ -269,6 +269,7 @@ const leaderboardEmpty = document.getElementById("leaderboardEmpty");
 const aboutView = document.getElementById("aboutView");
 const scheduleView = document.getElementById("scheduleView");
 const statisticsView = document.getElementById("statisticsView");
+const pokemonView = document.getElementById("pokemonView");
 const changelogView = document.getElementById("changelogView");
 const streamMapView = document.getElementById("streamMapView");
 const changelogList = document.getElementById("changelogList");
@@ -839,6 +840,8 @@ function switchView(view) {
   scheduleView.hidden = view !== "schedule";
   if (statisticsView) statisticsView.hidden = view !== "statistics";
   if (view === "statistics") document.dispatchEvent(new CustomEvent("yura:statistics-open"));
+  if (pokemonView) pokemonView.hidden = view !== "pokemon";
+  if (view === "pokemon") document.dispatchEvent(new CustomEvent("yura:pokemon-open"));
   changelogView.hidden = view !== "changelog";
   streamMapView.hidden = view !== "streammap";
 
@@ -2133,7 +2136,7 @@ function yuraRestorePublicDeepLink() {
     window.setTimeout(() => {
       document.querySelector('.yura-ranking-tab[data-rank-mode="level"]')?.click();
     }, 0);
-  } else if (["about", "commands", "leaderboard", "statistics", "schedule", "changelog"].includes(route)) {
+  } else if (["about", "commands", "leaderboard", "statistics", "schedule", "pokemon", "changelog"].includes(route)) {
     switchView(route);
   } else {
     // New visitors land on About, including browser history navigation to /.
