@@ -1432,73 +1432,58 @@ function yuraScheduleModernCardHtml(day, now) {
   const isToday = day.key === now.dateKey;
   const minutes = now.hour * 60 + now.minute;
   const liveNow = isToday && day.enabled && minutes >= day.start && minutes < day.end;
-  const weekend = day.dayIndex === 5 || day.dayIndex === 6;
   const classes = ["schedule-calendar-card"];
   if (!day.enabled) classes.push("off");
   if (isToday) classes.push("today");
   if (liveNow) classes.push("live-now");
-  if (day.offset < 7) classes.push("near");
-  const artAttr = day.enabled ? yuraScheduleEscape(day.artUrl) : "";
-  const note = yuraScheduleEscape(day.note);
-
-  if (!day.enabled) {
-    return `<article class="${classes.join(" ")}"><div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-off-center"><strong>OFF</strong><span>Brak streama</span></div></article>`;
-  }
-
-  // Work-shift labels are internal operator data and never appear on the public schedule.
-  let status = weekend ? "WEEKEND" : "";
-  let badgeClass = weekend ? " weekend" : "";
-  if (isToday) { status = "DZISIAJ"; badgeClass = ""; }
-  if (day.overridden) status = "BONUS";
-  if (day.special) status = "SPECIAL";
-  if (liveNow) { status = "LIVE"; badgeClass = " live"; }
-  const badge = status ? `<span class="schedule-calendar-badge${badgeClass}">${yuraScheduleEscape(status)}</span>` : "";
-  const color = yuraScheduleCategoryColor(day.category);
-  const startText = yuraScheduleEscape(yuraScheduleFormatMinutes(day.start));
-  const endText = yuraScheduleEscape(yuraScheduleFormatMinutes(day.end));
-  const timeHtml = `<span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}"><strong>${startText}<span class="schedule-calendar-time-sep">&ndash;</span>${endText}</strong></span>`;
-  return `<article class="${classes.join(" ")}" style="--cat:${color}"><div class="schedule-calendar-card-top">${liveNow ? `<span class="schedule-calendar-live-frame">LIVE</span>` : ""}<span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div><div class="schedule-calendar-art" data-schedule-art="${artAttr}"></div><div class="schedule-calendar-card-bottom">${timeHtml}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong>${badge}${note ? `<span class="schedule-calendar-note">${note}</span>` : ""}</div></article>`;
+  const heading = `<div class="schedule-calendar-card-top"><span class="schedule-calendar-day">${YURA_SCHEDULE_DAY_NAMES[day.dayIndex]}</span><span class="schedule-calendar-date">${yuraScheduleFormatShortDate(day.dayUtc)}</span></div>`;
+  if (!day.enabled) return `<article class="${classes.join(" ")}">${heading}<div class="schedule-calendar-off-center"><strong>Wolne</strong><span>Bez transmisji</span></div></article>`;
+  const usualDay = yuraScheduleConfig.weeklyRules?.[String(day.dayIndex)]?.enabled !== false;
+  const status = liveNow ? "LIVE" : isToday ? "DZISIAJ" : day.special ? "SPECJALNY" : day.overridden && !usualDay ? "BONUS" : "";
+  const badge = status ? `<span class="schedule-calendar-badge${liveNow ? " live" : ""}">${status}</span>` : "";
+  const note = day.note ? `<span class="schedule-calendar-note" title="${yuraScheduleEscape(day.note)}">${yuraScheduleEscape(day.note)}</span>` : "";
+  const flags = badge || note ? `<div class="schedule-calendar-card-flags">${badge}${note}</div>` : "";
+  const start = yuraScheduleEscape(yuraScheduleFormatMinutes(day.start));
+  const end = yuraScheduleEscape(yuraScheduleFormatMinutes(day.end));
+  const time = `<span class="schedule-calendar-time ${liveNow ? "schedule-live-now" : ""}"><strong>${start}<span class="schedule-calendar-time-sep">–</span>${end}</strong></span>`;
+  return `<article class="${classes.join(" ")}" style="--cat:${yuraScheduleCategoryColor(day.category)}">${heading}<div class="schedule-calendar-card-bottom">${time}<strong class="schedule-calendar-category">${yuraScheduleEscape(day.category)}</strong>${flags}</div></article>`;
 }
 
 function yuraScheduleModernWeekHtml(weekDays, now, weekIndex) {
-  const start = weekDays[0];
-  const end = weekDays[weekDays.length - 1];
-  const open = weekIndex === 0 ? " open" : "";
-  const featured = weekIndex === 0 ? " featured" : "";
-  const enabledCount = weekDays.filter(day => day.enabled).length;
-  const offCount = weekDays.length - enabledCount;
-  const subtitle = weekIndex === 0 ? "Najbli\u017Csze 5 dni widoczne od razu" : "Kliknij, aby rozwin\u0105\u0107 kolejne dni";
-  return `<details class="schedule-calendar-week${featured}"${open}><summary><div class="schedule-calendar-week-title"><span>BLOK ${weekIndex + 1} // ${weekDays.length} DNI</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} \u2014 ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${enabledCount} stream\u00F3w \u2022 ${offCount} OFF \u2022 ${subtitle}</em></div><div class="schedule-calendar-week-toggle">${weekIndex === 0 ? "otwarty domy\u015Blnie" : "rozwi\u0144 / zwi\u0144"}</div></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleModernCardHtml(day, now)).join("")}</div></div></details>`;
+  const start = weekDays[0], end = weekDays[weekDays.length - 1];
+  const onCount = weekDays.filter(day => day.enabled).length;
+  const offCount = weekDays.length - onCount;
+  const label = weekIndex === 0 ? "NAJBLIŻSZE DNI" : "KOLEJNE DNI";
+  const unit = onCount === 1 ? "transmisja" : onCount >= 2 && onCount <= 4 ? "transmisje" : "transmisji";
+  return `<details class="schedule-calendar-week${weekIndex === 0 ? " featured" : ""}"${weekIndex === 0 ? " open" : ""}><summary><div class="schedule-calendar-week-title"><span>${label} · ${String(weekIndex * 5 + 1).padStart(2, "0")}–${String(weekIndex * 5 + weekDays.length).padStart(2, "0")}</span><strong>${yuraScheduleFormatLongDate(start.dayUtc)} — ${yuraScheduleFormatLongDate(end.dayUtc)}</strong><em>${onCount} ${unit}${offCount ? ` · ${offCount} wolne` : ""}</em></div><span class="schedule-calendar-week-toggle">${weekIndex === 0 ? "Zwiń" : "Rozwiń"}</span></summary><div class="schedule-calendar-week-body"><div class="schedule-calendar-grid">${weekDays.map(day => yuraScheduleModernCardHtml(day, now)).join("")}</div></div></details>`;
 }
 
 function renderYuraLiveScheduleModern() {
   const host = document.getElementById("scheduleView");
   if (!host) return;
-  
   const now = yuraScheduleWarsawNowParts();
   const days = yuraScheduleBuildDays(now);
   const next = days.find(day => day.enabled && (day.offset > 0 || now.hour * 60 + now.minute < day.end));
-  const nextLabel = next ? `${next.offset === 0 ? "DZI\u015A" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} \u2022 ${next.label} \u2022 ${next.category}` : "\u2014";
-  const updated = String(yuraScheduleConfig.updatedAt || "").trim();
-  let updatedLabel = "AUTO CONFIG";
-  if (updated) {
-    const stamp = new Date(updated);
-    if (!Number.isNaN(stamp.getTime())) updatedLabel = `CONFIG \u2022 ${stamp.toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}`;
-  }
+  const nextLabel = next ? `${next.offset === 0 ? "DZIŚ" : YURA_SCHEDULE_DAY_NAMES[next.dayIndex]} · ${next.label} · ${next.category}` : "Brak zaplanowanych transmisji";
   const weeks = Array.from({ length: 5 }, (_, index) => days.slice(index * 5, index * 5 + 5));
-  const layoutName = String(yuraScheduleConfig.publicLayout || "MODERN").trim().toUpperCase() === "SLIM" ? "SLIM" : "MODERN";
-
+  const expanded = new Set(Array.from(host.querySelectorAll(".schedule-calendar-week[open]")).map(el => el.dataset.block).filter(Boolean));
+  const hadBlocks = host.querySelector(".schedule-calendar-week") !== null;
   host.innerHTML = `
     <section class="schedule-showcase">
-      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK // LIVE SCHEDULE</div><h1>Grafik</h1><p>Najbli\u017Csze 25 dni w wi\u0119kszych kartach po 5 dni na panel. Pierwszy blok jest pokazany od razu, kolejne mo\u017Cesz rozwin\u0105\u0107.</p></div><div class="status-chip">LIVE SCHEDULE</div></div>
-      <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>NAJBLI\u017BSZY STREAM<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
-      <div class="schedule-calendar-head"><div><span>STREAM CALENDAR // 25 DAYS</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} \u2014 ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">AUTO-UPDATE \u2022 EUROPE/WARSAW</div></div>
+      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK / GRAFIK</div><h1>Grafik</h1><p>Sprawdź, kiedy widzimy się na streamie.</p></div></div>
+      <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot" aria-hidden="true"></span><div class="schedule-next-copy"><span class="schedule-next-label">NAJBLIŻSZY STREAM</span><strong class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</strong></div></div><span class="schedule-summary-tz">CZAS POLSKI</span></div>
+      <div class="schedule-calendar-head"><div><span>PLAN TRANSMISJI</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} — ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><span class="schedule-calendar-hint">25 DNI</span></div>
       <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleModernWeekHtml(weekDays, now, index)).join("")}</div>
-      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>${layoutName === "SLIM" ? "Jednakowe proporcje kart" : "MODERN pokazuje 5 większych kart na panel"}; dni OFF pozostają bez grafiki.</strong></div>
     </section>`;
-  yuraScheduleApplyModernArts(host);
+  host.querySelectorAll(".schedule-calendar-week").forEach((block, index) => {
+    block.dataset.block = String(index);
+    if (hadBlocks) block.open = expanded.has(String(index));
+    const label = block.querySelector(".schedule-calendar-week-toggle");
+    const refreshLabel = () => { if (label) label.textContent = block.open ? "Zwiń" : "Rozwiń"; };
+    block.addEventListener("toggle", refreshLabel);
+    refreshLabel();
+  });
 }
-
 function renderYuraLiveSchedule() {
   const rawLayout = String(yuraScheduleConfig.publicLayout || "MODERN").trim().toUpperCase();
   const layout = ["CLASSIC","MODERN","SLIM"].includes(rawLayout) ? rawLayout : "MODERN";
