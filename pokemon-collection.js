@@ -15,6 +15,8 @@
   const trainersResultCount = root.querySelector('#pokemonTrainersResultCount');
   const speciesTotal = root.querySelector('#pokemonSpeciesCount');
   const trainersTotal = root.querySelector('#pokemonTrainersCount');
+  const dexSummary = root.querySelector('#pokemonDexSummary');
+  const trainersSummary = root.querySelector('#pokemonTrainersSummary');
   const dexMore = root.querySelector('#pokemonDexMore');
   const trainersMore = root.querySelector('#pokemonTrainersMore');
   const status = root.querySelector('#pokemonStatus');
@@ -138,7 +140,7 @@
           }
         } catch { /* Species IDs still remain available. */ }
       }
-      next.sort((a, b) => (a.joinOrder ?? Infinity) - (b.joinOrder ?? Infinity) || a.name.localeCompare(b.name, 'pl'));
+      next.sort((a, b) => a.pokemonId - b.pokemonId || a.name.localeCompare(b.name, 'pl'));
       const grouped = new Map();
       for (const row of next) {
         if (!grouped.has(row.pokemonId)) grouped.set(row.pokemonId, {
@@ -165,20 +167,23 @@
 
   const dexCard = item => {
     const card = make('article', 'pokemon-dex-card');
-    card.append(artwork(item));
+    const head = make('div', 'pokemon-dex-card-head');
+    const gen = generation(item.pokemonId);
+    const genChip = make('span', 'pokemon-gen', gen.label);
+    genChip.title = gen.region;
+    head.append(make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')), genChip);
+    const body = make('div', 'pokemon-dex-card-body');
+    const portrait = make('div', 'pokemon-dex-portrait');
+    portrait.append(artwork(item));
+    portrait.append(make('span', 'pokemon-dex-trainers', fmt(item.trainers.length) +
+      (item.trainers.length === 1 ? ' trener' : ' trenerów')));
     const info = make('div', 'pokemon-dex-info');
-    info.append(
-      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
-      make('strong', 'pokemon-species', item.pokemonName || 'Pokémon #' + item.pokemonId),
-      make('span', 'pokemon-dex-trainers', fmt(item.trainers.length) +
-        (item.trainers.length === 1 ? ' trener' : ' trenerów')),
-      make('span', 'pokemon-gen', generation(item.pokemonId).label + ' · ' + generation(item.pokemonId).region)
-    );
-    const names = make('p', 'pokemon-dex-owners',
-      item.trainers.slice(0, 3).map(person => '@' + person.name).join(', ') +
-      (item.trainers.length > 3 ? ' +' + (item.trainers.length - 3) : ''));
-    info.append(names);
-    card.append(info);
+    info.append(make('strong', 'pokemon-species', item.pokemonName || 'Pokémon #' + item.pokemonId));
+    info.append(make('p', 'pokemon-dex-owners',
+      item.trainers.slice(0, 2).map(person => '@' + person.name).join(', ') +
+      (item.trainers.length > 2 ? ' +' + (item.trainers.length - 2) : '')));
+    body.append(portrait, info);
+    card.append(head, body);
     return card;
   };
 
@@ -222,8 +227,7 @@
         block.append(list,btn);
       } else block.append(list);
     } else {
-      block.append(make('div', 'pokemon-trainer-history-note',
-        'Brak zachowanych wcześniejszych losowań. Widoczny wyżej Pokémon jest aktualnie przypisany.'));
+      block.append(make('div', 'pokemon-trainer-history-note', 'Brak zapisanych losowań.'));
     }
     if (item.joinEstimated)
       block.append(make('small','pokemon-trainer-history-note',
@@ -238,27 +242,25 @@
     avatar.dataset.trainerAvatar = item.login;
     const who = make('div', 'pokemon-trainer-person');
     who.append(make('strong', '', item.name), make('span', '', '@' + item.login));
-    user.append(avatar, who);
     if (item.joinOrder) {
-      const join = make('div', 'pokemon-trainer-join');
-      join.append(make('strong','', '#' + fmt(item.joinOrder) + (item.joinEstimated ? '*' : '')));
-      join.append(make('span','', 'KOLEJNOŚĆ TRENERÓW'));
+      const join = make('span', 'pokemon-trainer-join',
+        'TRENER #' + fmt(item.joinOrder) + (item.joinEstimated ? '*' : ''));
       const date = formatDate(item.joinedAt);
-      if (date) {
-        join.append(make('span','',date));
-        join.title = item.joinEstimated ?
-          'Kolejność odtworzona z najstarszych dostępnych zapisów — może nie być dokładna.' :
-          'Data pierwszego dołączenia do Pokémon.';
-      }
-      user.append(join);
+      join.title = item.joinEstimated
+        ? 'Kolejność oszacowana na podstawie zachowanych danych' + (date ? ' · ' + date : '')
+        : 'Dołączył ' + (date || 'do kolekcji');
+      who.append(join);
     }
+    const gen = generation(item.pokemonId);
+    const genChip = make('span', 'pokemon-gen', gen.label);
+    genChip.title = gen.region;
+    user.append(avatar, who, genChip);
     const assigned = make('div', 'pokemon-trainer-assigned');
     assigned.append(artwork(item));
     const data = make('div', 'pokemon-trainer-pokemon');
     data.append(
       make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
-      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId),
-      make('span', 'pokemon-gen', generation(item.pokemonId).label + ' · ' + generation(item.pokemonId).region)
+      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId)
     );
     assigned.append(data);
     card.append(user, assigned, trainerHistory(item));
@@ -355,6 +357,8 @@
     });
     dexPanel.hidden = mode !== 'dex';
     trainersPanel.hidden = mode !== 'trainers';
+    dexSummary.hidden = mode !== 'dex';
+    trainersSummary.hidden = mode !== 'trainers';
     search.placeholder = mode === 'dex' ? 'Szukaj Pokémona lub numeru…' :
       'Szukaj trenera lub Pokémona…';
     search.value = '';
