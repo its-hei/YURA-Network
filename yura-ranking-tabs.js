@@ -119,8 +119,9 @@
         item.classList.toggle('active',item.dataset.rankMode === selected);
         item.setAttribute('aria-selected',String(item.dataset.rankMode === selected));
       }
-      if (mode === 'points') { await originalLoad(true); }
-      else if (lastRanking) showRanking(lastRanking);
+      // All three rankings use the same authoritative /api/ranking response.
+      // In particular POINTS must not fall back to the legacy /api/leaderboard.
+      if (lastRanking) showRanking(lastRanking);
       else await fetchRanking();
       updateLabels();
     });
@@ -328,7 +329,7 @@
       if (selected==='gains') await getVerifiedSnapshot();
       renderMilestone();
       renderCurrentVip(result);
-      if (selected!=='points') showRanking(result);
+      showRanking(result);
     } catch (error) {
       // A dated D1 snapshot may still be shown if the public API is unavailable.
       const snapshot=selected==='gains'?await getVerifiedSnapshot():null;
@@ -337,15 +338,14 @@
         showRanking(lastRanking);
       } else {
         const label=document.getElementById('leaderboardStatus');
-        if(label) label.textContent='GAINS / LEVEL OFFLINE';
-        if(selected!=='points') originalRender({entries:[],updatedAt:null});
+        if(label) label.textContent='RANKING OFFLINE';
+        if(!lastRanking) originalRender({entries:[],updatedAt:null});
       }
       console.warn('YURA live gains unavailable; dated snapshot used where possible:',error);
     } finally { pending=false; }
   }
   // Reuse the existing 5-minute polling lifecycle, including hidden-tab suspension.
   loadLeaderboard = async function(force=false) {
-    if (selected==='points') return originalLoad(force);
     return fetchRanking();
   };
   updateLabels();
