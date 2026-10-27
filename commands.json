@@ -146,7 +146,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!pokemon",
-    "description": "Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
+    "description": "Pierwsze użycie losuje Ci Pokémona bezpłatnie i przypisuje go na stałe do konta Twitch. Następne użycia wyświetlają już przypisanego Pokémona. Wszystko odbywa się na czacie, bez logowania na stronie. Udział tylko dla osób obserwujących kanał Twitch (Follow), również przy sprawdzaniu przypisania.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -155,7 +155,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!pokeroll",
-    "description": "Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
+    "description": "Losuje nowego, innego Pokémona za 5 000 Y.U.R.A. Points. Wymaga wcześniejszego użycia !pokemon i odpowiedniego salda. Jeśli nie uda się wykonać losowania, punkty nie zostaną pobrane. Udział tylko dla obserwujących kanał Twitch (Follow); w razie braku potwierdzenia follow punkty nie są pobierane.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
