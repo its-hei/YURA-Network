@@ -1234,3 +1234,110 @@
   line-height:1.55;
 }
 #leaderboardView .ranking-roles-hint.needs-sync{color:#dfa76e}
+
+
+/* LEVELS POINTS GAINSLIKE V115 — same #1 feature / information sidebar / TOP 10 as GAINS. */
+#leaderboardView.ranking-unified-active #leaderboardTopSide,
+#leaderboardView.ranking-unified-active .leaderboard-main-col > #leaderboardList,
+#leaderboardView.ranking-unified-active .leaderboard-main-col > #leaderboardEmpty,
+#leaderboardView.ranking-unified-active #leaderboardMilestone{
+  display:none!important;
+}
+#leaderboardView .ranking-unified-table[hidden],
+#leaderboardView .ranking-unified-info[hidden]{display:none!important}
+#leaderboardView .ranking-unified-table{
+  width:100%;
+  min-width:0;
+}
+#leaderboardView .ranking-unified-table .gains-table-toolbar{
+  min-height:66px;
+}
+#leaderboardView .ranking-unified-title{
+  display:flex;
+  align-items:center;
+  align-self:stretch;
+  padding:0 3px;
+  border-bottom:2px solid var(--accent);
+  color:#ffb45d;
+  font:850 13px/1.15 var(--font-ui,Inter,system-ui,sans-serif);
+  letter-spacing:.045em;
+}
+#leaderboardView .ranking-unified-table .gains-board-row.leader{
+  background:linear-gradient(90deg,rgba(242,140,24,.11),rgba(242,140,24,.018) 70%);
+}
+#leaderboardView .ranking-unified-info{
+  display:grid;
+  grid-template-rows:minmax(0,1fr) minmax(0,.88fr);
+  align-self:stretch;
+  width:100%;
+  min-width:0;
+  min-height:246px;
+  height:100%;
+  border-color:rgba(242,140,24,.3);
+}
+#leaderboardView .ranking-unified-info-top{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:12px;
+  min-width:0;
+  padding:21px;
+}
+#leaderboardView .ranking-unified-info-kicker{
+  color:#ffb357;
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.08em;
+}
+#leaderboardView .ranking-unified-info-heading{
+  color:#f2f5f8;
+  font-size:clamp(19px,2vw,23px);
+  font-weight:850;
+  line-height:1.12;
+  overflow-wrap:anywhere;
+}
+#leaderboardView .ranking-unified-info-copy{
+  color:#a5b3c0;
+  font-size:12px;
+  line-height:1.6;
+  margin:0;
+}
+#leaderboardView .ranking-unified-info-bottom{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:8px;
+  min-width:0;
+  padding:16px 21px;
+  border-top:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.12);
+}
+#leaderboardView .ranking-unified-info .gains-last-winner-points{
+  display:block;
+  color:#ffb659;
+  overflow-wrap:anywhere;
+  font-size:clamp(24px,2.65vw,35px);
+  line-height:1.05;
+  white-space:normal;
+}
+#leaderboardView .ranking-unified-info .gains-last-winner-detail{
+  line-height:1.55;
+}
+@media(max-width:980px){
+  #leaderboardView .ranking-unified-info{
+    min-height:210px;
+    grid-template-rows:auto auto;
+  }
+  #leaderboardView .ranking-unified-info-top{padding:18px}
+  #leaderboardView .ranking-unified-info-bottom{padding:16px 18px}
+}
+@media(max-width:620px){
+  #leaderboardView .ranking-unified-info{
+    min-height:0;
+  }
+  #leaderboardView .ranking-unified-title{font-size:12px}
+  #leaderboardView .ranking-unified-info-top{padding:16px;gap:9px}
+  #leaderboardView .ranking-unified-info-bottom{padding:14px 16px}
+  #leaderboardView .ranking-unified-info-heading{font-size:19px}
+  #leaderboardView .ranking-unified-info .gains-last-winner-points{font-size:27px}
+}
