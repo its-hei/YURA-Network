@@ -485,7 +485,7 @@ function defaultCommandSettings(env: Env): CommandSettings {
     raffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!raffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60, joinConfirmation:true, warning20Seconds:true },
     sraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!sraffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60, joinConfirmation:true, warning20Seconds:true },
     autoraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!autoraffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1 },
-    jackpot: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!jackpot", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60 },
+    jackpot: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!jackpot", permission:"EVERYONE", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60 },
     alertcontrol: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!alert", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:0 },
     cancelraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!cancelraffle,!rafflecancel", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1 }
   };
@@ -1127,7 +1127,9 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   // stream_live is refreshed by EventSub/cron, but either may lag the actual start.
   // If the cached flag is still OFFLINE, verify Twitch directly before rejecting.
   if (!cfg.alwaysOnline && !(cfg.streamOn && await isStreamLiveForOnlineCommand(env))) return;
-  if (!commandPermissionAllows(event,env,cfg.permission)) return;
+  // JACKPOT is a community raffle: anyone in chat may start one, even when
+  // an older persisted command config still says MOD_BROADCASTER.
+  if (key !== "jackpot" && !commandPermissionAllows(event,env,cfg.permission)) return;
   if (!await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
 
   if (key === "alertcontrol") {
