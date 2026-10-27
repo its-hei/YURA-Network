@@ -4023,3 +4023,172 @@ body > .shell > .view-panel > .hero > div:first-child,
   #pokemonView .pokemon-dex-portrait{width:85px;flex-basis:85px}
   #pokemonView .pokemon-dex-portrait .pokemon-artwork{width:85px;height:85px;flex-basis:85px}
 }
+
+
+/* POKEMON COLLECTION V122 — roomier art, owner counts and expandable trainers. */
+#pokemonView .pokemon-dex-grid,
+#pokemonView .pokemon-trainers-grid{
+  align-items:start;
+}
+#pokemonView .pokemon-dex-card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  min-height:204px;
+  padding:11px 12px;
+  gap:9px;
+}
+#pokemonView .pokemon-dex-card-body{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width:0;
+}
+#pokemonView .pokemon-dex-portrait{
+  width:112px;
+  flex:0 0 112px;
+  min-width:0;
+}
+#pokemonView .pokemon-dex-portrait .pokemon-artwork{
+  width:112px;
+  height:112px;
+  flex:0 0 112px;
+}
+#pokemonView .pokemon-dex-info{
+  gap:8px;
+}
+#pokemonView .pokemon-dex-footer{
+  display:flex;
+  justify-content:flex-end;
+  align-items:flex-end;
+  min-height:17px;
+  margin-top:auto;
+}
+#pokemonView .pokemon-dex-trainers{
+  width:auto;
+  color:#c4d3e1;
+  font-size:10px;
+  font-weight:850;
+  text-align:right;
+  white-space:nowrap;
+}
+#pokemonView .pokemon-dex-unowned .pokemon-dex-info{
+  color:#8c9bab;
+}
+#pokemonView .pokemon-trainer-card{
+  display:block;
+  min-height:0;
+  padding:0;
+  gap:0;
+  overflow:hidden;
+  transition:border-color .2s ease,background .2s ease;
+}
+#pokemonView .pokemon-trainer-card[open]{
+  border-color:rgba(242,140,24,.45);
+}
+#pokemonView .pokemon-trainer-summary{
+  display:grid;
+  position:relative;
+  align-content:start;
+  gap:11px;
+  padding:13px 13px 25px;
+  min-height:0;
+  cursor:pointer;
+  list-style:none;
+  border-radius:inherit;
+}
+#pokemonView .pokemon-trainer-summary::-webkit-details-marker{display:none}
+#pokemonView .pokemon-trainer-summary::marker{content:""}
+#pokemonView .pokemon-trainer-summary::after{
+  content:"ROZWIŃ HISTORIĘ  ▾";
+  position:absolute;
+  right:12px;
+  bottom:8px;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.035em;
+  color:#9cabb9;
+}
+#pokemonView .pokemon-trainer-card[open] .pokemon-trainer-summary::after{
+  content:"ZWIŃ HISTORIĘ  ▴";
+  color:#ffb56b;
+}
+#pokemonView .pokemon-trainer-summary:hover::after{
+  color:#ffb56b;
+}
+#pokemonView .pokemon-trainer-summary:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+}
+#pokemonView .pokemon-trainer-user{
+  display:flex;
+  min-height:49px;
+  align-items:center;
+  gap:9px;
+  padding-bottom:9px;
+}
+#pokemonView .pokemon-trainer-avatar{
+  display:grid;
+  place-items:center;
+  flex:0 0 41px;
+  width:41px;
+  height:41px;
+  border:1px solid #455361;
+  border-radius:50%;
+  background:linear-gradient(180deg,#1f2b35,#121a22);
+  color:#ffb76a;
+  font-size:11px;
+  font-weight:900;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+#pokemonView .pokemon-trainer-person{
+  display:grid;
+  min-width:0;
+  gap:3px;
+}
+#pokemonView .pokemon-trainer-person strong{
+  font-size:12px;
+  line-height:1.3;
+}
+#pokemonView .pokemon-trainer-person span{
+  color:#a5b5c5;
+  font-size:10px;
+}
+#pokemonView .pokemon-trainer-assigned{
+  gap:11px;
+}
+#pokemonView .pokemon-trainer-assigned .pokemon-artwork{
+  flex:0 0 92px;
+  width:92px;
+  height:92px;
+}
+#pokemonView .pokemon-trainer-details{
+  display:block;
+  padding:0 13px 12px;
+}
+#pokemonView .pokemon-trainer-history{
+  display:grid;
+  gap:9px;
+  margin:0;
+  border-top:1px solid #2c3540;
+  padding-top:11px;
+}
+#pokemonView .pokemon-trainer-history-chip{
+  max-width:100%;
+  white-space:normal;
+}
+@media(max-width:960px){
+  #pokemonView .pokemon-dex-portrait{width:102px;flex-basis:102px}
+  #pokemonView .pokemon-dex-portrait .pokemon-artwork{width:102px;height:102px;flex-basis:102px}
+}
+@media(max-width:720px){
+  #pokemonView .pokemon-dex-portrait{width:96px;flex-basis:96px}
+  #pokemonView .pokemon-dex-portrait .pokemon-artwork{width:96px;height:96px;flex-basis:96px}
+}
+@media(max-width:510px){
+  #pokemonView .pokemon-dex-card{min-height:185px}
+  #pokemonView .pokemon-dex-portrait{width:112px;flex-basis:112px}
+  #pokemonView .pokemon-dex-portrait .pokemon-artwork{width:112px;height:112px;flex-basis:112px}
+}
