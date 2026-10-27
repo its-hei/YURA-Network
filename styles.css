@@ -3495,3 +3495,8 @@ footer.site-footer{font-size:12px;letter-spacing:0}
   #pokemonView .pokemon-species{font-size:15px}
   #pokemonView .pokemon-overview-card{padding:14px}
 }
+
+/* Statistics has two filters after moving Pokémon into its own section. */
+@media(max-width:620px){
+  #statisticsView .stats-scope-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
