@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=113">
+  <link rel="stylesheet" href="styles.css?v=115">
   <link rel="stylesheet" href="yura-ranking-tabs.css?v=114">
 </head>
 <body>
@@ -42,7 +42,7 @@
             Grafik
             
           </button>
-          <button class="side-item" type="button" data-view="statistics">Statystyki</button>
+          <button class="side-item" type="button" data-view="statistics">Staty</button>
         </nav>
   </header>
 
@@ -244,7 +244,7 @@
       <div class="hero stats-hero">
         <div>
           <div class="eyebrow">Y.U.R.A. / CHANNEL ANALYTICS</div>
-          <h1>Statystyki</h1>
+          <h1>Staty</h1>
           <p>Aktywność kanału, wiadomości widzów i historia zabaw za Y.U.R.A. Points.</p>
         </div>
         <div class="status-chip" id="statsStatus">OCZEKIWANIE NA CLOUD</div>
@@ -256,7 +256,7 @@
         <article class="stats-kpi"><span>GAMBLE ALL</span><strong id="statsAllGambles">—</strong><small>łącznie rozegranych losowań</small></article>
       </div>
       <div class="stats-main-heading">
-        <div><div class="eyebrow">PUBLICZNA AKTYWNOŚĆ</div><h2>Statystyki widzów</h2>
+        <div><div class="eyebrow">PUBLICZNA AKTYWNOŚĆ</div><h2>Staty widzów</h2>
           <p>Pokazujemy wyłącznie użytkowników, którzy napisali co najmniej 10 wiadomości.</p></div>
         <span class="stats-livestate" id="statsChannelLive">BRAK DANYCH</span>
       </div>
@@ -305,21 +305,20 @@
     <section class="content view-panel" id="scheduleView" hidden>
       <div class="hero">
         <div>
-          <div class="eyebrow">STREAM WINDOW</div>
-          <h1>Harmonogram</h1>
-          <p>Orientacyjne godziny transmisji. Zmiany i dodatkowe wolne dni pojawiają się na Discordzie.</p>
+          <div class="eyebrow">HEIYESHI / LIVE SCHEDULE</div>
+          <h1>Grafik</h1>
+          <p>Stałe godziny transmisji z uwzględnieniem przerw związanych z pracą.</p>
         </div>
-        <div class="status-chip">SCHEDULE ACTIVE</div>
       </div>
 
-      <div class="schedule-summary">
+      <div class="schedule-summary" aria-label="Godziny transmisji">
         <article class="schedule-window-card weekday">
           <div class="schedule-window-top">
-            <span class="schedule-code">PN–PT</span>
-            <span class="schedule-state">WEEKDAY</span>
+            <span class="schedule-code">PON–PT</span>
+            <span class="schedule-state">W TYGODNIU</span>
           </div>
-          <strong>16:00 — 19:00</strong>
-          <p>Standardowe okno transmisji w tygodniu.</p>
+          <strong>16:00 – 19:00</strong>
+          <p>Standardowe godziny streamów od poniedziałku do piątku.</p>
         </article>
 
         <article class="schedule-window-card weekend">
@@ -327,76 +326,52 @@
             <span class="schedule-code">SOB–ND</span>
             <span class="schedule-state">WEEKEND</span>
           </div>
-          <strong>16:00 — 24:00</strong>
-          <p>Dłuższe weekendowe sesje.</p>
+          <strong>16:00 – 24:00</strong>
+          <p>Dłuższe sesje w soboty i niedziele.</p>
         </article>
       </div>
 
-      <div class="schedule-week">
-        <article class="day-card">
-          <span class="day-name">PON</span>
-          <strong>16:00–19:00</strong>
-          <span class="day-note">STREAM WINDOW</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">WT</span>
-          <strong>16:00–19:00</strong>
-          <span class="day-note">STREAM WINDOW</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">ŚR</span>
-          <strong>16:00–19:00</strong>
-          <span class="day-note">STREAM WINDOW</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">CZW</span>
-          <strong>16:00–19:00</strong>
-          <span class="day-note">STREAM WINDOW</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">PT</span>
-          <strong>16:00–19:00</strong>
-          <span class="day-note">STREAM WINDOW</span>
-        </article>
-        <article class="day-card weekend">
-          <span class="day-name">SOB</span>
-          <strong>16:00–24:00</strong>
-          <span class="day-note">LONG SESSION</span>
-        </article>
-        <article class="day-card weekend">
-          <span class="day-name">ND</span>
-          <strong>16:00–24:00</strong>
-          <span class="day-note">LONG SESSION</span>
-        </article>
-      </div>
-
-      <div class="schedule-notices">
-        <article class="schedule-notice work-cycle">
-          <div class="notice-icon">03</div>
-          <div>
-            <span class="notice-label">CYKL PRACY //</span>
-            <strong>Co 3 tygodnie przerwa PN–PT</strong>
-            <p>
-              Raz na trzy tygodnie od poniedziałku do piątku wypada przerwa od streamów związana z pracą.
-              Weekend pozostaje standardowym oknem transmisji.
-            </p>
+      <div class="schedule-layout">
+        <section class="schedule-calendar" aria-label="Tygodniowy grafik transmisji">
+          <div class="schedule-section-head">
+            <div>
+              <div class="eyebrow">PLAN TYGODNIA</div>
+              <h2>Godziny streamów</h2>
+            </div>
+            <span class="schedule-timezone">CZAS POLSKI</span>
           </div>
-        </article>
 
-        <article class="schedule-notice discord-notice">
-          <div class="notice-icon">i</div>
-          <div>
-            <span class="notice-label">EXTRA OFF //</span>
-            <strong>Zmiany sprawdzaj na Discordzie</strong>
-            <p>
-              Informacje o dodatkowych dniach wolnych, przesunięciach godzin i spontanicznych streamach
-              pojawiają się na Discordzie.
-            </p>
-            <a href="https://discord.gg/8NHhFsRed5" target="_blank" rel="noreferrer">
-              discord.gg/8NHhFsRed5
-            </a>
+          <div class="schedule-week">
+            <article class="day-card"><span class="day-name">PON</span><strong>16:00–19:00</strong><span class="day-note">STANDARD</span></article>
+            <article class="day-card"><span class="day-name">WT</span><strong>16:00–19:00</strong><span class="day-note">STANDARD</span></article>
+            <article class="day-card"><span class="day-name">ŚR</span><strong>16:00–19:00</strong><span class="day-note">STANDARD</span></article>
+            <article class="day-card"><span class="day-name">CZW</span><strong>16:00–19:00</strong><span class="day-note">STANDARD</span></article>
+            <article class="day-card"><span class="day-name">PT</span><strong>16:00–19:00</strong><span class="day-note">STANDARD</span></article>
+            <article class="day-card weekend"><span class="day-name">SOB</span><strong>16:00–24:00</strong><span class="day-note">DŁUŻSZY STREAM</span></article>
+            <article class="day-card weekend"><span class="day-name">ND</span><strong>16:00–24:00</strong><span class="day-note">DŁUŻSZY STREAM</span></article>
           </div>
-        </article>
+        </section>
+
+        <aside class="schedule-notices" aria-label="Informacje o grafiku">
+          <article class="schedule-notice work-cycle">
+            <div class="notice-icon" aria-hidden="true">03</div>
+            <div>
+              <span class="notice-label">CYKL PRACY</span>
+              <strong>Co 3 tygodnie przerwa PN–PT</strong>
+              <p>Raz na trzy tygodnie w dni robocze nie ma streamów ze względu na pracę. Weekend pozostaje w grafiku.</p>
+            </div>
+          </article>
+
+          <article class="schedule-notice discord-notice">
+            <div class="notice-icon" aria-hidden="true">i</div>
+            <div>
+              <span class="notice-label">ZMIANY W GRAFIKU</span>
+              <strong>Aktualizacje na Discordzie</strong>
+              <p>Dodatkowe wolne dni, zmiany godzin i spontaniczne transmisje ogłaszam na Discordzie.</p>
+              <a href="https://discord.gg/8NHhFsRed5" target="_blank" rel="noreferrer">discord.gg/8NHhFsRed5</a>
+            </div>
+          </article>
+        </aside>
       </div>
     </section>
 
