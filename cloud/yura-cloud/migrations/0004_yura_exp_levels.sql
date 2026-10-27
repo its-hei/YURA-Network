@@ -1,0 +1,6 @@
+ALTER TABLE accounts ADD COLUMN exp INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE accounts ADD COLUMN exp_stream INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE accounts ADD COLUMN exp_stream_key TEXT NOT NULL DEFAULT '';
+ALTER TABLE accounts ADD COLUMN last_level_up_utc TEXT NOT NULL DEFAULT '';
+ALTER TABLE accounts ADD COLUMN last_exp_message_id TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_accounts_exp ON accounts(exp DESC);

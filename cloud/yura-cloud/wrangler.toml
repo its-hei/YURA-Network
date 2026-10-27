@@ -1,0 +1,13 @@
+keep_vars = true
+name = "yura-cloud"
+main = "src/index.ts"
+compatibility_date = "2026-09-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yura-cloud"
+database_id = "a9a1cd82-2b0e-46a1-910a-706a6bd6f4d9"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["* * * * *"]
