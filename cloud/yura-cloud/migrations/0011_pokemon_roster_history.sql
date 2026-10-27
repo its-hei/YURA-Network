@@ -15,16 +15,11 @@ CREATE INDEX IF NOT EXISTS idx_pokemon_first_joined
 INSERT OR IGNORE INTO pokemon_first_assignments
   (twitch_user_id,login,pokemon_id,pokemon_name,joined_at_utc,estimated)
 SELECT p.twitch_user_id,p.login,p.pokemon_id,p.pokemon_name,
-  COALESCE(
-    (SELECT MIN(events.created_at_utc)
-       FROM (
-         SELECT r.created_at_utc FROM pokemon_rerolls r
-          WHERE r.twitch_user_id=p.twitch_user_id
-         UNION ALL
-         SELECT old.created_at_utc FROM pokemon_purchases old
-          WHERE old.twitch_user_id=p.twitch_user_id
-       ) AS events),
-    p.updated_at_utc
+  MIN(
+    COALESCE((SELECT MIN(r.created_at_utc) FROM pokemon_rerolls r
+      WHERE r.twitch_user_id=p.twitch_user_id),p.updated_at_utc),
+    COALESCE((SELECT MIN(old.created_at_utc) FROM pokemon_purchases old
+      WHERE old.twitch_user_id=p.twitch_user_id),p.updated_at_utc)
   ),1
 FROM pokemon_profiles p
 WHERE p.pokemon_id BETWEEN 1 AND 1025;
