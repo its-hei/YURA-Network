@@ -105,9 +105,9 @@
   {
     "command": "!jackpot",
     "aliases": [],
-    "permission": "Moderator",
+    "permission": "Everyone",
     "usage": "!jackpot \u003Cwpisowe\u003E [czas w sekundach]",
-    "description": "Losowanie ze wsp\u00F3ln\u0105 pul\u0105 finansowan\u0105 przez uczestnik\u00F3w. Przyk\u0142ad: !jackpot 2000 \u2014 ka\u017Cde poprawne !join pobiera dok\u0142adnie 2000 YURA z salda (trzeba mie\u0107 wystarczaj\u0105c\u0105 liczb\u0119 punkt\u00F3w). 5 uczestnik\u00F3w daje pul\u0119 10 000; jeden losowy zwyci\u0119zca otrzymuje ca\u0142o\u015B\u0107. Powt\u00F3rne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej ni\u017C 2 uczestnikach wpisowe s\u0105 zwracane.",
+    "description": "Ka\u017Cdy widz mo\u017Ce uruchomi\u0107 to losowanie. Losowanie ze wsp\u00F3ln\u0105 pul\u0105 finansowan\u0105 przez uczestnik\u00F3w. Przyk\u0142ad: !jackpot 2000 \u2014 ka\u017Cde poprawne !join pobiera dok\u0142adnie 2000 YURA z salda (trzeba mie\u0107 wystarczaj\u0105c\u0105 liczb\u0119 punkt\u00F3w). 5 uczestnik\u00F3w daje pul\u0119 10 000; jeden losowy zwyci\u0119zca otrzymuje ca\u0142o\u015B\u0107. Powt\u00F3rne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej ni\u017C 2 uczestnikach wpisowe s\u0105 zwracane.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -146,7 +146,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!pokemon",
-    "description": "Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
+    "description": "Tylko dla os\u00F3b obserwuj\u0105cych kana\u0142 (Follow). Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -155,7 +155,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!pokeroll",
-    "description": "Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
+    "description": "Tylko dla obserwuj\u0105cych kana\u0142 (Follow). Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
