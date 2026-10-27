@@ -26,6 +26,29 @@
   let mode = 'dex', shownDex = 0, shownTrainers = 0;
   const norm = x => String(x ?? '').trim().toLocaleLowerCase('pl-PL');
   const fmt = n => nf.format(n);
+  const generation = id => {
+    const n = Number(id);
+    const ends = [151,251,386,493,649,721,809,905,1025];
+    const regions = ['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar / Hisui','Paldea'];
+    const roman = ['I','II','III','IV','V','VI','VII','VIII','IX'];
+    const idx = ends.findIndex(end => n >= 1 && n <= end);
+    return idx < 0 ? {num:0,label:'GEN ?',region:'—'} :
+      {num:idx + 1,label:'GEN ' + roman[idx],region:regions[idx]};
+  };
+  const formatDate = value => {
+    const when = new Date(value || '');
+    return Number.isFinite(when.getTime()) ? when.toLocaleDateString('pl-PL') : '';
+  };
+  const historyEvent = raw => {
+    const id = Number(raw?.pokemonId);
+    if (!Number.isInteger(id) || id < 1 || id > 1025) return null;
+    return {
+      pokemonId:id, pokemonName:String(raw?.pokemonName || '').slice(0,80),
+      at:String(raw?.at || '').slice(0,40),
+      type:String(raw?.type || '').slice(0,20),
+      approximate:raw?.approximate === true
+    };
+  };
   const make = (tag, className, value) => {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -91,7 +114,11 @@
           login,
           name: String(row?.name || login).trim().slice(0, 64) || login,
           pokemonId: id,
-          pokemonName: String(row?.pokemonName || '').trim().slice(0, 80)
+          pokemonName: String(row?.pokemonName || '').trim().slice(0, 80),
+          joinOrder: Number.isInteger(Number(row?.joinOrder)) && Number(row?.joinOrder) > 0 ? Number(row.joinOrder) : null,
+          joinedAt: String(row?.joinedAt || '').slice(0,40),
+          joinEstimated: row?.joinEstimated === true,
+          history: Array.isArray(row?.history) ? row.history.map(historyEvent).filter(Boolean) : []
         });
       }
       if (next.some(row => !row.pokemonName)) {
@@ -111,7 +138,7 @@
           }
         } catch { /* Species IDs still remain available. */ }
       }
-      next.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+      next.sort((a, b) => (a.joinOrder ?? Infinity) - (b.joinOrder ?? Infinity) || a.name.localeCompare(b.name, 'pl'));
       const grouped = new Map();
       for (const row of next) {
         if (!grouped.has(row.pokemonId)) grouped.set(row.pokemonId, {
@@ -144,7 +171,8 @@
       make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
       make('strong', 'pokemon-species', item.pokemonName || 'Pokémon #' + item.pokemonId),
       make('span', 'pokemon-dex-trainers', fmt(item.trainers.length) +
-        (item.trainers.length === 1 ? ' trener' : ' trenerów'))
+        (item.trainers.length === 1 ? ' trener' : ' trenerów')),
+      make('span', 'pokemon-gen', generation(item.pokemonId).label + ' · ' + generation(item.pokemonId).region)
     );
     const names = make('p', 'pokemon-dex-owners',
       item.trainers.slice(0, 3).map(person => '@' + person.name).join(', ') +
@@ -152,6 +180,55 @@
     info.append(names);
     card.append(info);
     return card;
+  };
+
+  const trainerHistory = item => {
+    const block = make('section', 'pokemon-trainer-history');
+    const title = make('div', 'pokemon-trainer-history-head');
+    title.append(make('span', '', 'HISTORIA POKÉMONÓW'));
+    title.append(make('span', '', fmt(item.history.length) + (item.history.length === 1 ? ' LOSOWANIE' : ' LOSOWAŃ')));
+    block.append(title);
+    const list = make('div', 'pokemon-trainer-history-list');
+    const records = [...item.history].reverse(); // newest first, retain repeated draws
+    const createChip = (record, idx) => {
+      const chip = make('span', 'pokemon-trainer-history-chip' +
+        (record.pokemonId === item.pokemonId && idx === 0 ? ' current' : ''));
+      chip.append(
+        make('small', '', '#' + String(record.pokemonId).padStart(4,'0')),
+        make('span', '', record.pokemonName || 'Pokémon #' + record.pokemonId),
+        make('small', '', generation(record.pokemonId).label)
+      );
+      const at = formatDate(record.at);
+      chip.title = [at, generation(record.pokemonId).region,
+        record.type === 'first' ? 'Pierwsze przypisanie' :
+        record.type === 'purchase' ? 'Starsze płatne losowanie' : 'Ponowne losowanie',
+        record.approximate ? 'Dane historyczne (niepełne)' : ''].filter(Boolean).join(' · ');
+      return chip;
+    };
+    if (records.length) {
+      const visible = records.slice(0,4);
+      list.append(...visible.map(createChip));
+      if (records.length > visible.length) {
+        const btn = make('button', 'pokemon-history-more',
+          'Pokaż całą historię (+' + fmt(records.length - visible.length) + ')');
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded','false');
+        btn.addEventListener('click', () => {
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          list.replaceChildren(...(expanded ? visible : records).map(createChip));
+          btn.setAttribute('aria-expanded',String(!expanded));
+          btn.textContent = expanded ? 'Pokaż mniej' : 'Zwiń historię';
+        });
+        block.append(list,btn);
+      } else block.append(list);
+    } else {
+      block.append(make('div', 'pokemon-trainer-history-note',
+        'Brak zachowanych wcześniejszych losowań. Widoczny wyżej Pokémon jest aktualnie przypisany.'));
+    }
+    if (item.joinEstimated)
+      block.append(make('small','pokemon-trainer-history-note',
+        'Starsze daty i pierwsze losowania mogą być niepełne.'));
+    return block;
   };
 
   const trainerCard = item => {
@@ -162,15 +239,29 @@
     const who = make('div', 'pokemon-trainer-person');
     who.append(make('strong', '', item.name), make('span', '', '@' + item.login));
     user.append(avatar, who);
+    if (item.joinOrder) {
+      const join = make('div', 'pokemon-trainer-join');
+      join.append(make('strong','', '#' + fmt(item.joinOrder) + (item.joinEstimated ? '*' : '')));
+      join.append(make('span','', 'KOLEJNOŚĆ TRENERÓW'));
+      const date = formatDate(item.joinedAt);
+      if (date) {
+        join.append(make('span','',date));
+        join.title = item.joinEstimated ?
+          'Kolejność odtworzona z najstarszych dostępnych zapisów — może nie być dokładna.' :
+          'Data pierwszego dołączenia do Pokémon.';
+      }
+      user.append(join);
+    }
     const assigned = make('div', 'pokemon-trainer-assigned');
     assigned.append(artwork(item));
     const data = make('div', 'pokemon-trainer-pokemon');
     data.append(
       make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
-      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId)
+      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId),
+      make('span', 'pokemon-gen', generation(item.pokemonId).label + ' · ' + generation(item.pokemonId).region)
     );
     assigned.append(data);
-    card.append(user, assigned);
+    card.append(user, assigned, trainerHistory(item));
     return card;
   };
 
@@ -225,7 +316,10 @@
   }
 
   function renderTrainers(more = false) {
-    const results = entries.filter(item => matches(item, query()));
+    const term = query();
+    const results = entries.filter(item => matches(item, term) ||
+      item.history.some(record => norm(record.pokemonName).includes(term) ||
+        String(record.pokemonId).includes(term)));
     if (!more) { shownTrainers = 0; trainersGrid.replaceChildren(); }
     trainersResultCount.textContent = fmt(results.length) +
       (results.length === 1 ? ' TRENER' : ' TRENERÓW');
