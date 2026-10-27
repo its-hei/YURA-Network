@@ -1,153 +1,300 @@
-/* Public Pokédex: fetches only after the user opens the Pokémon collection.
-   Uses existing /api/ranking assignments. Never stores OAuth or charges points. */
+/* Y.U.R.A. public Pokémon hub — read-only Pokédex and Pokémon Trainers. */
 (() => {
   'use strict';
-  const root=document.getElementById('statsPokemonCollection');
-  const stats=document.getElementById('statisticsView');
-  if(!root||!stats)return;
-  const list=root.querySelector('#pokemonCollectionRows');
-  const more=root.querySelector('#pokemonCollectionMore');
-  const counter=root.querySelector('#pokemonCollectionCount');
-  const cloud='https://yura-cloud.heiyeshi.workers.dev';
-  const endpoint=cloud+'/api/pokemon/collection';
-  const legacyEndpoint=cloud+'/api/ranking';
-  const sprites='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
-  const batchSize=18;
-  let entries=[],checkedAt=0,inflight=null,displayed=0,query='',loaded=false;
-  const norm=x=>String(x??'').trim().toLocaleLowerCase('pl-PL');
-  function text(tag,value,className=''){
-    const el=document.createElement(tag);
-    if(className)el.className=className;
-    el.textContent=String(value);
+  const root = document.getElementById('pokemonView');
+  if (!root) return;
+  const cloud = 'https://yura-cloud.heiyeshi.workers.dev';
+  const art = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+  const tabs = [...root.querySelectorAll('[data-pokemon-mode]')];
+  const search = root.querySelector('#pokemonSearch');
+  const dexPanel = root.querySelector('#pokemonDexPanel');
+  const trainersPanel = root.querySelector('#pokemonTrainersPanel');
+  const dexGrid = root.querySelector('#pokemonDexGrid');
+  const trainersGrid = root.querySelector('#pokemonTrainersGrid');
+  const dexCount = root.querySelector('#pokemonDexCount');
+  const trainersResultCount = root.querySelector('#pokemonTrainersResultCount');
+  const speciesTotal = root.querySelector('#pokemonSpeciesCount');
+  const trainersTotal = root.querySelector('#pokemonTrainersCount');
+  const dexMore = root.querySelector('#pokemonDexMore');
+  const trainersMore = root.querySelector('#pokemonTrainersMore');
+  const status = root.querySelector('#pokemonStatus');
+  const nf = new Intl.NumberFormat('pl-PL');
+  const batchSize = 24;
+  const avatarCache = new Map();
+  const avatarPending = new Set();
+  let entries = [], species = [], loadedAt = 0, inflight = null;
+  let mode = 'dex', shownDex = 0, shownTrainers = 0;
+  const norm = x => String(x ?? '').trim().toLocaleLowerCase('pl-PL');
+  const fmt = n => nf.format(n);
+  const make = (tag, className, value) => {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (value !== undefined) el.textContent = String(value);
     return el;
-  }
-  function message(title,detail){
-    const card=text('div',title,'stats-empty');
-    if(detail)card.append(text('p',detail));
-    list.replaceChildren(card);
-    more.hidden=true;
-  }
-  async function load(){
-    if(loaded&&Date.now()-checkedAt<10*60*1000)return;
-    if(inflight)return inflight;
-    message('Ładowanie kolekcji…','Pobieramy tylko przypisania Pokémonów, bez prywatnych danych.');
-    inflight=(async()=>{
-      // The dedicated endpoint includes EVERY assigned Pokémon and its species
-      // name; the old ranking remains a read-only fallback until Cloud is updated.
-      let response=await fetch(endpoint,{cache:'no-store'});
-      let data=null;
-      if(response.ok){
-        data=await response.json();
-        if(!Array.isArray(data?.entries))throw Error('nieobsługiwany format kolekcji Cloud');
-      }else if(response.status===404){
-        response=await fetch(legacyEndpoint,{cache:'no-store'});
-        if(!response.ok)throw Error('HTTP '+response.status);
-        data=await response.json();
-        if(!Array.isArray(data?.gains))throw Error('nieobsługiwany format starego Cloud');
-      }else throw Error('HTTP '+response.status);
-      const source=Array.isArray(data.entries)?data.entries:data.gains;
-      const seen=new Set();
-      entries=source.filter(item=>{
-        const user=norm(item?.login||item?.name);
-        const id=Number(item?.pokemonId ?? item?.pokemon_id);
-        if(!/^[a-z0-9_]{2,25}$/.test(user)||
-           !Number.isInteger(id)||id<1||id>1025||
-           !['pokemon',''].includes(norm(item?.avatarMode??item?.avatar_mode??''))||
-           seen.has(user))return false;
-        seen.add(user);return true;
-      }).map(item=>({
-        login:String(item.login||item.name),
-        name:String(item.name||item.login),
-        pokemonId:Number(item.pokemonId??item.pokemon_id),
-        pokemonName:String(item.pokemonName||item.pokemon_name||'').trim()
-      })).sort((a,b)=>a.name.localeCompare(b.name,'pl'));
-      // The old ranking exposes Pokémon IDs but not species names.
-      // Retrieve names in one cacheable request instead of dozens of lookups.
-      if(entries.some(item=>!item.pokemonName)){
-        try{
-          const dexRes=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025',{cache:'force-cache'});
-          if(dexRes.ok){
-            const dex=await dexRes.json();
-            const names=new Map((dex.results||[]).map(row=>{
-              const found=String(row.url||'').match(/\/pokemon\/(\d+)\/?$/);
-              return [found?Number(found[1]):0,String(row.name||'').replace(/-/g,' ')];
-            }).filter(([id,name])=>Number.isInteger(id)&&id>0&&name));
-            for(const item of entries){
-              if(!item.pokemonName && names.has(item.pokemonId)){
-                const label=names.get(item.pokemonId);
-                item.pokemonName=label.charAt(0).toUpperCase()+label.slice(1);
-              }
-            }
-          }
-        }catch{}
-      }
-      loaded=true;checkedAt=Date.now();
-    })().finally(()=>{inflight=null});
-    return inflight;
-  }
-  function createCard(item){
-    const card=document.createElement('article');
-    card.className='pokemon-collection-card';
-    const picture=document.createElement('div');
-    picture.className='pokemon-collection-picture';
-    const img=document.createElement('img');
-    img.alt='';
-    img.loading='lazy';
-    img.decoding='async';
-    img.width=120;img.height=120;
-    img.src=sprites+'other/official-artwork/'+item.pokemonId+'.png';
-    img.onerror=()=>{
-      if(img.dataset.fallback)return;
-      img.dataset.fallback='1';
-      img.src=sprites+item.pokemonId+'.png';
+  };
+  const visible = () => !root.hidden;
+  const errorMessage = (target, main, detail = '') => {
+    const el = make('div', 'pokemon-empty', main);
+    if (detail) el.append(make('p', '', detail));
+    target.replaceChildren(el);
+  };
+  const safeAvatar = raw => {
+    if (!raw || typeof raw !== 'string') return '';
+    try {
+      const url = new URL(raw);
+      if (url.protocol !== 'https:' || !/(^|\.)(jtvnw\.net|twitchcdn\.net)$/.test(url.hostname.toLowerCase())) return '';
+      return url.href;
+    } catch { return ''; }
+  };
+  const artwork = item => {
+    const picture = make('div', 'pokemon-artwork');
+    const img = document.createElement('img');
+    img.alt = item.pokemonName || 'Pokémon #' + item.pokemonId;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.width = 110;
+    img.height = 110;
+    img.src = art + 'other/official-artwork/' + item.pokemonId + '.png';
+    img.onerror = () => {
+      if (img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      img.src = art + item.pokemonId + '.png';
     };
     picture.append(img);
-    const details=document.createElement('div');
-    details.className='pokemon-collection-info';
-    details.append(text('small','#'+String(item.pokemonId).padStart(4,'0'),'pokemon-collection-number'));
-    details.append(text('strong',item.pokemonName||'Pokémon #'+item.pokemonId));
-    details.append(text('span','@'+item.name,'pokemon-collection-owner'));
-    card.append(picture,details);
-    return card;
-  }
-  const filtered=()=>{
-    const term=norm(query).replace(/^@/,'');
-    return entries.filter(item=>!term||norm(item.login).includes(term)||
-      norm(item.name).includes(term)||norm(item.pokemonName).includes(term)||
-      String(item.pokemonId).includes(term));
+    return picture;
   };
-  function render(reset=true){
-    if(!loaded)return;
-    if(reset)displayed=0;
-    const current=filtered();
-    counter.textContent=current.length+' '+(current.length===1?'POKÉMON': 'POKÉMONÓW');
-    if(!current.length){
-      message(query?'Nie znaleziono Pokémona ani widza.':'Kolekcja jest jeszcze pusta.',
-        'Pierwszy Pokémon pojawi się po użyciu przez widza komendy !pokemon.');
+  const query = () => norm(search.value).replace(/^@/, '');
+  const matches = (item, term) => !term ||
+    norm(item.pokemonName).includes(term) ||
+    String(item.pokemonId).includes(term) ||
+    norm(item.login).includes(term) ||
+    norm(item.name).includes(term);
+
+  async function load() {
+    if (loadedAt && Date.now() - loadedAt < 5 * 60 * 1000) return;
+    if (inflight) return inflight;
+    status.textContent = 'POBIERANIE DANYCH';
+    inflight = (async () => {
+      const resp = await fetch(cloud + '/api/pokemon/collection', { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const payload = await resp.json();
+      if (!Array.isArray(payload?.entries)) throw new Error('Niepoprawny format odpowiedzi Y.U.R.A. Cloud');
+      const used = new Set();
+      const next = [];
+      for (const row of payload.entries) {
+        const login = norm(row?.login);
+        const id = Number(row?.pokemonId);
+        if (!/^[a-z0-9_]{2,25}$/.test(login) ||
+            !Number.isInteger(id) || id < 1 || id > 1025 || used.has(login)) continue;
+        used.add(login);
+        next.push({
+          login,
+          name: String(row?.name || login).trim().slice(0, 64) || login,
+          pokemonId: id,
+          pokemonName: String(row?.pokemonName || '').trim().slice(0, 80)
+        });
+      }
+      if (next.some(row => !row.pokemonName)) {
+        try {
+          const dexResp = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025', { cache: 'force-cache' });
+          if (dexResp.ok) {
+            const dexData = await dexResp.json();
+            const names = new Map((dexData.results || []).map(item => {
+              const id = String(item.url || '').match(/\/pokemon\/(\d+)\/?$/);
+              return [id ? Number(id[1]) : 0, String(item.name || '')];
+            }));
+            next.forEach(row => {
+              if (row.pokemonName || !names.has(row.pokemonId)) return;
+              const name = names.get(row.pokemonId).replace(/-/g, ' ');
+              row.pokemonName = name[0].toUpperCase() + name.slice(1);
+            });
+          }
+        } catch { /* Species IDs still remain available. */ }
+      }
+      next.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+      const grouped = new Map();
+      for (const row of next) {
+        if (!grouped.has(row.pokemonId)) grouped.set(row.pokemonId, {
+          pokemonId: row.pokemonId, pokemonName: row.pokemonName,
+          trainers: []
+        });
+        const item = grouped.get(row.pokemonId);
+        if (!item.pokemonName && row.pokemonName) item.pokemonName = row.pokemonName;
+        item.trainers.push({ login: row.login, name: row.name });
+      }
+      entries = next;
+      species = [...grouped.values()].sort((a, b) => a.pokemonId - b.pokemonId);
+      loadedAt = Date.now();
+      speciesTotal.textContent = fmt(species.length);
+      trainersTotal.textContent = fmt(entries.length);
+      status.textContent = 'Y.U.R.A. CLOUD / ONLINE';
+    })().catch(err => {
+      status.textContent = 'BRAK DANYCH CLOUD';
+      loadedAt = 0;
+      throw err;
+    }).finally(() => { inflight = null; });
+    return inflight;
+  }
+
+  const dexCard = item => {
+    const card = make('article', 'pokemon-dex-card');
+    card.append(artwork(item));
+    const info = make('div', 'pokemon-dex-info');
+    info.append(
+      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
+      make('strong', 'pokemon-species', item.pokemonName || 'Pokémon #' + item.pokemonId),
+      make('span', 'pokemon-dex-trainers', fmt(item.trainers.length) +
+        (item.trainers.length === 1 ? ' trener' : ' trenerów'))
+    );
+    const names = make('p', 'pokemon-dex-owners',
+      item.trainers.slice(0, 3).map(person => '@' + person.name).join(', ') +
+      (item.trainers.length > 3 ? ' +' + (item.trainers.length - 3) : ''));
+    info.append(names);
+    card.append(info);
+    return card;
+  };
+
+  const trainerCard = item => {
+    const card = make('article', 'pokemon-trainer-card');
+    const user = make('div', 'pokemon-trainer-user');
+    const avatar = make('div', 'pokemon-trainer-avatar', item.name.charAt(0).toUpperCase());
+    avatar.dataset.trainerAvatar = item.login;
+    const who = make('div', 'pokemon-trainer-person');
+    who.append(make('strong', '', item.name), make('span', '', '@' + item.login));
+    user.append(avatar, who);
+    const assigned = make('div', 'pokemon-trainer-assigned');
+    assigned.append(artwork(item));
+    const data = make('div', 'pokemon-trainer-pokemon');
+    data.append(
+      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4, '0')),
+      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId)
+    );
+    assigned.append(data);
+    card.append(user, assigned);
+    return card;
+  };
+
+  function updateAvatars() {
+    root.querySelectorAll('[data-trainer-avatar]').forEach(el => {
+      const url = safeAvatar(avatarCache.get(el.dataset.trainerAvatar));
+      if (!url || el.querySelector('img')) return;
+      const img = document.createElement('img');
+      img.src = url;
+      img.loading = 'lazy';
+      img.alt = '';
+      img.onerror = () => img.remove();
+      el.append(img);
+    });
+  }
+
+  async function fetchAvatars(logins) {
+    const unique = [...new Set(logins)].filter(login => !avatarCache.has(login) && !avatarPending.has(login));
+    for (let i = 0; i < unique.length; i += 20) {
+      const group = unique.slice(i, i + 20);
+      group.forEach(login => avatarPending.add(login));
+      try {
+        const r = await fetch(cloud + '/api/avatars?logins=' + encodeURIComponent(group.join(',')),
+          { cache: 'default' });
+        if (!r.ok) throw new Error('Avatar lookup unavailable');
+        const data = await r.json();
+        group.forEach(login => avatarCache.set(login, safeAvatar(data?.avatars?.[login])));
+        if (visible() && mode === 'trainers') updateAvatars();
+      } catch {
+        group.forEach(login => avatarCache.set(login, ''));
+      } finally { group.forEach(login => avatarPending.delete(login)); }
+    }
+  }
+
+  function renderDex(more = false) {
+    const term = query();
+    const results = species.filter(item => matches(item, term) ||
+      item.trainers.some(person => norm(person.name).includes(term) || norm(person.login).includes(term)));
+    if (!more) { shownDex = 0; dexGrid.replaceChildren(); }
+    dexCount.textContent = fmt(results.length) + (results.length === 1 ? ' GATUNEK' : ' GATUNKÓW');
+    if (!results.length) {
+      errorMessage(dexGrid, term ? 'Nie znaleziono Pokémona.' : 'Pokédex jest jeszcze pusty.',
+        term ? 'Spróbuj innej nazwy lub numeru.' : 'Pokémony pojawią się po przypisaniu ich widzom.');
+      dexMore.hidden = true;
       return;
     }
-    if(reset)list.replaceChildren();
-    const next=current.slice(displayed,displayed+batchSize);
-    list.append(...next.map(createCard));
-    displayed+=next.length;
-    more.hidden=displayed>=current.length;
-    more.textContent='Pokaż kolejne ('+Math.min(batchSize,current.length-displayed)+')';
+    const next = results.slice(shownDex, shownDex + batchSize);
+    dexGrid.append(...next.map(dexCard));
+    shownDex += next.length;
+    dexMore.hidden = shownDex >= results.length;
+    dexMore.textContent = 'Pokaż kolejne (' + fmt(Math.min(batchSize, results.length - shownDex)) + ')';
   }
-  more.addEventListener('click',()=>render(false));
-  document.addEventListener('yura:pokemon-collection',async event=>{
-    const info=event.detail||{};
-    if(!info.active)return;
-    const nextQuery=String(info.query||'');
-    const differs=nextQuery!==query;
-    query=nextQuery;
-    try{
-      await load();
-      if(root.hidden)return;
-      render(differs||!displayed);
-    }catch(err){
-      message('Nie można teraz pobrać kolekcji.',
-        'Cloud nie udostępnił listy Pokémonów. Spróbuj ponownie później.');
-      counter.textContent='—';
+
+  function renderTrainers(more = false) {
+    const results = entries.filter(item => matches(item, query()));
+    if (!more) { shownTrainers = 0; trainersGrid.replaceChildren(); }
+    trainersResultCount.textContent = fmt(results.length) +
+      (results.length === 1 ? ' TRENER' : ' TRENERÓW');
+    if (!results.length) {
+      errorMessage(trainersGrid, query() ? 'Nie znaleziono trenera.' : 'Nie ma jeszcze trenerów.',
+        'Przypisania pojawią się po użyciu komendy !pokemon.');
+      trainersMore.hidden = true;
+      return;
     }
+    const next = results.slice(shownTrainers, shownTrainers + batchSize);
+    trainersGrid.append(...next.map(trainerCard));
+    shownTrainers += next.length;
+    trainersMore.hidden = shownTrainers >= results.length;
+    trainersMore.textContent = 'Pokaż kolejnych (' +
+      fmt(Math.min(batchSize, results.length - shownTrainers)) + ')';
+    updateAvatars();
+    void fetchAvatars(next.map(person => person.login));
+  }
+
+  function render() {
+    if (!loadedAt) return;
+    if (mode === 'dex') renderDex();
+    else renderTrainers();
+  }
+  function setMode(next) {
+    if (next !== 'dex' && next !== 'trainers') return;
+    mode = next;
+    tabs.forEach(tab => {
+      const active = tab.dataset.pokemonMode === mode;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+    dexPanel.hidden = mode !== 'dex';
+    trainersPanel.hidden = mode !== 'trainers';
+    search.placeholder = mode === 'dex' ? 'Szukaj Pokémona lub numeru…' :
+      'Szukaj trenera lub Pokémona…';
+    search.value = '';
+    render();
+  }
+  tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.pokemonMode)));
+  root.querySelector('.pokemon-tabs').addEventListener('keydown', event => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    const next = mode === 'dex' ? 'trainers' : 'dex';
+    setMode(next);
+    tabs.find(tab => tab.dataset.pokemonMode === next)?.focus();
   });
+  search.addEventListener('input', render);
+  dexMore.addEventListener('click', () => renderDex(true));
+  trainersMore.addEventListener('click', () => renderTrainers(true));
+
+  async function open() {
+    if (!visible()) return;
+    if (!loadedAt) {
+      errorMessage(dexGrid, 'Ładowanie Pokédexu…');
+      errorMessage(trainersGrid, 'Ładowanie listy trenerów…');
+    }
+    try {
+      await load();
+      if (visible()) render();
+    } catch {
+      errorMessage(dexGrid, 'Nie można teraz pobrać Pokédexu.',
+        'Y.U.R.A. Cloud nie udostępnia chwilowo danych. Spróbuj ponownie później.');
+      errorMessage(trainersGrid, 'Nie można teraz pobrać trenerów.',
+        'Y.U.R.A. Cloud nie udostępnia chwilowo danych. Spróbuj ponownie później.');
+      dexMore.hidden = trainersMore.hidden = true;
+    }
+  }
+  document.addEventListener('yura:pokemon-open', open);
+  if (visible()) void open();
 })();
