@@ -1212,7 +1212,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       && Number.isSafeInteger(Number(durationRaw)) && Number(durationRaw)>=5 && Number(durationRaw)<=3600);
     if(!validStake || !validDuration || parts.length>3){
       await sendChat(env,`🎰 @${display} użyj !jackpot <wpisowe> [sekundy], np. !jackpot 1000 60 (1–1 000 000 YURA, 5–3600 s).`);
-      return; // Invalid input must not start a cooldown.
+      return;
     }
     const active=await getYuraRaffleState(env);
     if(active?.active){
@@ -1225,26 +1225,64 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       return;
     }
     const stake=Number(stakeRaw);
+    // Opening a jackpot is the author\u2019s first paid !join. Verify the
+    // author\u2019s balance before taking the shared Raffle / Jackpot start gate.
+    if(isYuraPointsBotLogin(login) || !/^\d+$/.test(String(event.chatter_user_id||""))){
+      await sendChat(env,`🎰 @${display} nie można uruchomić Jackpota z konta bota lub bez identyfikatora Twitch.`);
+      return;
+    }
+    await ensureAccount(env,event.chatter_user_id,login,display);
+    const authorAccount=await getAccount(env,login);
+    if(!authorAccount || Number(authorAccount.points)<stake){
+      await sendChat(env,`🎰 @${display} potrzebujesz ${stake.toLocaleString("pl-PL")} YURA, aby uruchomić Jackpot i automatycznie dołączyć (masz ${Number(authorAccount?.points||0).toLocaleString("pl-PL")}).`);
+      return;
+    }
     const configured=Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60))||60));
     const duration=durationRaw ? Number(durationRaw) : configured;
     const endsAtUtc=new Date(Date.now()+duration*1000).toISOString();
     if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
-    let newSession:any;
+    let newSession=0;
     try {
-      const res=await env.DB.prepare("INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)")
-        .bind(stake,endsAtUtc,nowIso()).run();
-      newSession=res.meta?.last_row_id;
-    } catch {
-      await sendChat(env,`🎰 @${display} nie mogę uruchomić nowej sesji — poprzedni Jackpot może jeszcze trwać. Spróbuj po jego zakończeniu.`);
+      const createdAt=nowIso();
+      // Cloudflare D1 batch is a transaction: if debit fails, session creation
+      // and the jackpot_entries insert roll back together. The INSERT trigger
+      // debits the author exactly once and records a transaction audit entry.
+      const batch=await env.DB.batch([
+        env.DB.prepare(`INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)`)
+          .bind(stake,endsAtUtc,createdAt),
+        env.DB.prepare(`INSERT INTO jackpot_entries(session_id,login,twitch_user_id,display_name,stake,joined_at_utc)
+          SELECT id,?1,?2,?3,?4,?5 FROM jackpot_sessions WHERE status='open' ORDER BY id DESC LIMIT 1`)
+          .bind(login,event.chatter_user_id,display,stake,createdAt)
+      ]);
+      if(Number(batch[0]?.meta?.changes||0)!==1 || Number(batch[1]?.meta?.changes||0)!==1)
+        throw new Error("Jackpot start did not create one funded participant");
+      newSession=Number(batch[0]?.meta?.last_row_id||0);
+      if(!Number.isSafeInteger(newSession) || newSession<=0){
+        const sessionRow=await env.DB.prepare(`SELECT id FROM jackpot_sessions WHERE status='open' ORDER BY id DESC LIMIT 1`).first<{id:number}>();
+        newSession=Number(sessionRow?.id||0);
+      }
+      if(!newSession)throw new Error("Jackpot session identifier unavailable");
+    } catch(e){
+      // No session or debit persists on D1 batch failure; unlock the shared
+      // family gate so an invalid attempt cannot block another viewer.
+      if(newSession){
+        try {await finishJackpot(env,newSession,true);}catch(refundError){console.error("Jackpot automatic join refund failed",String(refundError));}
+      }
+      await env.DB.prepare(`DELETE FROM command_cooldowns WHERE command_key=?1 AND user_id='*'`)
+        .bind(RAFFLE_SHARED_START_KEY).run();
+      console.warn("Jackpot organizer auto-join failed",String(e));
+      const current=await getAccount(env,login);
+      await sendChat(env,Number(current?.points||0)<stake
+        ? `🎰 @${display} nie masz już wystarczająco punktów (${Number(current?.points||0).toLocaleString("pl-PL")} YURA). Jackpot nie wystartował.`
+        : `🎰 @${display} nie udało się bezpiecznie uruchomić Jackpota. Spróbuj ponownie — nie otwarto pustej sesji.`);
       return;
     }
-    if(!newSession)throw new Error("Jackpot database did not return a session id");
     const state:YuraRaffleState={active:true,mode:"jackpot",prize:stake,endsAtUtc,durationSeconds:duration,
-      entries:[],jackpotId:Number(newSession),winnerCount:1,warningSent:true,joinConfirmation:true};
+      entries:[{userId:event.chatter_user_id,login,display}],
+      jackpotId:newSession,winnerCount:1,warningSent:true,joinConfirmation:true};
     await setYuraRaffleState(env,state);
-    // Mark cooldown only after the session has been persisted, never on error.
     await tryEnterCloudCommandCooldown(env,JACKPOT_START_COOLDOWN_KEY,event.chatter_user_id,cfg);
-    await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • dołącz: !join • jedna osoba wygrywa całą pulę!`);
+    await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • @${display} dołączył automatycznie (1 gracz, pula ${stake.toLocaleString("pl-PL")} YURA) • dołącz: !join!`);
     return;
   }
   if (key === "raffle" || key === "sraffle" || key === "jackpot") {
