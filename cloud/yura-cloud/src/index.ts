@@ -668,6 +668,27 @@ async function remainingJackpotCooldownSeconds(env:Env,userId:string,cfg:Command
   }
   return Math.max(0,remaining);
 }
+// Shared, atomic global cooldown/lock for all YURA prize draws.
+const RAFFLE_SHARED_START_KEY="raffle-family-v1";
+async function enterSharedRaffleStartGate(env:Env,durationSeconds:number,globalCooldownSeconds:number):Promise<number> {
+  const now=Date.now();
+  const blockMs=Math.max(15000,Math.max(5,durationSeconds)*1000,Math.max(0,globalCooldownSeconds)*1000);
+  const end=new Date(now+blockMs).toISOString();
+  const current=new Date(now).toISOString();
+  const row=await env.DB.prepare(`INSERT INTO command_cooldowns(command_key,user_id,expires_at_utc)
+    VALUES(?1,'*',?2)
+    ON CONFLICT(command_key,user_id) DO UPDATE SET expires_at_utc=excluded.expires_at_utc
+    WHERE command_cooldowns.expires_at_utc<=?3`).bind(RAFFLE_SHARED_START_KEY,end,current).run();
+  if(Number(row.meta?.changes||0)===1)return 0;
+  const existing=await env.DB.prepare(`SELECT expires_at_utc FROM command_cooldowns WHERE command_key=?1 AND user_id='*'`)
+    .bind(RAFFLE_SHARED_START_KEY).first<{expires_at_utc:string}>();
+  return Math.max(1,Math.ceil((Date.parse(String(existing?.expires_at_utc||""))-now)/1000)||1);
+}
+async function tryStartRaffleFamily(env:Env,display:string,durationSeconds:number,cfg:CommandConfig):Promise<boolean>{
+  const wait=await enterSharedRaffleStartGate(env,durationSeconds,cfg.globalCooldown);
+  if(wait>0){await sendChat(env,`🎟️ @${display} trwa losowanie lub wspólny cooldown Raffle/Jackpot. Spróbuj za ${wait} s.`);return false;}
+  return true;
+}
 function formatAge(iso: string) {
   const started = Date.parse(iso);
   if (!Number.isFinite(started)) return "0 dni";
@@ -1147,7 +1168,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
   // Jackpot accepts all viewers even with older moderator-only persisted permissions.
   if (key !== "jackpot" && !commandPermissionAllows(event,env,cfg.permission)) return;
-  if (key !== "jackpot" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
+  if (key !== "jackpot" && key !== "raffle" && key !== "sraffle" && key !== "autoraffle" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
 
   if (key === "alertcontrol") {
     // Alert queue controls are intentionally local: Desktop forwards them to Streamer.bot.
@@ -1169,6 +1190,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       userId:String(x?.user_id ?? ""),login:norm(x?.user_login ?? ""),display:String(x?.user_name ?? x?.user_login ?? "")
     }));
     const duration = 6;
+    if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
     const state:YuraRaffleState = {
       active:true,mode:"auto",id:crypto.randomUUID(),prize,
       endsAtUtc:new Date(Date.now()+duration*1000).toISOString(),durationSeconds:duration,
@@ -1206,6 +1228,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const configured=Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60))||60));
     const duration=durationRaw ? Number(durationRaw) : configured;
     const endsAtUtc=new Date(Date.now()+duration*1000).toISOString();
+    if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
     let newSession:any;
     try {
       const res=await env.DB.prepare("INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)")
@@ -1234,6 +1257,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const prize = Math.max(1,Math.min(1000000,Math.trunc(Number(parts[1] ?? defaultPrize)) || defaultPrize));
     const configuredDuration = Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60)) || 60));
     const duration = Math.max(5,Math.min(3600,Math.trunc(Number(parts[2] ?? configuredDuration)) || configuredDuration));
+    if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
     const state:YuraRaffleState = { active:true, mode:key === "sraffle" ? "single" : "multi", prize, endsAtUtc:new Date(Date.now()+duration*1000).toISOString(), durationSeconds:duration, entries:[{ userId:event.chatter_user_id, login, display }], warningSent:false, joinConfirmation:cfg.joinConfirmation !== false, warning20Seconds:cfg.warning20Seconds !== false, warningFinalThird:cfg.warningFinalThird !== false };
     await setYuraRaffleState(env,state);
     await sendChat(env,key === "sraffle"
@@ -2718,6 +2742,34 @@ async function loadChannelRoles(env:Env) {
   return loaded;
 }
 
+// Read-only authoritative state for the existing OBS Raffle overlay.
+async function apiRaffleOverlayState(env:Env):Promise<Response>{
+  const state=await getYuraRaffleState(env);
+  const ends=Date.parse(String(state?.endsAtUtc||""));
+  const active=!!(state?.active && Number.isFinite(ends) && ends>Date.now());
+  let participants=active?(state?.entries?.length||0):0;
+  let lastParticipant=active&&participants?String(state?.entries?.[participants-1]?.display||""):"";
+  let stake=0;
+  let pool=active?Number(state?.prize||0):0;
+  if(active&&state?.mode==="jackpot"&&state.jackpotId){
+    stake=Number(state.prize||0);
+    const count=await env.DB.prepare(`SELECT COUNT(*) AS n FROM jackpot_entries WHERE session_id=?1`)
+      .bind(state.jackpotId).first<{n:number}>();
+    const last=await env.DB.prepare(`SELECT display_name FROM jackpot_entries WHERE session_id=?1 ORDER BY joined_at_utc DESC LIMIT 1`)
+      .bind(state.jackpotId).first<{display_name:string}>();
+    participants=Math.max(0,Number(count?.n||0));
+    lastParticipant=String(last?.display_name||"");
+    pool=stake*participants;
+  }
+  const mode=state?.mode==="single"?"SRAFFLE":state?.mode==="multi"?"RAFFLE":
+    state?.mode==="auto"?"AUTORAFFLE":state?.mode==="jackpot"?"JACKPOT":"RAFFLE";
+  return new Response(JSON.stringify({ok:true,active,mode,singleWinner:mode==="JACKPOT"||mode==="SRAFFLE",
+    participants,lastParticipant,prize:pool,stake,
+    winnerCount:state?.winnerCount||0,endsAtUtc:active?state!.endsAtUtc:null,
+    durationSeconds:state?.durationSeconds||60}),
+    {headers:{"Content-Type":"application/json; charset=utf-8",
+      "Cache-Control":"no-store, max-age=0", "Access-Control-Allow-Origin":"*"}});
+}
 // Public Pokémon collection with join order and immutable reroll/purchase history.
 // First-assignment dates for legacy users are explicitly marked as estimates.
 async function apiPokemonCollection(env:Env):Promise<Response> {
@@ -3285,6 +3337,7 @@ export default {
     if (url.pathname === "/api/leaderboard-revision" && req.method === "GET") return apiLeaderboardRevision(env);
     if (url.pathname === "/api/leaderboard" && req.method === "GET") return apiLeaderboard(env);
     if (url.pathname === "/api/ranking" && req.method === "GET") return apiYuraRanking(env);
+    if (url.pathname === "/api/raffle/public" && req.method === "GET") return apiRaffleOverlayState(env);
     if (url.pathname === "/api/pokemon/collection" && req.method === "GET") return apiPokemonCollection(env);
     if (url.pathname === "/api/avatars" && req.method === "GET") return apiPublicAvatarBatch(req,env);
     if (url.pathname === "/api/public-stats" && req.method === "GET") return apiYuraPublicStats(env);
