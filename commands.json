@@ -107,7 +107,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!jackpot \u003Cwpisowe\u003E [czas w sekundach]",
-    "description": "Ka\u017Cdy widz mo\u017Ce uruchomi\u0107 to losowanie. Losowanie ze wsp\u00F3ln\u0105 pul\u0105 finansowan\u0105 przez uczestnik\u00F3w. Przyk\u0142ad: !jackpot 2000 \u2014 ka\u017Cde poprawne !join pobiera dok\u0142adnie 2000 YURA z salda (trzeba mie\u0107 wystarczaj\u0105c\u0105 liczb\u0119 punkt\u00F3w). 5 uczestnik\u00F3w daje pul\u0119 10 000; jeden losowy zwyci\u0119zca otrzymuje ca\u0142o\u015B\u0107. Powt\u00F3rne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej ni\u017C 2 uczestnikach wpisowe s\u0105 zwracane.",
+    "description": "Każdy widz może uruchomić to losowanie. Losowanie ze wspólną pulą finansowaną przez uczestników. Przykład: !jackpot 2000 — autor automatycznie dołącza jako pierwszy gracz i wpłaca 2000 YURA. Każde następne !join pobiera od nowego uczestnika 2000 YURA, o ile ma on wystarczające saldo. 5 uczestników daje pulę 10 000; jeden losowy zwycięzca otrzymuje całość. Powtórne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej niż 2 uczestnikach wpisowe są zwracane.",
     "category": "RAFFLE",
     "source": "YURA"
   },
