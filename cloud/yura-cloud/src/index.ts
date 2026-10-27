@@ -653,6 +653,21 @@ async function tryEnterCloudCommandCooldown(env: Env, commandKey: string, userId
   return true;
 }
 
+// Only successful Jackpot starts consume a cooldown; invalid attempts must reply.
+// v2 ignores historical jackpot cooldown rows written before input validation.
+const JACKPOT_START_COOLDOWN_KEY = "jackpot-start-v2";
+async function remainingJackpotCooldownSeconds(env:Env,userId:string,cfg:CommandConfig):Promise<number> {
+  const now=Date.now();
+  let remaining=0;
+  for(const check of [{id:"*",seconds:cfg.globalCooldown},{id:userId||"unknown",seconds:cfg.userCooldown}]) {
+    if(check.seconds<=0)continue;
+    const row=await env.DB.prepare("SELECT expires_at_utc FROM command_cooldowns WHERE command_key=?1 AND user_id=?2")
+      .bind(JACKPOT_START_COOLDOWN_KEY,check.id).first<{expires_at_utc:string}>();
+    const until=Date.parse(String(row?.expires_at_utc||""));
+    if(Number.isFinite(until))remaining=Math.max(remaining,Math.ceil((until-now)/1000));
+  }
+  return Math.max(0,remaining);
+}
 function formatAge(iso: string) {
   const started = Date.parse(iso);
   if (!Number.isFinite(started)) return "0 dni";
@@ -1126,11 +1141,13 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   // ONLINE commands must work on the FIRST chat message after going live.
   // stream_live is refreshed by EventSub/cron, but either may lag the actual start.
   // If the cached flag is still OFFLINE, verify Twitch directly before rejecting.
-  if (!cfg.alwaysOnline && !(cfg.streamOn && await isStreamLiveForOnlineCommand(env))) return;
-  // JACKPOT is a community raffle: anyone in chat may start one, even when
-  // an older persisted command config still says MOD_BROADCASTER.
+  if (!cfg.alwaysOnline && !(cfg.streamOn && await isStreamLiveForOnlineCommand(env))) {
+    if(key==="jackpot")await sendChat(env,`🎰 @${display} !jackpot działa tylko podczas transmisji (ONLINE).`);
+    return;
+  }
+  // Jackpot accepts all viewers even with older moderator-only persisted permissions.
   if (key !== "jackpot" && !commandPermissionAllows(event,env,cfg.permission)) return;
-  if (!await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
+  if (key !== "jackpot" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
 
   if (key === "alertcontrol") {
     // Alert queue controls are intentionally local: Desktop forwards them to Streamer.bot.
@@ -1166,28 +1183,47 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
 
   if (key === "jackpot") {
     const stakeRaw=parts[1];
-    if (!stakeRaw || !/^\d+$/.test(stakeRaw) || !Number.isSafeInteger(Number(stakeRaw)) || Number(stakeRaw)<1 || Number(stakeRaw)>1000000) {
-      await sendChat(env,`🎰 @${display} użyj !jackpot <wpisowe> [sekundy], np. !jackpot 2000.`); return;
+    const durationRaw=parts[2];
+    const validStake=!!stakeRaw && /^\d+$/.test(stakeRaw)
+      && Number.isSafeInteger(Number(stakeRaw)) && Number(stakeRaw)>=1 && Number(stakeRaw)<=1000000;
+    const validDuration=!durationRaw || (/^\d+$/.test(durationRaw)
+      && Number.isSafeInteger(Number(durationRaw)) && Number(durationRaw)>=5 && Number(durationRaw)<=3600);
+    if(!validStake || !validDuration || parts.length>3){
+      await sendChat(env,`🎰 @${display} użyj !jackpot <wpisowe> [sekundy], np. !jackpot 1000 60 (1–1 000 000 YURA, 5–3600 s).`);
+      return; // Invalid input must not start a cooldown.
     }
     const active=await getYuraRaffleState(env);
-    if (active?.active) { await sendChat(env,`@${display} inne raffle już trwa.`); return; }
+    if(active?.active){
+      await sendChat(env,`🎰 @${display} ${active.mode==="jackpot"?"Jackpot":"Inne raffle"} już trwa. ${active.mode==="jackpot"?"Dołącz: !join.":"Spróbuj po zakończeniu."}`);
+      return;
+    }
+    const remaining=await remainingJackpotCooldownSeconds(env,event.chatter_user_id,cfg);
+    if(remaining>0){
+      await sendChat(env,`🎰 @${display} cooldown Jackpota: jeszcze ${remaining} s. Spróbuj ponownie po odliczaniu.`);
+      return;
+    }
     const stake=Number(stakeRaw);
     const configured=Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60))||60));
-    const duration=parts[2] && /^\d+$/.test(parts[2]) ? Math.max(5,Math.min(3600,Number(parts[2]))) : configured;
+    const duration=durationRaw ? Number(durationRaw) : configured;
     const endsAtUtc=new Date(Date.now()+duration*1000).toISOString();
-    let newSession: any;
+    let newSession:any;
     try {
-      const res=await env.DB.prepare("INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)").bind(stake,endsAtUtc,nowIso()).run();
+      const res=await env.DB.prepare("INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)")
+        .bind(stake,endsAtUtc,nowIso()).run();
       newSession=res.meta?.last_row_id;
-    } catch { await sendChat(env,`@${display} jackpot już trwa.`); return; }
-    if (!newSession) throw new Error("Jackpot database did not return a session id");
+    } catch {
+      await sendChat(env,`🎰 @${display} nie mogę uruchomić nowej sesji — poprzedni Jackpot może jeszcze trwać. Spróbuj po jego zakończeniu.`);
+      return;
+    }
+    if(!newSession)throw new Error("Jackpot database did not return a session id");
     const state:YuraRaffleState={active:true,mode:"jackpot",prize:stake,endsAtUtc,durationSeconds:duration,
       entries:[],jackpotId:Number(newSession),winnerCount:1,warningSent:true,joinConfirmation:true};
     await setYuraRaffleState(env,state);
-    await sendChat(env,`🎰 JACKPOT • wpisowe ${stake.toLocaleString('pl-PL')} YURA • ${duration}s • !join, jedna osoba zgarnia całą pulę!`);
+    // Mark cooldown only after the session has been persisted, never on error.
+    await tryEnterCloudCommandCooldown(env,JACKPOT_START_COOLDOWN_KEY,event.chatter_user_id,cfg);
+    await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • dołącz: !join • jedna osoba wygrywa całą pulę!`);
     return;
   }
-
   if (key === "raffle" || key === "sraffle" || key === "jackpot") {
     const active = await getYuraRaffleState(env);
     if (active?.active && Date.parse(active.endsAtUtc) > Date.now()) {
