@@ -1413,14 +1413,16 @@
     width:100%;
     margin-bottom:19px;
   }
-  #leaderboardView .yura-ranking-tabs .yura-ranking-tab{
+  #leaderboardView .yura-ranking-tabs .yura-ranking-tab,
+  #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
     min-height:48px;
     font-size:12px;
     padding:8px 4px;
   }
 }
 @media(max-width:380px){
-  #leaderboardView .yura-ranking-tabs .yura-ranking-tab{
+  #leaderboardView .yura-ranking-tabs .yura-ranking-tab,
+  #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
     font-size:11px;
     min-height:44px;
   }
