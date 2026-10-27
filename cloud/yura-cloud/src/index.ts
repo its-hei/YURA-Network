@@ -895,6 +895,11 @@ async function isStreamLiveForOnlineCommand(env: Env): Promise<boolean> {
 // authoritative identity; the public website never writes these preferences.
 const POKEROLL_PRICE = 5000;
 const POKEMON_MAX_SPECIES_ID = 1025;
+// Uniform public and chat display. Stored legacy species names may be lowercase.
+function formatPokemonName(raw:string):string {
+  return String(raw||'').trim().replace(/-/g,' ')
+    .replace(/(^|\s)(\p{L})/gu,(_,space,letter:string)=>space+letter.toUpperCase());
+}
 function randomPokemonId(): number {
   // Rejection sampling avoids a small modulo bias.
   const range = 4294967296 - (4294967296 % POKEMON_MAX_SPECIES_ID);
@@ -912,8 +917,9 @@ async function randomPokemon(excludeId?:number):Promise<{id:number,name:string}|
       });
       if(!res.ok)continue;
       const body:any=await res.json();
-      const name=String(body?.name || '');
-      if(Number(body?.id)===id && /^[a-z0-9-]{2,40}$/.test(name))return {id,name};
+      const rawName=String(body?.name || '');
+      if(Number(body?.id)===id && /^[a-z0-9-]{2,40}$/.test(rawName))
+        return {id,name:formatPokemonName(rawName)};
     } catch { /* no charge/assignment if the species cannot be confirmed */ }
   }
   return null;
@@ -946,7 +952,7 @@ async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<
     // Any user who previously chose a Twitch avatar now switches to Pokémon on chat.
     await env.DB.prepare(`UPDATE pokemon_profiles SET avatar_mode='pokemon',updated_at_utc=?1
       WHERE twitch_user_id=?2 AND avatar_mode<>'pokemon'`).bind(nowIso(),id).run();
-    return {id:Number(saved.pokemon_id),name:String(saved.pokemon_name),created:false};
+    return {id:Number(saved.pokemon_id),name:formatPokemonName(String(saved.pokemon_name)),created:false};
   }
   const chosen=await randomPokemon();
   if(!chosen)return null;
@@ -965,7 +971,7 @@ async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<
   // Concurrent first message: return whichever Pokémon was actually persisted.
   const actual=await env.DB.prepare('SELECT pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1')
     .bind(id).first<any>();
-  return actual?{id:Number(actual.pokemon_id),name:String(actual.pokemon_name),created:false}:null;
+  return actual?{id:Number(actual.pokemon_id),name:formatPokemonName(String(actual.pokemon_name)),created:false}:null;
 }
 async function rerollPokemonForChat(env:Env,event:TwitchChatEvent) {
   const id=String(event.chatter_user_id||'');
@@ -2692,23 +2698,31 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
     /^[a-z0-9_]{2,25}$/.test(norm(String(r.login||''))) &&
     !knownBotLogin(String(r.login||'')));
   const histories=new Map<string,any[]>();
+  const discovered=new Map<number,string>();
+  const remember=(id:number,name:string) => {
+    if(!Number.isInteger(id)||id<1||id>POKEMON_MAX_SPECIES_ID)return;
+    const title=formatPokemonName(name);
+    if(!discovered.has(id)||(!discovered.get(id)&&title))discovered.set(id,title);
+  };
   const byId=new Map<string,any>();
   const items=valid.map((r:any,index:number)=>{
     const id=String(r.twitch_user_id||'');
     const estimated=Number(r.join_estimated||0)!==0;
     const entry:any={
       login:norm(String(r.login)),name:String(r.display_name||r.login),
-      pokemonId:Number(r.pokemon_id),pokemonName:String(r.pokemon_name||''),
+      pokemonId:Number(r.pokemon_id),pokemonName:formatPokemonName(String(r.pokemon_name||'')),
       updatedAt:String(r.updated_at_utc||''),
       joinedAt:String(r.joined_at_utc||''),
       joinOrder:index+1,joinEstimated:estimated,history:[] as any[]
     };
     byId.set(id,entry);
+    remember(entry.pokemonId,entry.pokemonName);
     const history:any[]=[];
     if(!estimated){
       history.push({pokemonId:Number(r.first_pokemon_id),
-        pokemonName:String(r.first_pokemon_name||''),at:String(r.joined_at_utc||''),
+        pokemonName:formatPokemonName(String(r.first_pokemon_name||'')),at:String(r.joined_at_utc||''),
         type:'first',approximate:false});
+      remember(Number(r.first_pokemon_id),String(r.first_pokemon_name||''));
     }
     histories.set(id,history);
     return entry;
@@ -2729,7 +2743,8 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
       const h=histories.get(String(r.twitch_user_id||''));
       const pokemonId=Number(r.pokemon_id);
       if(!h || !Number.isInteger(pokemonId) || pokemonId<1 || pokemonId>1025)continue;
-      h.push({pokemonId,pokemonName:String(r.pokemon_name||''),
+      remember(pokemonId,String(r.pokemon_name||''));
+      h.push({pokemonId,pokemonName:formatPokemonName(String(r.pokemon_name||'')),
         at:String(r.created_at_utc||''),type:String(r.event_type||'reroll'),
         approximate:false});
     }
@@ -2743,8 +2758,9 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
       entry.history=history.slice(-60);
     }
   }
-  return json({schemaVersion:2,source:'YURA Cloud',updatedAt:nowIso(),
-    count:items.length,entries:items});
+  return json({schemaVersion:3,source:'YURA Cloud',updatedAt:nowIso(),
+    count:items.length,entries:items,
+    discovered:[...discovered].sort((a,b)=>a[0]-b[0]).map(([pokemonId,pokemonName])=>({pokemonId,pokemonName}))});
 }
 
 // Resolve up to 20 Twitch profile pictures with a SINGLE authorized Helix call.
