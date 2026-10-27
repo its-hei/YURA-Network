@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=119">
+  <link rel="stylesheet" href="styles.css?v=120">
   <link rel="stylesheet" href="yura-ranking-tabs.css?v=114">
 </head>
 <body>
@@ -295,7 +295,7 @@
           <h1>Pokémon</h1>
           <p>Pokédex społeczności i trenerzy, którzy zdobyli Pokémony na kanale.</p>
         </div>
-        <div class="status-chip" id="pokemonStatus" role="status">OCZEKIWANIE NA CLOUD</div>
+        <span class="pokemon-sr-only" id="pokemonStatus" role="status" aria-live="polite">OCZEKIWANIE NA DANE</span>
       </div>
 
       <div class="pokemon-toolbar">
@@ -305,54 +305,37 @@
           <button class="pokemon-tab" id="pokemonTrainersTab" type="button" role="tab"
                   aria-selected="false" aria-controls="pokemonTrainersPanel" data-pokemon-mode="trainers">Pokémon Trainers</button>
         </div>
-        <label class="pokemon-search">
-          <span aria-hidden="true">⌕</span>
-          <input id="pokemonSearch" type="search" placeholder="Szukaj Pokémona lub numeru…" autocomplete="off" aria-label="Szukaj w Pokémonach">
-        </label>
-      </div>
-
-      <div class="pokemon-overview" aria-label="Podsumowanie kolekcji">
-        <div class="pokemon-overview-card">
-          <span>ODKRYTE GATUNKI</span>
-          <strong id="pokemonSpeciesCount">—</strong>
-        </div>
-        <div class="pokemon-overview-card">
-          <span>POKÉMON TRAINERS</span>
-          <strong id="pokemonTrainersCount">—</strong>
+        <div class="pokemon-tools-right">
+          <div class="pokemon-count-chip" id="pokemonDexSummary" aria-label="Odkryte gatunki">
+            <span>GATUNKI</span><strong id="pokemonSpeciesCount">—</strong>
+          </div>
+          <div class="pokemon-count-chip" id="pokemonTrainersSummary" aria-label="Liczba trenerów" hidden>
+            <span>TRENERZY</span><strong id="pokemonTrainersCount">—</strong>
+          </div>
+          <label class="pokemon-search">
+            <span aria-hidden="true">⌕</span>
+            <input id="pokemonSearch" type="search" placeholder="Szukaj Pokémona lub numeru…" autocomplete="off" aria-label="Szukaj w Pokémonach">
+          </label>
         </div>
       </div>
 
       <section class="pokemon-panel" id="pokemonDexPanel" role="tabpanel" aria-labelledby="pokemonDexTab">
-        <div class="pokemon-panel-head">
-          <div>
-            <div class="eyebrow">POKÉDEX</div>
-            <h2>Odkryte Pokémony</h2>
-            <p>Gatunki aktualnie przypisane do widzów. Ten Pokédex nie oznacza pełnej listy wszystkich gatunków.</p>
-          </div>
-          <span class="pokemon-result-count" id="pokemonDexCount">—</span>
-        </div>
+        <h2 class="pokemon-sr-only">Odkryte Pokémony</h2>
+        <span class="pokemon-sr-only" id="pokemonDexCount" role="status">—</span>
         <div class="pokemon-dex-grid" id="pokemonDexGrid" aria-live="polite">
-          <p class="pokemon-empty">Otwórz Pokédex, aby pobrać dane z Y.U.R.A. Cloud.</p>
+          <p class="pokemon-empty">Ładowanie Pokédexu…</p>
         </div>
         <button type="button" class="pokemon-more" id="pokemonDexMore" hidden>Pokaż kolejne</button>
       </section>
 
       <section class="pokemon-panel" id="pokemonTrainersPanel" role="tabpanel" aria-labelledby="pokemonTrainersTab" hidden>
-        <div class="pokemon-panel-head">
-          <div>
-            <div class="eyebrow">POKÉMON TRAINERS</div>
-            <h2>Trenerzy Y.U.R.A.</h2>
-            <p>Widzowie i ich aktualnie przypisane Pokémony.</p>
-          </div>
-          <span class="pokemon-result-count" id="pokemonTrainersResultCount">—</span>
-        </div>
+        <h2 class="pokemon-sr-only">Trenerzy Y.U.R.A.</h2>
+        <span class="pokemon-sr-only" id="pokemonTrainersResultCount" role="status">—</span>
         <div class="pokemon-trainers-grid" id="pokemonTrainersGrid" aria-live="polite">
-          <p class="pokemon-empty">Wybierz Pokémon Trainers, aby zobaczyć trenerów.</p>
+          <p class="pokemon-empty">Ładowanie trenerów…</p>
         </div>
         <button type="button" class="pokemon-more" id="pokemonTrainersMore" hidden>Pokaż kolejnych</button>
       </section>
-
-      <p class="pokemon-info"><strong>!pokemon</strong> — pierwszy Pokémon za darmo. <strong>!pokeroll</strong> — nowe losowanie za 5 000 Y.U.R.A. Points. Udział tylko dla osób z Follow na Twitchu. Strona wyświetla historię i nie zmienia przypisań.</p>
     </section>
 
     <section class="content view-panel" id="scheduleView" hidden>
@@ -476,7 +459,7 @@
   <script src="yura-ranking-tabs.js?v=112"></script>
   <script src="gains-views.js?v=5"></script>
   <script src="statistics.js?v=5"></script>
-  <script src="pokemon-collection.js?v=7"></script>
+  <script src="pokemon-collection.js?v=8"></script>
 
   <!-- NETWORK HITS is isolated: failure here cannot break the site -->
   <script src="network-hits.js?v=24"></script>
