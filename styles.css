@@ -3004,3 +3004,162 @@ footer.site-footer{font-size:12px;letter-spacing:0}
   }
   #statisticsView .pokemon-collection-picture img{width:80px;height:80px}
 }
+
+/* Grafik — unified with the Y.U.R.A. public site cards and typography. */
+#scheduleView .hero{padding-bottom:24px}
+#scheduleView .schedule-summary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin:8px 0 30px;
+}
+#scheduleView .schedule-window-card{
+  min-width:0;
+  min-height:146px;
+  padding:21px 23px;
+  border:1px solid #2b343e;
+  border-radius:13px;
+  background:linear-gradient(140deg,#141b21,#0f141a);
+  box-shadow:none;
+}
+#scheduleView .schedule-window-card.weekend{
+  border-color:rgba(242,140,24,.33);
+  background:linear-gradient(140deg,rgba(242,140,24,.1),#10151a 75%);
+}
+#scheduleView .schedule-window-top{align-items:center}
+#scheduleView .schedule-code{font-size:11px;font-weight:800;letter-spacing:.07em}
+#scheduleView .schedule-state{color:#92a0ae;font-size:10px;font-weight:750}
+#scheduleView .schedule-window-card strong{
+  margin-top:20px;
+  color:#f5f6fa;
+  font-size:clamp(26px,3.2vw,36px);
+  font-weight:850;
+  line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere;
+}
+#scheduleView .schedule-window-card p{margin-top:10px;color:#a3afbd;font-size:12px;line-height:1.55}
+#scheduleView .schedule-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr);
+  align-items:start;
+  gap:14px;
+}
+#scheduleView .schedule-calendar{min-width:0}
+#scheduleView .schedule-section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  margin:0 0 14px;
+}
+#scheduleView .schedule-section-head h2{
+  margin:7px 0 0;
+  color:#f5f6fa;
+  font:850 clamp(24px,3vw,32px)/1.15 var(--font-display);
+}
+#scheduleView .schedule-timezone{
+  padding:7px 10px;
+  border:1px solid #313a45;
+  border-radius:999px;
+  color:#a4b0bd;
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+#scheduleView .schedule-week{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  overflow:hidden;
+  margin:0;
+  border:1px solid #2b343e;
+  border-radius:13px;
+  background:#10161c;
+}
+#scheduleView .day-card{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) max-content;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  min-height:63px;
+  padding:13px 18px;
+  border:0;
+  border-bottom:1px solid #29323b;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+#scheduleView .day-card:last-child{border-bottom:0}
+#scheduleView .day-card.weekend{background:rgba(242,140,24,.045)}
+#scheduleView .day-name{color:#a5b2c0;font-size:12px;font-weight:850;letter-spacing:.06em}
+#scheduleView .day-card.weekend .day-name{color:var(--accent)}
+#scheduleView .day-card strong{
+  color:#eaf0f5;
+  font-family:var(--font-ui);
+  font-size:14px;
+  font-weight:800;
+  line-height:1.35;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+#scheduleView .day-note{
+  color:#778595;
+  font-family:var(--font-ui);
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.02em;
+  text-align:right;
+}
+#scheduleView .day-card.weekend .day-note{color:#d8a267}
+#scheduleView .schedule-notices{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-content:start;
+  gap:14px;
+  margin:0;
+}
+#scheduleView .schedule-notice,
+#scheduleView .schedule-notice.work-cycle,
+#scheduleView .schedule-notice.discord-notice{
+  min-width:0;
+  padding:19px;
+  border:1px solid #2b343e;
+  border-radius:13px;
+  background:linear-gradient(140deg,#141b21,#0f141a);
+  box-shadow:none;
+}
+#scheduleView .schedule-notice.discord-notice{border-color:rgba(242,140,24,.25)}
+#scheduleView .notice-icon,
+#scheduleView .work-cycle .notice-icon,
+#scheduleView .discord-notice .notice-icon{
+  border-color:rgba(242,140,24,.28);
+  background:rgba(242,140,24,.07);
+  color:var(--accent);
+}
+#scheduleView .notice-label{color:#91a0af;font-size:10px;letter-spacing:.07em}
+#scheduleView .schedule-notice strong{color:#f1f4f7;font-size:14px;font-weight:800;line-height:1.4}
+#scheduleView .schedule-notice p{color:#a4b0bd;font-size:12px;line-height:1.65}
+#scheduleView .schedule-notice a{color:#ffb565;font-size:12px;overflow-wrap:anywhere}
+#scheduleView .schedule-notice a:hover{color:#ffd39c}
+@media(max-width:900px){
+  #scheduleView .schedule-layout{grid-template-columns:minmax(0,1fr)}
+  #scheduleView .schedule-notices{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  #scheduleView .schedule-summary{grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:26px}
+  #scheduleView .schedule-window-card{min-height:125px;padding:19px}
+  #scheduleView .schedule-window-card strong{font-size:30px;margin-top:13px}
+  #scheduleView .schedule-notices{grid-template-columns:minmax(0,1fr)}
+  #scheduleView .schedule-section-head{align-items:flex-start;flex-wrap:wrap}
+  #scheduleView .day-card{grid-template-columns:42px minmax(0,1fr) max-content;padding:12px 13px;gap:9px;min-height:58px}
+  #scheduleView .day-card strong{font-size:13px}
+  #scheduleView .day-note{font-size:9px}
+}
+@media(max-width:380px){
+  #scheduleView .schedule-timezone{font-size:9px}
+  #scheduleView .day-note{display:none}
+  #scheduleView .day-card{grid-template-columns:42px minmax(0,1fr)}
+}
