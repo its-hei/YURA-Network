@@ -1220,6 +1220,116 @@ function yuraScheduleEnsureStyles(layout) {
       @media(max-width:620px){.schedule-calendar-week-body{padding:10px}.schedule-calendar-grid{grid-template-columns:1fr;gap:8px}.schedule-calendar-card{grid-template-columns:62px 76px minmax(0,1fr);grid-template-rows:auto;align-items:center;min-height:86px;padding:8px;gap:9px}.schedule-calendar-card.off{grid-template-columns:62px minmax(0,1fr);grid-template-rows:auto;min-height:80px}.schedule-calendar-art{height:62px}.schedule-calendar-card-top{min-height:0}.schedule-calendar-card-bottom{gap:4px}.schedule-calendar-time strong{font-size:13px}}
     `;
   }
+  /* YURA SCHEDULE VISUAL UNIFICATION / 2026-10-27
+     The live calendar is regenerated and its style tag is appended after
+     styles.css, so these last rules keep MODERN and SLIM aligned with the
+     public site's shared full-width design. */
+  style.textContent += `
+    #scheduleView .schedule-showcase{
+      width:100%;min-width:0;margin:0;padding:0;border:0;border-radius:0;
+      background:transparent;box-shadow:none;overflow:visible;
+    }
+    #scheduleView .schedule-showcase::before{display:none}
+    #scheduleView .schedule-showcase > .hero{
+      min-height:136px;margin:0;padding:0 0 24px;border:0;
+      align-items:flex-start;gap:20px;
+    }
+    #scheduleView .schedule-showcase > .hero .eyebrow{
+      display:flex;align-items:center;gap:10px;
+      color:#abb5c3;font-size:11px;font-weight:700;
+      letter-spacing:.13em;line-height:1.4;
+    }
+    #scheduleView .schedule-showcase > .hero .eyebrow::before{
+      content:"";display:block;flex:0 0 23px;width:23px;height:2px;
+      background:var(--accent);
+    }
+    #scheduleView .schedule-showcase .status-chip{
+      border-color:rgba(242,140,24,.28);
+      background:rgba(242,140,24,.08);
+      color:var(--accent);box-shadow:none;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-summary{
+      margin:0 0 28px;border:1px solid #2b343e;border-radius:13px;
+      background:linear-gradient(140deg,#141b21,#0f141a);box-shadow:none;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-summary-dot{
+      background:var(--accent);box-shadow:0 0 9px rgba(242,140,24,.2);
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-head{
+      margin:0 0 14px;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-week{
+      border-color:#2b343e;border-radius:13px;
+      background:#10161c;box-shadow:none;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-grid{
+      display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+      justify-content:stretch;align-items:stretch;gap:12px;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-card{
+      box-sizing:border-box;width:100%;min-width:0;
+      height:278px;min-height:278px;
+      grid-template-columns:minmax(0,1fr);
+      grid-template-rows:32px minmax(0,1fr) 80px;
+      align-items:stretch;gap:8px;padding:10px;
+      border-radius:13px;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-card.off{
+      height:278px;min-height:278px;
+      grid-template-columns:minmax(0,1fr);
+      grid-template-rows:32px minmax(0,1fr);
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-art{
+      min-height:0;height:100%;min-width:0;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-card-bottom{
+      min-height:0;justify-content:center;gap:5px;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-card-top{
+      min-height:0;
+    }
+    #scheduleView .schedule-showcase .schedule-calendar-time strong{
+      font-size:clamp(11px,1.15vw,15px);
+    }
+    @media(max-width:1120px){
+      #scheduleView .schedule-showcase .schedule-calendar-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
+    @media(max-width:900px){
+      #scheduleView .schedule-showcase .schedule-calendar-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+    @media(max-width:620px){
+      #scheduleView .schedule-showcase > .hero{
+        min-height:116px;padding-bottom:20px;flex-wrap:wrap;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-grid{
+        grid-template-columns:minmax(0,1fr);gap:9px;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-card{
+        height:auto;min-height:96px;
+        grid-template-columns:62px 76px minmax(0,1fr);
+        grid-template-rows:auto;align-items:center;
+        gap:9px;padding:9px;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-card.off{
+        height:auto;min-height:90px;
+        grid-template-columns:62px minmax(0,1fr);
+        grid-template-rows:auto;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-art{
+        height:62px;min-height:0;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-card-bottom{
+        min-height:0;align-items:flex-start;text-align:left;
+      }
+      #scheduleView .schedule-showcase .schedule-calendar-time strong{
+        font-size:13px;
+      }
+    }
+  `;
 }
 
 function yuraScheduleApplyClassicArts(host) {
@@ -1289,7 +1399,7 @@ function renderYuraLiveScheduleClassic() {
   const weeks = Array.from({ length: 4 }, (_, index) => days.slice(index * 7, index * 7 + 7));
 
   host.innerHTML = `
-    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 25 DAYS</div><h1>Harmonogram</h1><p>Najbli\u017Csze 25 dni w uk\u0142adzie tygodniowym. Pierwszy tydzie\u0144 jest otwarty, kolejne rozwijasz z g\u00F3ry w d\u00F3\u0142.</p></div><div class="status-chip">25 DNI</div></div>
+    <div class="hero"><div><div class="eyebrow">STREAM CALENDAR // 25 DAYS</div><h1>Grafik</h1><p>Najbli\u017Csze 25 dni w uk\u0142adzie tygodniowym. Pierwszy tydzie\u0144 jest otwarty, kolejne rozwijasz z g\u00F3ry w d\u00F3\u0142.</p></div><div class="status-chip">25 DNI</div></div>
     <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>Najbli\u017Cszy stream:<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
     <div class="schedule-calendar-head"><div><span>NAJBLI\u017BSZE 25 DNI //</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} \u2014 ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">4 TYGODNIE \u2022 1 OTWARTY + 3 ZWIJANE</div></div>
     <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleClassicWeekHtml(weekDays, now, index)).join("")}</div>
@@ -1380,11 +1490,11 @@ function renderYuraLiveScheduleModern() {
 
   host.innerHTML = `
     <section class="schedule-showcase">
-      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK // LIVE SCHEDULE</div><h1>Harmonogram</h1><p>Najbli\u017Csze 25 dni w wi\u0119kszych kartach po 5 dni na panel. Pierwszy blok jest pokazany od razu, kolejne mo\u017Cesz rozwin\u0105\u0107.</p></div><div class="status-chip">LIVE SCHEDULE</div></div>
+      <div class="hero"><div><div class="eyebrow">Y.U.R.A. NETWORK // LIVE SCHEDULE</div><h1>Grafik</h1><p>Najbli\u017Csze 25 dni w wi\u0119kszych kartach po 5 dni na panel. Pierwszy blok jest pokazany od razu, kolejne mo\u017Cesz rozwin\u0105\u0107.</p></div><div class="status-chip">LIVE SCHEDULE</div></div>
       <div class="schedule-calendar-summary"><div class="schedule-calendar-summary-main"><span class="schedule-calendar-summary-dot"></span><strong>NAJBLI\u017BSZY STREAM<span class="schedule-live-next">${yuraScheduleEscape(nextLabel)}</span></strong></div><div class="schedule-calendar-config">${yuraScheduleEscape(updatedLabel)}</div></div>
       <div class="schedule-calendar-head"><div><span>STREAM CALENDAR // 25 DAYS</span><strong>${yuraScheduleFormatLongDate(days[0].dayUtc)} \u2014 ${yuraScheduleFormatLongDate(days[days.length - 1].dayUtc)}</strong></div><div class="schedule-calendar-hint">AUTO-UPDATE \u2022 EUROPE/WARSAW</div></div>
       <div class="schedule-calendar-weeks">${weeks.map((weekDays, index) => yuraScheduleModernWeekHtml(weekDays, now, index)).join("")}</div>
-      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>${layoutName === "SLIM" ? "SLIM pokazuje wyższe i węższe karty" : "MODERN pokazuje 5 większych kart na panel"}; dni OFF pozostają bez grafiki.</strong></div>
+      <div class="schedule-calendar-range">Harmonogram aktualizuje si\u0119 automatycznie. <strong>${layoutName === "SLIM" ? "Jednakowe proporcje kart" : "MODERN pokazuje 5 większych kart na panel"}; dni OFF pozostają bez grafiki.</strong></div>
     </section>`;
   yuraScheduleApplyModernArts(host);
 }
