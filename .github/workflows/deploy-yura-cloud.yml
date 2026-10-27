@@ -87,7 +87,7 @@ jobs:
 
       - name: Apply only unapplied migrations to existing D1
         working-directory: cloud/yura-cloud
-        run: npx wrangler d1 migrations apply yura-cloud --remote --yes
+        run: npx wrangler d1 migrations apply yura-cloud --remote
 
       - name: Deploy Worker while preserving dashboard variables and secrets
         working-directory: cloud/yura-cloud
