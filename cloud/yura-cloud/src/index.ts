@@ -3267,6 +3267,7 @@ async function handleCommandSettings(req: Request, env: Env) {
   let body:any;
   try { body = await req.json(); } catch { return json({error:"invalid json"},400); }
   const defaults = defaultCommandSettings(env);
+  const previous = await loadCommandSettings(env); // Preserve Jackpot duration when older Desktop builds omit it.
   const clean:any = { masterEnabled: typeof body?.masterEnabled === "boolean" ? body.masterEnabled : true };
   clean.customCommands = Array.isArray(body?.customCommands)
     ? body.customCommands.slice(0,100).map((src:any,index:number) => ({
@@ -3299,7 +3300,7 @@ async function handleCommandSettings(req: Request, env: Env) {
       clean[key].critWinPercent = Math.max(0,Math.min(100-clean[key].winPercent,Number(src.critWinPercent ?? base.critWinPercent ?? 1)||0));
     }
     if (key === "raffle" || key === "sraffle" || key === "jackpot") {
-      clean[key].defaultDurationSeconds = Math.max(5,Math.min(3600,Math.trunc(Number(src.defaultDurationSeconds ?? base.defaultDurationSeconds ?? 60)||60)));
+      clean[key].defaultDurationSeconds = Math.max(5,Math.min(3600,Math.trunc(Number(src.defaultDurationSeconds ?? (key === "jackpot" ? previous.jackpot?.defaultDurationSeconds : base.defaultDurationSeconds) ?? 60)||60)));
       clean[key].joinConfirmation = typeof src.joinConfirmation === "boolean" ? src.joinConfirmation : (base.joinConfirmation ?? true);
       clean[key].warning20Seconds = typeof src.warning20Seconds === "boolean" ? src.warning20Seconds : (base.warning20Seconds ?? true);
     }
