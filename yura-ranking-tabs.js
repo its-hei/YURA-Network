@@ -130,6 +130,135 @@
   // Ranking tabs remain above both leader and runner-up panels.
   (host.querySelector('.leaderboard-layout') || host.querySelector('.leaderboard-toolbar'))?.before(rankControls);
 
+  // Shared explanatory panel: same visual treatment as Permanent VIP, with
+  // values read from the actual Cloud reward settings (not hard-coded guesses).
+  const rewardGuide=document.createElement('details');
+  rewardGuide.className='yura-vip-odds yura-reward-guide';
+  rewardGuide.id='yuraRewardGuide';
+  rewardGuide.innerHTML=
+    '<summary id="yuraRewardGuideTitle">Gains • Jak zdobywać EXP?</summary>'+
+    '<div class="yura-reward-guide-body">'+
+      '<p class="yura-reward-guide-intro" id="yuraRewardGuideIntro"></p>'+
+      '<div class="yura-reward-guide-scroll"><table>'+
+        '<thead><tr><th>Za co</th><th>Ile</th><th>Warunki</th></tr></thead>'+
+        '<tbody id="yuraRewardGuideRows"></tbody>'+
+      '</table></div>'+
+      '<p class="yura-reward-guide-note" id="yuraRewardGuideNote"></p>'+
+    '</div>';
+  rankControls.after(rewardGuide);
+  const rewardTitle=rewardGuide.querySelector('#yuraRewardGuideTitle');
+  const rewardIntro=rewardGuide.querySelector('#yuraRewardGuideIntro');
+  const rewardRows=rewardGuide.querySelector('#yuraRewardGuideRows');
+  const rewardNote=rewardGuide.querySelector('#yuraRewardGuideNote');
+  let rewardRules=null, rewardPending=null, rewardFetchedAt=0;
+  const rewardNumber=value=>{
+    const n=Number(value);
+    return Number.isFinite(n)&&n>=0?plFormatNumber(Math.trunc(n)):null;
+  };
+  function plFormatNumber(n){
+    return new Intl.NumberFormat('pl-PL').format(n);
+  }
+  function rewardRow(label,value,description){
+    const tr=document.createElement('tr');
+    const name=document.createElement('td');
+    const amount=document.createElement('td');
+    const note=document.createElement('td');
+    name.textContent=label;
+    amount.textContent=value;
+    amount.className='yura-reward-guide-value';
+    note.textContent=description;
+    tr.append(name,amount,note);
+    return tr;
+  }
+  function renderRewardGuide(){
+    const isPoints=selected==='points';
+    const isGains=selected==='gains';
+    rewardTitle.textContent=isPoints
+      ? 'Points • za co dostajesz YURA Points?'
+      : (isGains?'Gains':'Levels')+' • za co dostajesz EXP?';
+    rewardIntro.textContent=isPoints
+      ? 'Saldo YURA Points jest stałe między miesiącami. Poniżej stawki za aktywność i nagrody zależne od losowań.'
+      : isGains
+      ? 'Gains zlicza EXP zdobyty w bieżącym miesiącu. Do rankingu liczy się przyrost, a nie całkowity poziom.'
+      : 'Levels pokazuje łączny poziom wynikający z całego zgromadzonego EXP. Progi poziomów rosną według krzywej Tibii.';
+    rewardRows.replaceChildren();
+    if(!rewardRules){
+      const row=document.createElement('tr');
+      const cell=document.createElement('td');
+      cell.colSpan=3;
+      cell.textContent=rewardPending
+        ? 'Pobieranie aktualnych stawek z YURA Cloud…'
+        : 'Aktualne stawki są chwilowo niedostępne. Spróbuj ponownie, rozwijając kafelek.';
+      row.append(cell);
+      rewardRows.append(row);
+      rewardNote.textContent='Nie pokazujemy niepotwierdzonych wartości.';
+      return;
+    }
+    const rules=rewardRules;
+    const n=value=>{const result=rewardNumber(value);return result===null?'—':result;};
+    const fixed=(value,unit)=>'+'+n(value)+' '+unit;
+    if(isPoints){
+      rewardRows.append(
+        rewardRow('Wiadomość na czacie',fixed(rules.points.per_chat_message,'pkt'),
+          'Każda wiadomość widza, również komenda; boty i wykluczone konta nie dostają punktów.'),
+        rewardRow('Obecność podczas transmisji',fixed(rules.points.per_10m_presence,'pkt / 10 min'),
+          'Za faktycznie zarejestrowany czas obecności. Krótsze odcinki są sumowane.'),
+        rewardRow('Wygrana w Raffle','Zmienna','Nagroda zależy od rodzaju i puli losowania.'),
+        rewardRow('Wygrana w Jackpot','Cała pula','Udział kosztuje ustalone wpisowe; przy anulowaniu wpisowe jest zwracane.'),
+        rewardRow('!gamble','Zysk lub strata','Wynik i liczba punktów zależą od stawki oraz rezultatu gry.')
+      );
+      rewardNote.textContent='YURA Points nie zerują się co miesiąc. Zakupy/udział w grach mogą zmniejszyć saldo.';
+    } else {
+      const exp=rules.exp;
+      rewardRows.append(
+        rewardRow('Wiadomość na czacie',fixed(exp.per_chat_message,'EXP'),
+          'Każda wiadomość podczas trwającej transmisji; z wyłączeniem botów i kont wykluczonych.'),
+        rewardRow('Pierwsza wiadomość na streamie',fixed(exp.first_message_bonus,'EXP bonusu'),
+          'Jednorazowo na daną transmisję, dodatkowo do EXP za samą wiadomość.'),
+        rewardRow('Oglądanie transmisji',
+          Number(exp.per_10m_watchtime)>0 ? fixed(exp.per_10m_watchtime,'EXP / 10 min') : '0 EXP',
+          Number(exp.per_10m_watchtime)>0
+            ? 'Za zarejestrowany watchtime. Wymaga obecności na transmisji.'
+            : 'Naliczanie EXP za watchtime jest obecnie wyłączone.')
+      );
+      rewardNote.textContent=isGains
+        ? 'Gains liczy miesięczny przyrost EXP. Miesięczny ranking startuje od nowa na początku kolejnego miesiąca.'
+        : 'Levels nie daje osobnych punktów za awans. Poziom wynika z całkowitego EXP; jego wymagania rosną nieliniowo.';
+    }
+  }
+  async function loadRewardRules(force=false){
+    if(rewardPending)return rewardPending;
+    if(!force && rewardRules && Date.now()-rewardFetchedAt<300000)return;
+    rewardPending=(async()=>{
+      try {
+        const base=typeof YURA_CLOUD_BASE==='string'
+          ? YURA_CLOUD_BASE : 'https://yura-cloud.heiyeshi.workers.dev';
+        const response=await fetch(base+'/api/public-rewards',{cache:'no-store'});
+        if(!response.ok)throw Error('Rewards HTTP '+response.status);
+        const data=await response.json();
+        if(!data?.ok || !data.points || !data.exp ||
+          ![data.points.per_chat_message,data.points.per_10m_presence,
+            data.exp.per_chat_message,data.exp.first_message_bonus,
+            data.exp.per_10m_watchtime].every(v=>Number.isFinite(Number(v))&&Number(v)>=0))
+          throw Error('Invalid reward rates');
+        rewardRules=data;
+        rewardFetchedAt=Date.now();
+      }catch(err){
+        if(!rewardRules) console.warn('YURA public reward rates unavailable:',err);
+      }finally{
+        rewardPending=null;
+        renderRewardGuide();
+      }
+    })();
+    renderRewardGuide();
+    return rewardPending;
+  }
+  rewardGuide.addEventListener('toggle',()=>{
+    if(rewardGuide.open)void loadRewardRules();
+  });
+  renderRewardGuide();
+  void loadRewardRules();
+
   // Transparent public odds: each stake bracket has a 10x smaller probability after loss.
   if (vipRule && !host.querySelector('.yura-vip-odds')) {
     const details=document.createElement('details');
@@ -218,6 +347,7 @@
   }
 
   function updateLabels() {
+    renderRewardGuide();
     if (title) title.textContent = selected === 'gains'
       ? (gainsSnapshotActive
         ? 'Potwierdzony ranking EXP z 26.10.2026. To zapisany odczyt, nie wynik na żywo.'
