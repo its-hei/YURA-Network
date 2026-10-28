@@ -130,10 +130,34 @@
   // Ranking tabs remain above both leader and runner-up panels.
   (host.querySelector('.leaderboard-layout') || host.querySelector('.leaderboard-toolbar'))?.before(rankControls);
 
-  // The reward guide is part of the static sidebar markup, immediately below
-  // the Search card. Never generate a second guide above the ranking leader.
-  const rewardGuide=host.querySelector('#yuraRewardGuide');
-  if(!rewardGuide) throw new Error('Missing YURA reward guide below search');
+  // The guide must always live below Search, including on older cached
+  // index.html versions where the static guide has not yet been published.
+  const sidebar=host.querySelector('.leaderboard-side-col');
+  const searchCard=sidebar?.querySelector('.leaderboard-side-card');
+  let rewardGuide=host.querySelector('#yuraRewardGuide');
+  if(!rewardGuide){
+    rewardGuide=document.createElement('details');
+    rewardGuide.id='yuraRewardGuide';
+    rewardGuide.className='yura-reward-guide';
+    rewardGuide.innerHTML=
+      '<summary id="yuraRewardGuideTitle"></summary>'+
+      '<div class="yura-reward-guide-body">'+
+        '<p class="yura-reward-guide-intro" id="yuraRewardGuideIntro"></p>'+
+        '<div class="yura-reward-guide-scroll"><table>'+
+          '<thead><tr><th>Za co</th><th>Ile</th><th>Warunki</th></tr></thead>'+
+          '<tbody id="yuraRewardGuideRows"></tbody>'+
+        '</table></div>'+
+        '<p class="yura-reward-guide-note" id="yuraRewardGuideNote"></p>'+
+      '</div>';
+  }
+  // Never fall back to rankControls.after(): that caused the top-of-page bug.
+  if(searchCard && rewardGuide.previousElementSibling!==searchCard){
+    searchCard.insertAdjacentElement('afterend',rewardGuide);
+  }
+  // Older cached scripts can create duplicate guides. Keep the one in use.
+  host.querySelectorAll('#yuraRewardGuide').forEach(node=>{
+    if(node!==rewardGuide)node.remove();
+  });
   const rewardTitle=rewardGuide.querySelector('#yuraRewardGuideTitle');
   const rewardIntro=rewardGuide.querySelector('#yuraRewardGuideIntro');
   const rewardRows=rewardGuide.querySelector('#yuraRewardGuideRows');
