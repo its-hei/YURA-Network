@@ -145,7 +145,10 @@
       '</table></div>'+
       '<p class="yura-reward-guide-note" id="yuraRewardGuideNote"></p>'+
     '</div>';
-  rankControls.after(rewardGuide);
+  // Keep reward rules with the sidebar tools, immediately below search.
+  const searchCard=host.querySelector('.leaderboard-side-col > .leaderboard-side-card');
+  if (searchCard) searchCard.after(rewardGuide);
+  else rankControls.after(rewardGuide);
   const rewardTitle=rewardGuide.querySelector('#yuraRewardGuideTitle');
   const rewardIntro=rewardGuide.querySelector('#yuraRewardGuideIntro');
   const rewardRows=rewardGuide.querySelector('#yuraRewardGuideRows');
