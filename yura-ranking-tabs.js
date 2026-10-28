@@ -130,25 +130,10 @@
   // Ranking tabs remain above both leader and runner-up panels.
   (host.querySelector('.leaderboard-layout') || host.querySelector('.leaderboard-toolbar'))?.before(rankControls);
 
-  // Shared explanatory panel: same visual treatment as Permanent VIP, with
-  // values read from the actual Cloud reward settings (not hard-coded guesses).
-  const rewardGuide=document.createElement('details');
-  rewardGuide.className='yura-vip-odds yura-reward-guide';
-  rewardGuide.id='yuraRewardGuide';
-  rewardGuide.innerHTML=
-    '<summary id="yuraRewardGuideTitle">Gains • Jak zdobywać EXP?</summary>'+
-    '<div class="yura-reward-guide-body">'+
-      '<p class="yura-reward-guide-intro" id="yuraRewardGuideIntro"></p>'+
-      '<div class="yura-reward-guide-scroll"><table>'+
-        '<thead><tr><th>Za co</th><th>Ile</th><th>Warunki</th></tr></thead>'+
-        '<tbody id="yuraRewardGuideRows"></tbody>'+
-      '</table></div>'+
-      '<p class="yura-reward-guide-note" id="yuraRewardGuideNote"></p>'+
-    '</div>';
-  // Keep reward rules with the sidebar tools, immediately below search.
-  const searchCard=host.querySelector('.leaderboard-side-col > .leaderboard-side-card');
-  if (searchCard) searchCard.after(rewardGuide);
-  else rankControls.after(rewardGuide);
+  // The reward guide is part of the static sidebar markup, immediately below
+  // the Search card. Never generate a second guide above the ranking leader.
+  const rewardGuide=host.querySelector('#yuraRewardGuide');
+  if(!rewardGuide) throw new Error('Missing YURA reward guide below search');
   const rewardTitle=rewardGuide.querySelector('#yuraRewardGuideTitle');
   const rewardIntro=rewardGuide.querySelector('#yuraRewardGuideIntro');
   const rewardRows=rewardGuide.querySelector('#yuraRewardGuideRows');
