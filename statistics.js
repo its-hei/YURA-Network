@@ -4,7 +4,6 @@
   const root=document.getElementById('statisticsView');
   if(!root)return;
   const base='https://yura-cloud.heiyeshi.workers.dev';
-  const status=root.querySelector('#statsStatus');
   const rowsEl=root.querySelector('#statsViewerRows');
   const sortControl=root.querySelector('#statsSort');
   const search=root.querySelector('#statsSearch');
@@ -66,7 +65,7 @@
   let pending=false;
   async function load(){
     if(pending)return;
-    pending=true;status.textContent='POBIERANIE DANYCH';
+    pending=true;
     try{
       const r=await fetch(base+'/api/public-stats',{cache:'no-store'});
       if(!r.ok)throw Error('HTTP '+r.status);
@@ -80,17 +79,13 @@
       setText('#statsTotalFollowers',value(c,'followers'));
       setText('#statsAllGambles',c.gambleAllWins!=null&&c.gambleAllLosses!=null?
         number(Number(c.gambleAllWins)+Number(c.gambleAllLosses)):'—');
-      setText('#statsChannelLive',c.streamLive===true?'TRANSMISJA TRWA':c.streamLive===false?'OFFLINE':'BRAK DANYCH');
       const since=data.trackedSince?new Date(data.trackedSince):null;
       setText('#statsCoverage',since&&!Number.isNaN(since.getTime())?
         'Statystyki od '+since.toLocaleDateString('pl-PL')+
         ' • uwzględniono osoby z min. 10 wiadomościami.':'Statystyki od uruchomienia rejestrowania w Y.U.R.A. Cloud.');
-      status.textContent='STATYSTYKI Y.U.R.A.';
-      status.classList.add('is-loaded');
       render();
     }catch(e){
       loaded=false;records=[];
-      status.textContent='OCZEKIWANIE NA CLOUD';
       setText('#statsCoverage','Strona jest gotowa. Dane pojawią się po aktualizacji Y.U.R.A. Cloud — bez wymyślonych wyników.');
       render();
     }finally{pending=false;}
