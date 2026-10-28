@@ -1343,9 +1343,8 @@
 }
 
 
-/* YURA RANKING NAV V116 — use the site's top navigation style.
-   Keep #leaderboardStatus in the DOM for live sync/search announcements,
-   but remove its visible green pill from the public header. */
+/* YURA RANKING NAV V117 — match Komendy kanału tab buttons exactly.
+   Sync status remains in the DOM for accessibility and search announcements. */
 #leaderboardView > .hero #leaderboardStatus{
   position:absolute!important;
   width:1px!important;
@@ -1358,72 +1357,72 @@
   white-space:nowrap!important;
 }
 #leaderboardView .yura-ranking-tabs{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  width:min(520px,100%);
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  width:100%;
   max-width:100%;
-  gap:0;
-  padding:0;
+  gap:8px;
   margin:0 0 22px;
+  padding:0;
   border:0;
-  border-bottom:1px solid rgba(255,255,255,.09);
-  align-items:stretch;
-  flex-wrap:nowrap;
 }
 #leaderboardView .yura-ranking-tabs .yura-ranking-tab,
 #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
-  display:flex;
+  display:inline-flex;
+  flex:0 0 auto;
   align-items:center;
   justify-content:center;
   box-sizing:border-box;
-  width:100%;
+  width:auto;
   min-width:0;
-  min-height:52px;
-  padding:9px 7px;
-  border:0;
-  border-bottom:2px solid transparent;
-  border-radius:0;
-  background:transparent;
+  min-height:40px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#10151a;
   box-shadow:none;
-  color:var(--muted);
-  font-family:var(--font-ui,Inter,system-ui,sans-serif);
+  color:#aeb8c6;
+  font-family:var(--font-ui);
   font-size:13px;
   font-weight:600;
   line-height:1.2;
   letter-spacing:0;
   text-align:center;
   white-space:nowrap;
-  transition:color .14s ease,border-color .14s ease;
+  cursor:pointer;
+  transition:border-color .15s ease,background .15s ease,color .15s ease;
 }
 #leaderboardView .yura-ranking-tabs .yura-ranking-tab:hover{
+  border-color:#4b5360;
+  background:#151b22;
   color:#f3f5f7;
-  background:transparent;
-}
-#leaderboardView .yura-ranking-tabs .yura-ranking-tab:focus-visible{
-  outline:2px solid var(--accent);
-  outline-offset:-3px;
 }
 #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
-  color:var(--accent);
-  border-bottom-color:var(--accent);
-  background:transparent;
+  border:1px solid rgba(242,140,24,.5);
+  border-radius:9px;
+  background:rgba(242,140,24,.11);
+  color:#f5f6f9;
 }
-@media(max-width:820px){
+#leaderboardView .yura-ranking-tabs .yura-ranking-tab:focus-visible{
+  outline:2px solid rgba(242,140,24,.52);
+  outline-offset:2px;
+}
+@media(max-width:760px){
   #leaderboardView .yura-ranking-tabs{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
     width:100%;
-    margin-bottom:19px;
+    margin:0 0 19px;
   }
   #leaderboardView .yura-ranking-tabs .yura-ranking-tab,
   #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
-    min-height:48px;
-    font-size:12px;
+    width:100%;
+    min-width:0;
+    min-height:41px;
     padding:8px 4px;
-  }
-}
-@media(max-width:380px){
-  #leaderboardView .yura-ranking-tabs .yura-ranking-tab,
-  #leaderboardView .yura-ranking-tabs .yura-ranking-tab.active{
-    font-size:11px;
-    min-height:44px;
+    font-size:12px;
+    white-space:nowrap;
   }
 }
