@@ -855,7 +855,12 @@ function switchView(view) {
 }
 
 viewButtons.forEach(button => {
-  button.addEventListener("click", () => switchView(button.dataset.view));
+  button.addEventListener("click", event => {
+    // Native links still support Ctrl/Cmd-click and opening in a new tab.
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    switchView(button.dataset.view);
+  });
 });
 
 leaderboardEligibilityToggle?.addEventListener("click", () => {
@@ -2221,23 +2226,6 @@ function yuraOpenStreamMap() {
   }
 }
 
-// Keep older shared URL links working without restoring a separate Levels tile.
-function yuraRestorePublicDeepLink() {
-  const route = new URL(window.location.href).searchParams.get("yuraView");
-  if (route === "streammap") {
-    switchView("streammap");
-  } else if (route === "levels") {
-    switchView("leaderboard");
-    // The Ranking tabs script is loaded immediately AFTER app.js.
-    window.setTimeout(() => {
-      document.querySelector('.yura-ranking-tab[data-rank-mode="level"]')?.click();
-    }, 0);
-  } else if (["about", "commands", "leaderboard", "statistics", "schedule", "pokemon", "changelog"].includes(route)) {
-    switchView(route);
-  } else {
-    // New visitors land on About, including browser history navigation to /.
-    switchView("about");
-  }
-}
-window.addEventListener("popstate", yuraRestorePublicDeepLink);
-yuraRestorePublicDeepLink();
+// URL navigation, historic ?yuraView links, and browser back/forward are
+// handled by route-navigation.js after the nested ranking and Pokémon tabs load.
+switchView("about");
