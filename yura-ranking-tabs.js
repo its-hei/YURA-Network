@@ -256,8 +256,8 @@
   rewardGuide.addEventListener('toggle',()=>{
     if(rewardGuide.open)void loadRewardRules();
   });
+  // Do not spend Cloud D1 reads until a visitor actually opens the guide.
   renderRewardGuide();
-  void loadRewardRules();
 
   // Transparent public odds: each stake bracket has a 10x smaller probability after loss.
   if (vipRule && !host.querySelector('.yura-vip-odds')) {
