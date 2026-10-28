@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=122">
-  <link rel="stylesheet" href="yura-ranking-tabs.css?v=119">
+  <link rel="stylesheet" href="yura-ranking-tabs.css?v=120">
 </head>
 <body>
   <div class="ambient"></div>
@@ -146,6 +146,21 @@
                 <span id="leaderboardEligibilityLabel">KANDYDACI VIP</span>
               </button>
             </section>
+
+            <!-- Ranking reward rules live ONLY below Search, never above the leader. -->
+            <details class="yura-reward-guide" id="yuraRewardGuide">
+              <summary id="yuraRewardGuideTitle">Gains • Jak zdobywać EXP?</summary>
+              <div class="yura-reward-guide-body">
+                <p class="yura-reward-guide-intro" id="yuraRewardGuideIntro"></p>
+                <div class="yura-reward-guide-scroll">
+                  <table>
+                    <thead><tr><th>Za co</th><th>Ile</th><th>Warunki</th></tr></thead>
+                    <tbody id="yuraRewardGuideRows"></tbody>
+                  </table>
+                </div>
+                <p class="yura-reward-guide-note" id="yuraRewardGuideNote"></p>
+              </div>
+            </details>
 
             <section class="leaderboard-side-card">
               <h2 class="leaderboard-side-heading">Synchronizacja</h2>
@@ -443,7 +458,7 @@
 
   <!-- Core site logic: independent from analytics/counter -->
   <script src="app.js?v=mobile121"></script>
-  <script src="yura-ranking-tabs.js?v=117"></script>
+  <script src="yura-ranking-tabs.js?v=118"></script>
   <script src="gains-views.js?v=6"></script>
   <script src="statistics.js?v=6"></script>
   <script src="pokemon-collection.js?v=9"></script>
