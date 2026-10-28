@@ -1583,6 +1583,34 @@ async function apiExpSettings(env: Env) {
   });
 }
 
+// Read-only rates for public ranking explanation. No OAuth tokens or private settings.
+async function apiPublicRewardRules(env:Env):Promise<Response>{
+  const exp=await apiExpSettings(env);
+  if(!exp.ok)return json({ok:false,error:"exp_settings_unavailable"},503);
+  const settings:any=await exp.json();
+  return json({
+    ok:true,
+    source:"YURA Cloud",
+    points:{
+      per_chat_message:Math.max(0,Math.trunc(num(env.POINTS_CHAT_MESSAGE,10))),
+      per_10m_presence:Math.max(0,Math.trunc(num(env.POINTS_BASE_PER_10M,100)))
+    },
+    exp:{
+      per_chat_message:settings.per_message,
+      first_message_bonus:settings.first_message_bonus,
+      per_10m_watchtime:settings.watchtime_per_10m,
+      level_curve:"tibia"
+    },
+    notes:{
+      exp_only_live:true,
+      first_exp_bonus_per_stream:true,
+      points_persist_between_months:true,
+      gains_monthly:true,
+      raffle_rewards_variable:true
+    }
+  });
+}
+
 function normalizeLoginList(value:any): string[] {
   const src = Array.isArray(value) ? value : String(value ?? "").split(/[,;\s]+/);
   return [...new Set(src.map((x:any)=>norm(String(x ?? "").replace(/^@/,""))).filter(Boolean))];
@@ -3369,6 +3397,7 @@ export default {
     if (url.pathname === "/api/status" && req.method === "GET") return json(await cloudStatus(env));
     if (url.pathname === "/api/accounts" && req.method === "GET") return apiAccounts(env);
     if (url.pathname === "/api/exp-settings" && req.method === "GET") return apiExpSettings(env);
+    if (url.pathname === "/api/public-rewards" && req.method === "GET") return apiPublicRewardRules(env);
     if (url.pathname === "/api/exp-settings" && req.method === "PUT") return handleExpSettings(req,env);
     if (url.pathname === "/api/points-blacklist" && req.method === "PUT") return handlePointsBlacklist(req,env);
     if (url.pathname === "/api/points-reset" && req.method === "POST") return handlePointsReset(req,env);
