@@ -1426,3 +1426,114 @@
     white-space:nowrap;
   }
 }
+
+
+/* YURA REWARD GUIDE / 2026-10-28 — same collapsible card language as Permanent VIP. */
+#leaderboardView .yura-reward-guide{
+  display:block;
+  box-sizing:border-box;
+  width:min(425px,100%);
+  max-width:100%;
+  margin:-6px 0 22px;
+  padding:14px 16px;
+  border:1px solid rgba(255,138,31,.27);
+  border-radius:12px;
+  background:linear-gradient(125deg,#111820,#0f141a);
+  color:#cbd3df;
+  box-shadow:none;
+  transition:width .18s ease,border-color .18s ease;
+}
+#leaderboardView .yura-reward-guide[open]{
+  width:min(780px,100%);
+  border-color:rgba(255,138,31,.47);
+}
+#leaderboardView .yura-reward-guide > summary{
+  cursor:pointer;
+  display:list-item;
+  color:#ffac52;
+  font-family:var(--font-ui,Inter,system-ui,sans-serif);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.012em;
+  line-height:1.55;
+}
+#leaderboardView .yura-reward-guide > summary:hover{
+  color:#ffc080;
+}
+#leaderboardView .yura-reward-guide > summary:focus-visible{
+  outline:2px solid rgba(242,140,24,.55);
+  outline-offset:4px;
+  border-radius:4px;
+}
+#leaderboardView .yura-reward-guide-body{
+  padding-top:14px;
+}
+#leaderboardView .yura-reward-guide-intro{
+  margin:0 0 14px;
+  max-width:none;
+  font-size:12px;
+  line-height:1.6;
+  color:#b0bbc7;
+}
+#leaderboardView .yura-reward-guide-scroll{
+  max-width:100%;
+  overflow-x:auto;
+}
+#leaderboardView .yura-reward-guide table{
+  width:100%;
+  max-width:none;
+  min-width:440px;
+  border-collapse:collapse;
+  text-align:left;
+  font-size:12px;
+  line-height:1.5;
+}
+#leaderboardView .yura-reward-guide th,
+#leaderboardView .yura-reward-guide td{
+  padding:10px 11px;
+  border-bottom:1px solid rgba(255,255,255,.075);
+  vertical-align:top;
+}
+#leaderboardView .yura-reward-guide th{
+  color:#f2a24b;
+  font-size:10px;
+  letter-spacing:.065em;
+  text-transform:uppercase;
+}
+#leaderboardView .yura-reward-guide th:nth-child(2),
+#leaderboardView .yura-reward-guide td:nth-child(2){
+  min-width:100px;
+  white-space:nowrap;
+}
+#leaderboardView .yura-reward-guide-value{
+  color:#ffbe6f;
+  font-weight:850;
+  font-variant-numeric:tabular-nums;
+}
+#leaderboardView .yura-reward-guide-note{
+  color:#98a8b7;
+  font-size:11px;
+  line-height:1.6;
+  max-width:none;
+  margin:14px 0 0;
+}
+@media(max-width:620px){
+  #leaderboardView .yura-reward-guide,
+  #leaderboardView .yura-reward-guide[open]{
+    width:100%;
+    padding:13px 14px;
+    margin-top:-2px;
+    margin-bottom:18px;
+  }
+  #leaderboardView .yura-reward-guide > summary{
+    font-size:12px;
+  }
+  #leaderboardView .yura-reward-guide table{
+    min-width:380px;
+    font-size:11px;
+  }
+  #leaderboardView .yura-reward-guide th,
+  #leaderboardView .yura-reward-guide td{
+    padding:9px 8px;
+  }
+}
