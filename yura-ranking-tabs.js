@@ -106,7 +106,7 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'tab yura-ranking-tab' + (mode === selected ? ' active' : '');
-    button.textContent = mode === 'level' ? 'LEVELS' : mode.toUpperCase();
+    button.textContent = mode === 'level' ? 'Levels' : mode === 'gains' ? 'Gains' : 'Points';
     button.dataset.rankMode = mode;
     button.setAttribute('role','tab');
     button.setAttribute('aria-selected',String(mode===selected));
