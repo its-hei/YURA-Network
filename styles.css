@@ -4192,3 +4192,7 @@ body > .shell > .view-panel > .hero > div:first-child,
   #pokemonView .pokemon-dex-portrait{width:112px;flex-basis:112px}
   #pokemonView .pokemon-dex-portrait .pokemon-artwork{width:112px;height:112px;flex-basis:112px}
 }
+
+/* TOP LINKS AS ANCHORS V1 — browser links with the same appearance as former tabs. */
+.topbar .top-navigation a.side-item,
+.topbar .top-navigation a.side-item:visited{text-decoration:none}
