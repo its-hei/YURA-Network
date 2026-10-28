@@ -1537,3 +1537,17 @@
     padding:9px 8px;
   }
 }
+
+/* Reward guide belongs beneath Search inside the ranking sidebar. */
+#leaderboardView .leaderboard-side-col > .yura-reward-guide,
+#leaderboardView .leaderboard-side-col > .yura-reward-guide[open]{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+  align-self:start;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide .yura-reward-guide-scroll{
+  width:100%;
+  overflow-x:auto;
+}
