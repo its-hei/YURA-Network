@@ -1551,3 +1551,86 @@
   width:100%;
   overflow-x:auto;
 }
+
+
+/* REWARDS SIDEBAR V122: compact two-column rows with conditions underneath.
+   A fixed 3-column 440px table previously forced horizontal scrolling. */
+#leaderboardView .leaderboard-side-col > .yura-reward-guide .yura-reward-guide-scroll{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:visible;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table,
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table thead,
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table tbody{
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table tr{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,47%);
+  column-gap:10px;
+  row-gap:3px;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table thead tr{
+  padding:6px 0 8px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table tbody tr{
+  padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.075);
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table th,
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table td{
+  box-sizing:border-box;
+  display:block;
+  width:auto;
+  min-width:0;
+  max-width:100%;
+  padding:0;
+  margin:0;
+  border:0;
+  font-size:11px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table thead th{
+  color:#efa34a;
+  font-size:10px;
+  font-weight:850;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table th:nth-child(2),
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table td:nth-child(2){
+  min-width:0;
+  text-align:right;
+  white-space:normal;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table th:nth-child(3){
+  display:none;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table td:nth-child(3){
+  grid-column:1/-1;
+  color:#99a9b8;
+  font-size:10px;
+  line-height:1.55;
+  margin-top:3px;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide table td[colspan]{
+  grid-column:1/-1;
+  text-align:left;
+}
+#leaderboardView .leaderboard-side-col > .yura-reward-guide .yura-reward-guide-value{
+  color:#ffba68;
+  font-weight:850;
+  font-variant-numeric:tabular-nums;
+}
