@@ -25,10 +25,34 @@ function esc(value = "") {
 }
 
 function commandDisplayRows(commands){
-  const male=commands.find(x=>x.command==="!tts"&&x.category==="TTS");
-  const female=commands.find(x=>x.command==="!tits"&&x.category==="TTS");
-  if(!male||!female)return commands;
-  return commands.flatMap(command=>{
+  // YURA Desktop refreshes commands.json automatically. Keep public role
+  // overrides here so routine syncs cannot reset the channel's access labels.
+  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll"]);
+  const explicitMods=new Set(["!tts","!tits","!donation","!donocel","!donoreset"]);
+  const prepared=commands
+    .filter(entry=>String(entry.command||"").toLowerCase()!=="!deska")
+    .map(entry=>{
+      const key=String(entry.command||"").toLowerCase();
+      let command={...entry,aliases:Array.isArray(entry.aliases)?[...entry.aliases]:[]};
+      if(followers.has(key))command.permission="Follower";
+      else if(explicitMods.has(key)||command.permission==="Według Streamer.bot")
+        command.permission="Moderator";
+      if(key==="!dedge"){
+        command.aliases=[...new Set([...command.aliases,"!deska"])];
+        command.description="Dla obserwujących (Follow). !dedge i !deska obsługują ten sam licznik śmierci. Bez argumentu +1; większą liczbę mogą podać VIP oraz moderatorzy.";
+      }
+      if(key==="!jackpot"){
+        command.description="Tylko dla obserwujących kanał (Follow). "+String(entry.description||"").replace(/^Każdy widz może uruchomić to losowanie\.\s*/,"");
+      }
+      if(key==="!join"){
+        command.description=String(entry.description||"")+" Podczas Jackpota mogą dołączać tylko obserwujący kanał (Follow).";
+      }
+      return command;
+    });
+  const male=prepared.find(x=>x.command==="!tts"&&x.category==="TTS");
+  const female=prepared.find(x=>x.command==="!tits"&&x.category==="TTS");
+  if(!male||!female)return prepared;
+  return prepared.flatMap(command=>{
     if(command===female)return [];
     if(command!==male)return [command];
     return [{
