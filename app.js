@@ -106,7 +106,8 @@ const commandGroupOrder=[
 function commandVisualGroup(command){
   const name=String(command.command||"").trim().toLowerCase();
   const category=String(command.category||"").trim().toUpperCase();
-  if(["!ref","!dc"].includes(name))return "custom";
+  // The channel basics and manual commands form one shared block.
+  if(["!ref","!dc","!dedge"].includes(name))return "general";
   if(["PUNKTY Y.U.R.A.","PUNKTY — ADMIN","RAFFLE"].includes(category) ||
     ["!points","!gamble","!jackpot","!join","!transfer","!pokemon","!pokeroll","!top","!add","!remove"].includes(name))
     return "points";
