@@ -978,6 +978,19 @@ async function pokemonFollowerAccess(env:Env,event:TwitchChatEvent):Promise<'all
     return body.data.some((r:any)=>String(r?.user_id||'')===id)?'allowed':'not-following';
   }catch{return 'unavailable';}
 }
+// Server-side Follow requirement shared by Jackpot, Dedge and Pokémon.
+// No changes to Points or state if Twitch cannot confirm a follow.
+async function allowFollowOnlyCommand(env:Env,event:TwitchChatEvent,display:string,command:string):Promise<boolean>{
+  const access=await pokemonFollowerAccess(env,event);
+  if(access==='allowed')return true;
+  if(access==='not-following'){
+    await sendChat(env,"@"+display+" "+command+" jest dostępne tylko dla obserwujących kanał (Follow). Zaobserwuj kanał i spróbuj ponownie.");
+  }else{
+    await sendChat(env,"@"+display+" nie mogę teraz potwierdzić Follow na Twitchu — "+command+" nie zostało wykonane. Spróbuj później.");
+  }
+  return false;
+}
+
 async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<{id:number,name:string,created:boolean}|null> {
   const id=String(event.chatter_user_id||'');
   const login=norm(event.chatter_user_login);
@@ -1102,6 +1115,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     if (!state?.active || state.mode === "auto" || Date.parse(state.endsAtUtc) <= Date.now()) return;
     if (state.mode === "jackpot") {
       if (!state.jackpotId || isYuraPointsBotLogin(login)) return;
+      if(!await allowFollowOnlyCommand(env,event,display,"!join do Jackpot"))return;
       const previous = await env.DB.prepare("SELECT 1 x FROM jackpot_entries WHERE session_id=?1 AND login=?2").bind(state.jackpotId,login).first<any>();
       if (previous) { await sendChat(env,`🎰 @${display} już jesteś w jackpot.`); return; }
       const session = await env.DB.prepare("SELECT stake,status FROM jackpot_sessions WHERE id=?1").bind(state.jackpotId).first<any>();
@@ -1166,8 +1180,11 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     if(key==="jackpot")await sendChat(env,`🎰 @${display} !jackpot działa tylko podczas transmisji (ONLINE).`);
     return;
   }
-  // Jackpot accepts all viewers even with older moderator-only persisted permissions.
-  if (key !== "jackpot" && !commandPermissionAllows(event,env,cfg.permission)) return;
+  // These explicit Follow requirements cannot be overridden by older
+  // persisted EVERYONE or moderator permission settings.
+  const followerCommands=["jackpot","deaths","pokemon","pokeroll"];
+  if(followerCommands.includes(key) && !await allowFollowOnlyCommand(env,event,display,cmd))return;
+  if(!followerCommands.includes(key) && !commandPermissionAllows(event,env,cfg.permission))return;
   if (key !== "jackpot" && key !== "raffle" && key !== "sraffle" && key !== "autoraffle" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
 
   if (key === "alertcontrol") {
@@ -1335,17 +1352,6 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const row = await getAccount(env, target);
     await sendChat(env, `@${display} ${target}: ${(row?.points ?? 0).toLocaleString("pl-PL")} YURA.`);
     return;
-  }
-  if (key === "pokemon" || key === "pokeroll") {
-    const access=await pokemonFollowerAccess(env,event);
-    if(access==='not-following'){
-      await sendChat(env,`@${display} udział w Pokémon jest tylko dla obserwujących kanał. Kliknij Follow na Twitchu i spróbuj ponownie.`);
-      return;
-    }
-    if(access==='unavailable'){
-      await sendChat(env,`@${display} nie mogę teraz potwierdzić follow na Twitchu. Spróbuj ponownie później — nic nie zostało wylosowane ani pobrane.`);
-      return;
-    }
   }
   if (key === "pokemon") {
     if(parts.length!==1) {
