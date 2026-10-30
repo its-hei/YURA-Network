@@ -3,11 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Komendy — HEIYESHI</title>
-  <meta http-equiv="refresh" content="0;url=/YURA-Network/?yuraView=commands">
-  <script>window.location.replace("/YURA-Network/?yuraView=commands");</script>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Komendy kanału — HEIYESHI</title>
+  <meta http-equiv="refresh" content="0;url=/YURA-Network/?yuraView=commands&amp;fresh=20261030">
+  <script>
+    // GitHub Pages is static: force a new root-document request on direct
+    // visits instead of reusing a stale index.html carrying old JS/CSS URLs.
+    const destination = new URL("/YURA-Network/", location.origin);
+    destination.searchParams.set("yuraView", "commands");
+    destination.searchParams.set("fresh", String(Date.now()));
+    location.replace(destination.href);
+  </script>
 </head>
 <body>
-  <p>Otwieranie zakładki Komendy. <a href="/YURA-Network/?yuraView=commands">Przejdź do strony</a>.</p>
+  <p>Otwieranie Komend kanału… <a href="/YURA-Network/?yuraView=commands&amp;fresh=20261030">Przejdź do Komend</a>.</p>
 </body>
 </html>
