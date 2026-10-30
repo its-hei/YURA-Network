@@ -1,6 +1,6 @@
 const state = {
   commands: [],
-  filter: "all",
+  filter: "viewers",
   query: "",
   openCommands: new Set(),
   leaderboardQuery: "",
@@ -13,7 +13,7 @@ const body = document.getElementById("commandsBody");
 const empty = document.getElementById("emptyState");
 const searchInput = document.getElementById("searchInput");
 const filterSelect = document.getElementById("commandFilter");
-state.filter = filterSelect?.value || "all";
+state.filter = filterSelect?.value || "viewers";
 
 function esc(value = "") {
   return String(value)
@@ -43,14 +43,17 @@ function commandDisplayRows(commands){
   });
 }
 
+// Both visibility groups together cover the complete public command catalog.
+function isViewerCommand(command) {
+  return String(command.permission || "").trim().toLowerCase() === "everyone";
+}
+
 function renderCounts() {
   if (!filterSelect) return;
-  const totals = {
-    all: commandDisplayRows(state.commands).length,
-    Everyone: commandDisplayRows(state.commands).filter(c => c.permission === "Everyone").length,
-    Moderator: commandDisplayRows(state.commands).filter(c => c.permission === "Moderator").length
-  };
-  const labels = { all: "Wszystkie", Everyone: "Widzowie", Moderator: "Moderator" };
+  const cards = commandDisplayRows(state.commands);
+  const viewers = cards.filter(isViewerCommand).length;
+  const totals = { viewers, moderation: cards.length - viewers };
+  const labels = { viewers: "Widzowie", moderation: "Moderacja" };
   Array.from(filterSelect.options).forEach(option => {
     option.textContent = labels[option.value] + " · " + totals[option.value];
   });
@@ -72,7 +75,9 @@ function commandMonogram(command){
 function render(){
   const query = state.query.trim().toLowerCase();
   const filtered = commandDisplayRows(state.commands).filter(command => {
-    const permissionMatches = state.filter === "all" || command.permission === state.filter;
+    const permissionMatches = state.filter === "moderation"
+      ? !isViewerCommand(command)
+      : isViewerCommand(command);
     const searchSpace = [
       command.command, ...(command.aliases || []), command.usage,
       command.description, command.permission, command.category || ""
@@ -211,7 +216,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=26", { cache: "no-store" })
+fetch("./commands.json?v=27", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
