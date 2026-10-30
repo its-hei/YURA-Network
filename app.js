@@ -26,12 +26,31 @@ function esc(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function commandDisplayRows(commands){
+  const male=commands.find(x=>x.command==="!tts"&&x.category==="TTS");
+  const female=commands.find(x=>x.command==="!tits"&&x.category==="TTS");
+  if(!male||!female)return commands;
+  return commands.flatMap(command=>{
+    if(command===female)return [];
+    if(command!==male)return [command];
+    return [{
+      ...male,
+      command:"!tts / !tits",
+      usage:"!tts [tekst] · !tits [tekst]",
+      description:"Dwie osobne komendy czytania tekstu przez Streamer.bot: !tts używa głosu męskiego, a !tits głosu żeńskiego. Obie są dostępne od moderatora wzwyż.",
+      aliases:[],
+      copyUsage:male.usage,
+      secondaryCommand:{command:female.command,usage:female.usage,description:female.description}
+    }];
+  });
+}
+
 function renderCounts() {
   if (!filterSelect) return;
   const totals = {
-    all: state.commands.length,
-    Everyone: state.commands.filter(c => c.permission === "Everyone").length,
-    Moderator: state.commands.filter(c => c.permission === "Moderator").length
+    all: commandDisplayRows(state.commands).length,
+    Everyone: commandDisplayRows(state.commands).filter(c => c.permission === "Everyone").length,
+    Moderator: commandDisplayRows(state.commands).filter(c => c.permission === "Moderator").length
   };
   const labels = { all: "Wszystkie", Everyone: "Widzowie", Moderator: "Moderator" };
   Array.from(filterSelect.options).forEach(option => {
@@ -54,7 +73,7 @@ function commandMonogram(command){
 }
 function render(){
   const query = state.query.trim().toLowerCase();
-  const filtered = state.commands.filter(command => {
+  const filtered = commandDisplayRows(state.commands).filter(command => {
     const permissionMatches = state.filter === "all" || command.permission === state.filter;
     const searchSpace = [
       command.command, ...(command.aliases || []), command.usage,
@@ -110,9 +129,17 @@ function render(){
               <span class="command-info-label">Składnia</span>
               <div class="command-info-copy-line">
                 <code>${esc(usage)}</code>
-                <button class="command-copy-action copy-command" type="button" data-copy="${esc(usage)}" title="Kopiuj składnię">Kopiuj</button>
+                <button class="command-copy-action copy-command" type="button" data-copy="${esc(command.copyUsage || usage)}" title="Kopiuj składnię">Kopiuj</button>
               </div>
             </div>
+            ${command.secondaryCommand ? `
+              <div class="command-info-field">
+                <span class="command-info-label">Druga komenda · głos żeński</span>
+                <div class="command-info-copy-line">
+                  <code>${esc(command.secondaryCommand.usage)}</code>
+                  <button class="command-copy-action copy-command" type="button" data-copy="${esc(command.secondaryCommand.usage)}" title="Kopiuj składnię żeńskiego TTS">Kopiuj</button>
+                </div>
+              </div>` : ""}
             ${aliases.length ? `
               <div class="command-info-field">
                 <span class="command-info-label">Aliasy</span>
