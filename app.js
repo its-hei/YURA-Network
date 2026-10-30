@@ -1,6 +1,6 @@
 const state = {
   commands: [],
-  filter: "Everyone",
+  filter: "all",
   query: "",
   openGroups: new Set(),
   openCommands: new Set(),
@@ -14,9 +14,8 @@ const state = {
 const body = document.getElementById("commandsBody");
 const empty = document.getElementById("emptyState");
 const searchInput = document.getElementById("searchInput");
-const tabs = [...document.querySelectorAll(".tab")];
-const initiallyActiveTab = document.querySelector(".tab.active");
-state.filter = initiallyActiveTab?.dataset.filter || "Everyone";
+const filterSelect = document.getElementById("commandFilter");
+state.filter = filterSelect?.value || "all";
 
 function esc(value = "") {
   return String(value)
@@ -28,11 +27,16 @@ function esc(value = "") {
 }
 
 function renderCounts() {
-  document.getElementById("count-all").textContent = state.commands.length;
-  document.getElementById("count-everyone").textContent =
-    state.commands.filter(c => c.permission === "Everyone").length;
-  document.getElementById("count-moderator").textContent =
-    state.commands.filter(c => c.permission === "Moderator").length;
+  if (!filterSelect) return;
+  const totals = {
+    all: state.commands.length,
+    Everyone: state.commands.filter(c => c.permission === "Everyone").length,
+    Moderator: state.commands.filter(c => c.permission === "Moderator").length
+  };
+  const labels = { all: "Wszystkie", Everyone: "Widzowie", Moderator: "Moderator" };
+  Array.from(filterSelect.options).forEach(option => {
+    option.textContent = labels[option.value] + " · " + totals[option.value];
+  });
 }
 
 function render(){
@@ -201,16 +205,12 @@ body.addEventListener("click", event => {
   render();
 });
 
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(item => item.classList.remove("active"));
-    tab.classList.add("active");
-    state.filter = tab.dataset.filter;
-    // Każdy filtr startuje z automatycznie rozwiniętą pierwszą grupą.
-    state.openGroups.clear();
-    state.initialGroupOpened = false;
-    render();
-  });
+filterSelect?.addEventListener("change", () => {
+  state.filter = filterSelect.value;
+  // On filter changes the first matching category is expanded by default.
+  state.openGroups.clear();
+  state.initialGroupOpened = false;
+  render();
 });
 
 searchInput.addEventListener("input", event => {
