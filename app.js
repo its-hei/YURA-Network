@@ -39,6 +39,19 @@ function renderCounts() {
   });
 }
 
+function commandRole(command){
+  const value=String(command.accessTier||command.permission||"").trim().toLowerCase();
+  if(["broadcaster","owner","streamer","nadawca"].includes(value))return "broadcaster";
+  if(value.includes("moderator")||value==="mod")return "moderator";
+  if(value.includes("vip"))return "vip";
+  if(value.includes("artist")||value.includes("artysta"))return "artist";
+  if(value.includes("follower")||value.includes("follow")||value.includes("obserw"))return "follower";
+  if(["everyone","każdy","wszyscy","all"].includes(value))return "everyone";
+  return "unknown";
+}
+function commandMonogram(command){
+  return String(command.command||"").replace(/^!/,"").replace(/[^a-z0-9]/gi,"").slice(0,2).toUpperCase()||"!";
+}
 function render(){
   const query = state.query.trim().toLowerCase();
   const filtered = state.commands.filter(command => {
@@ -66,7 +79,8 @@ function render(){
     const isOpen = query.length > 0 || state.openGroups.has(group.category);
     const cards = group.commands.map(command => {
       const aliases = Array.isArray(command.aliases) ? command.aliases : [];
-      const badgeClass = String(command.permission || "Everyone").toLowerCase();
+      const permission = String(command.permission || "Według konfiguracji");
+      const role = commandRole(command);
       const opened = state.openCommands.has(command.command);
       const usage = command.usage || command.command;
       const metadata = [
@@ -75,17 +89,20 @@ function render(){
         command.globalCooldown != null ? `<span><b>Global CD:</b> ${esc(command.globalCooldown)} s</span>` : ""
       ].filter(Boolean).join("");
       return `
-        <details class="command-info-card" data-command="${esc(command.command)}" ${opened ? "open" : ""}>
+        <details class="command-info-card command-role-${role}" data-command="${esc(command.command)}" data-role="${role}" ${opened ? "open" : ""}>
           <summary class="command-info-summary">
-            <span class="command-info-heading">
+            <span class="command-info-icon" aria-hidden="true">${esc(commandMonogram(command))}</span>
+            <span class="command-info-primary">
               <strong class="command-info-name">${esc(command.command)}</strong>
-              <span class="badge ${esc(badgeClass)}">${esc(command.permission || "Everyone")}</span>
+              <span class="command-info-secondary">
+                <span class="command-info-usage">${esc(usage)}</span>
+                ${aliases.length ? `<span class="alias-count">+${aliases.length} ${aliases.length === 1 ? "alias" : "aliasy"}</span>` : ""}
+              </span>
             </span>
-            <span class="command-info-secondary">
-              <span class="command-info-usage">${esc(usage)}</span>
-              ${aliases.length ? `<span class="alias-count">+${aliases.length} ${aliases.length === 1 ? "alias" : "aliasy"}</span>` : ""}
+            <span class="command-info-trailing">
+              <span class="command-info-permission">${esc(permission)}</span>
+              <span class="command-info-arrow" aria-hidden="true">⌄</span>
             </span>
-            <span class="command-info-arrow" aria-hidden="true">⌄</span>
           </summary>
           <div class="command-info-details">
             <p class="command-info-description">${esc(command.description || "Brak dodatkowego opisu.")}</p>
