@@ -441,7 +441,7 @@
   {
     "command": "!tits",
     "aliases": [],
-    "permission": "Według Streamer.bot",
+    "permission": "Moderator",
     "usage": "!tits [tekst]",
     "description": "Uruchamia czytanie wiadomości głosem żeńskim (TTS) przez Streamer.bot. Dostępność i sposób przekazywania tekstu zależą od konfiguracji.",
     "category": "TTS",
@@ -450,7 +450,7 @@
   {
     "command": "!tts",
     "aliases": [],
-    "permission": "Według Streamer.bot",
+    "permission": "Moderator",
     "usage": "!tts [tekst]",
     "description": "Uruchamia czytanie wiadomości głosem męskim (TTS) przez Streamer.bot. Dostępność i sposób przekazywania tekstu zależą od konfiguracji.",
     "category": "TTS",
