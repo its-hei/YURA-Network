@@ -98,6 +98,28 @@ function commandRole(command){
 function commandMonogram(command){
   return String(command.command||"").replace(/^!/,"").replace(/[^a-z0-9]/gi,"").slice(0,2).toUpperCase()||"!";
 }
+// Public display groups are deliberately visual only: there are no nested
+// tabs or accordions. YURA Desktop may rewrite the source categories on sync.
+const commandGroupOrder=[
+  "general","info","points","custom","overlay","music","donations","alerts","tts","other"
+];
+function commandVisualGroup(command){
+  const name=String(command.command||"").trim().toLowerCase();
+  const category=String(command.category||"").trim().toUpperCase();
+  if(["!ref","!dc"].includes(name))return "custom";
+  if(["PUNKTY Y.U.R.A.","PUNKTY — ADMIN","RAFFLE"].includes(category) ||
+    ["!points","!gamble","!jackpot","!join","!transfer","!pokemon","!pokeroll","!top","!add","!remove"].includes(name))
+    return "points";
+  if(category==="OGÓLNE")return "general";
+  if(category==="INFORMACJE")return "info";
+  if(category==="MUZYKA")return "music";
+  if(category==="DONATIONS")return "donations";
+  if(category==="ALERTY")return "alerts";
+  if(category==="TTS")return "tts";
+  if(category==="OVERLAY")return "overlay";
+  return "other";
+}
+
 function render(){
   const query = state.query.trim().toLowerCase();
   const filtered = commandDisplayRows(state.commands).filter(command => {
@@ -110,8 +132,20 @@ function render(){
     ].join(" ").toLowerCase();
     return permissionMatches && (!query || searchSpace.includes(query));
   });
-  // One uninterrupted grid: no category sections or nested accordions.
-  body.innerHTML = filtered.map(command => {
+  // Keep related commands together; a thin full-width rule separates
+  // groups in the flat two-column grid (no category headings or collapsed tabs).
+  const sorted = filtered.map((command,index)=>({
+    command,index,group:commandVisualGroup(command)
+  })).sort((a,b)=>{
+    const orderA=commandGroupOrder.indexOf(a.group);
+    const orderB=commandGroupOrder.indexOf(b.group);
+    return orderA-orderB || a.index-b.index;
+  });
+  body.innerHTML = sorted.map((item,index) => {
+      const command=item.command;
+      const divider=index>0 && sorted[index-1].group!==item.group
+        ? `<div class="command-group-divider" role="separator" aria-label="Oddzielenie grup komend"></div>`
+        : "";
       const aliases = Array.isArray(command.aliases) ? command.aliases : [];
       const permission = String(command.permission || "Według konfiguracji");
       const role = commandRole(command);
@@ -122,7 +156,7 @@ function render(){
         command.userCooldown != null ? `<span><b>User CD:</b> ${esc(command.userCooldown)} s</span>` : "",
         command.globalCooldown != null ? `<span><b>Global CD:</b> ${esc(command.globalCooldown)} s</span>` : ""
       ].filter(Boolean).join("");
-      return `
+      return divider + `
         <details class="command-info-card command-role-${role}" data-command="${esc(command.command)}" data-role="${role}" ${opened ? "open" : ""}>
           <summary class="command-info-summary">
             <span class="command-info-icon" aria-hidden="true">${esc(commandMonogram(command))}</span>
