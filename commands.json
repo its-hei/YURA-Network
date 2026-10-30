@@ -5,7 +5,7 @@
     "permission": "Everyone",
     "usage": "!nuke",
     "description": "Samodzielny 1-sekundowy timeout.",
-    "category": "OG\u00D3LNE"
+    "category": "OGÓLNE"
   },
   {
     "command": "!transfer",
@@ -13,8 +13,8 @@
       "!give"
     ],
     "permission": "Everyone",
-    "usage": "!transfer @nick \u003Ckwota | procent% | all\u003E",
-    "description": "Przekazuje w\u0142asne punkty innemu u\u017Cytkownikowi.",
+    "usage": "!transfer @nick <kwota | procent% | all>",
+    "description": "Przekazuje własne punkty innemu użytkownikowi.",
     "category": "PUNKTY Y.U.R.A."
   },
   {
@@ -24,7 +24,7 @@
     ],
     "permission": "Everyone",
     "usage": "!accountage [@nick]",
-    "description": "Sprawdza wiek konta na Twitchu. Przyk\u0142ady: !accountage (w\u0142asne konto) i !accountage @nick (wskazane konto). Pokazuje czas od rejestracji, a nie sta\u017C obserwowania kana\u0142u.",
+    "description": "Sprawdza wiek konta na Twitchu. Przykłady: !accountage (własne konto) i !accountage @nick (wskazane konto). Pokazuje czas od rejestracji, a nie staż obserwowania kanału.",
     "category": "INFORMACJE",
     "source": "YURA"
   },
@@ -33,7 +33,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!followage [@nick]",
-    "description": "Sprawdza sta\u017C obserwowania kana\u0142u na Twitchu. Przyk\u0142ady: !followage (Tw\u00F3j follow), !followage @nick (inna osoba). Wynik jest dost\u0119pny tylko wtedy, gdy Twitch udost\u0119pnia potrzebne dane.",
+    "description": "Sprawdza staż obserwowania kanału na Twitchu. Przykłady: !followage (Twój follow), !followage @nick (inna osoba). Wynik jest dostępny tylko wtedy, gdy Twitch udostępnia potrzebne dane.",
     "category": "INFORMACJE",
     "source": "YURA"
   },
@@ -42,7 +42,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!uptime",
-    "description": "Pokazuje, jak d\u0142ugo trwa obecna transmisja na Twitchu (uptime). Gdy kana\u0142 jest offline, nie podaje czasu poprzedniej transmisji. Przyk\u0142ad: !uptime.",
+    "description": "Pokazuje, jak długo trwa obecna transmisja na Twitchu (uptime). Gdy kanał jest offline, nie podaje czasu poprzedniej transmisji. Przykład: !uptime.",
     "category": "INFORMACJE",
     "source": "YURA"
   },
@@ -53,16 +53,18 @@
     ],
     "permission": "Everyone",
     "usage": "!watchtime [@nick]",
-    "description": "Pokazuje \u0142\u0105czny watchtime zarejestrowany przez YUR\u0118 na tym kanale. Przyk\u0142ady: !watchtime (Tw\u00F3j czas), !watchtime @nick (wskazana osoba). Wynik zale\u017Cy od czasu faktycznie zarejestrowanego przez system.",
+    "description": "Pokazuje łączny watchtime zarejestrowany przez YURĘ na tym kanale. Przykłady: !watchtime (Twój czas), !watchtime @nick (wskazana osoba). Wynik zależy od czasu faktycznie zarejestrowanego przez system.",
     "category": "INFORMACJE",
     "source": "YURA"
   },
   {
     "command": "!dedge",
-    "aliases": [],
-    "permission": "Everyone",
+    "aliases": [
+      "!deska"
+    ],
+    "permission": "Follower",
     "usage": "!dedge [liczba]",
-    "description": "Dodaje \u015Bmier\u0107 do aktywnego licznika na streamie. Bez argumentu \u002B1; podanie liczby pozwala zwi\u0119kszy\u0107 licznik o wi\u0119cej, je\u015Bli masz wymagane uprawnienia.",
+    "description": "Komenda tylko dla osób obserwujących kanał (Follow). !dedge i !deska dodają śmierć do aktywnego licznika; bez argumentu +1. Liczbę większą niż 1 mogą podawać VIP i moderatorzy.",
     "category": "OVERLAY",
     "source": "YURA"
   },
@@ -71,7 +73,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!raffle [pula]",
-    "description": "Uruchamia zwyk\u0142e losowanie YURA Points dla wielu zwyci\u0119zc\u00F3w. Uprawniona osoba ustawia pul\u0119 nagr\u00F3d, a widzowie do\u0142\u0105czaj\u0105 za darmo przez !join. Nie myl z !autoraffle (3 nagrody 50/35/15) ani z p\u0142atnym !jackpot.",
+    "description": "Uruchamia zwykłe losowanie YURA Points dla wielu zwycięzców. Uprawniona osoba ustawia pulę nagród, a widzowie dołączają za darmo przez !join. Nie myl z !autoraffle (3 nagrody 50/35/15) ani z płatnym !jackpot.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -80,7 +82,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!sraffle [nagroda]",
-    "description": "Uruchamia bezp\u0142atne losowanie z jedn\u0105 nagrod\u0105 w YURA Points. Uprawniona osoba ustala nagrod\u0119, widzowie do\u0142\u0105czaj\u0105 przez !join, a zwyci\u0119zca otrzymuje ustalone punkty. W przeciwie\u0144stwie do !jackpot nie ma wpisowego.",
+    "description": "Uruchamia bezpłatne losowanie z jedną nagrodą w YURA Points. Uprawniona osoba ustala nagrodę, widzowie dołączają przez !join, a zwycięzca otrzymuje ustalone punkty. W przeciwieństwie do !jackpot nie ma wpisowego.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -89,7 +91,7 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!cancelraffle",
-    "description": "Anuluje trwaj\u0105ce losowanie (!raffle, !sraffle lub !jackpot) bez wybierania zwyci\u0119zcy. Je\u017Celi w !jackpot pobrano wpisowe, uczestnikom zostaj\u0105 zwr\u00F3cone ich wp\u0142aty. Dost\u0119pna dla os\u00F3b z wymaganymi uprawnieniami.",
+    "description": "Anuluje trwające losowanie (!raffle, !sraffle lub !jackpot) bez wybierania zwycięzcy. Jeżeli w !jackpot pobrano wpisowe, uczestnikom zostają zwrócone ich wpłaty. Dostępna dla osób z wymaganymi uprawnieniami.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -98,16 +100,16 @@
     "aliases": [],
     "permission": "Moderator",
     "usage": "!autoraffle [pula YURA]",
-    "description": "Automatyczne losowanie dla obecnych kwalifikuj\u0105cych si\u0119 widz\u00F3w: dok\u0142adnie 3 r\u00F3\u017Cne osoby otrzymuj\u0105 kolejno 50%, 35% i 15% puli. Przyk\u0142ad: !autoraffle 1000 \u2192 500 / 350 / 150 YURA. Nie trzeba wpisywa\u0107 !join ani op\u0142aca\u0107 udzia\u0142u; wymaganych jest co najmniej 3 uczestnik\u00F3w.",
+    "description": "Automatyczne losowanie dla obecnych kwalifikujących się widzów: dokładnie 3 różne osoby otrzymują kolejno 50%, 35% i 15% puli. Przykład: !autoraffle 1000 → 500 / 350 / 150 YURA. Nie trzeba wpisywać !join ani opłacać udziału; wymaganych jest co najmniej 3 uczestników.",
     "category": "RAFFLE",
     "source": "YURA"
   },
   {
     "command": "!jackpot",
     "aliases": [],
-    "permission": "Everyone",
-    "usage": "!jackpot \u003Cwpisowe\u003E",
-    "description": "Ka\u017Cdy widz mo\u017Ce uruchomi\u0107 to losowanie. Losowanie ze wsp\u00F3ln\u0105 pul\u0105 finansowan\u0105 przez uczestnik\u00F3w. Przyk\u0142ad: !jackpot 2000 \u2014 autor komendy automatycznie do\u0142\u0105cza i wp\u0142aca 2000 YURA. Ka\u017Cde kolejne poprawne !join pobiera 2000 YURA z salda uczestnika. Czas losowania ustawia streamer w YURA (POINTS \u2192 JACKPOT \u2022 CZAS LOSOWANIA). 5 uczestnik\u00F3w daje pul\u0119 10 000; jeden losowy zwyci\u0119zca otrzymuje ca\u0142o\u015B\u0107. Powt\u00F3rne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej ni\u017C 2 uczestnikach wpisowe s\u0105 zwracane.",
+    "permission": "Follower",
+    "usage": "!jackpot <wpisowe>",
+    "description": "Tylko osoby obserwujące kanał (Follow) mogą uruchomić Jackpot i do niego dołączyć. Losowanie ze wspólną pulą finansowaną przez uczestników. Przykład: !jackpot 2000 — autor komendy automatycznie dołącza i wpłaca 2000 YURA. Każde kolejne poprawne !join pobiera 2000 YURA z salda uczestnika. Czas losowania ustawia streamer w YURA (POINTS → JACKPOT • CZAS LOSOWANIA). 5 uczestników daje pulę 10 000; jeden losowy zwycięzca otrzymuje całość. Powtórne !join nie pobiera kolejnego wpisowego. Po anulowaniu i przy mniej niż 2 uczestnikach wpisowe są zwracane.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -116,7 +118,7 @@
     "aliases": [],
     "permission": "Everyone",
     "usage": "!join",
-    "description": "Zapisuje Ci\u0119 do aktualnie otwartego losowania. W !raffle oraz !sraffle udzia\u0142 jest bezp\u0142atny. W !jackpot p\u0142acisz z w\u0142asnego salda ustalone wpisowe, wi\u0119c potrzebujesz odpowiedniej liczby punkt\u00F3w. Jedna osoba mo\u017Ce do\u0142\u0105czy\u0107 tylko raz; kolejne !join nie pobiera ponownie punkt\u00F3w.",
+    "description": "Zapisuje Cię do aktualnie otwartego losowania. W !raffle oraz !sraffle udział jest bezpłatny. W !jackpot płacisz z własnego salda ustalone wpisowe, więc potrzebujesz odpowiedniej liczby punktów. Jedna osoba może dołączyć tylko raz; kolejne !join nie pobiera ponownie punktów. Podczas Jackpota dołączanie jest dostępne tylko dla obserwujących kanał.",
     "category": "RAFFLE",
     "source": "YURA"
   },
@@ -128,7 +130,7 @@
     ],
     "permission": "Everyone",
     "usage": "!points",
-    "description": "Sprawdza bie\u017C\u0105ce saldo YURA Points. Punkty mo\u017Cna zdobywa\u0107 za aktywno\u015B\u0107, przekazywa\u0107 innym i wydawa\u0107 w zabawach kana\u0142u. Saldo mo\u017Ce spada\u0107 po przegranym !gamble lub po wp\u0142acie do !jackpot.",
+    "description": "Sprawdza bieżące saldo YURA Points. Punkty można zdobywać za aktywność, przekazywać innym i wydawać w zabawach kanału. Saldo może spadać po przegranym !gamble lub po wpłacie do !jackpot.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -136,26 +138,26 @@
     "command": "!gamble",
     "aliases": [],
     "permission": "Everyone",
-    "usage": "!gamble \u003Ckwota|procent%|all\u003E",
-    "description": "Stawiasz YURA Points na losowy wynik. Przyk\u0142ady: !gamble 2000 (kwota), !gamble 25% (cz\u0119\u015B\u0107 salda), !gamble all (ca\u0142e saldo). Wygrana zwi\u0119ksza, a przegrana zmniejsza saldo. Tylko !gamble all ze stawk\u0105 co najmniej 1000 pkt uruchamia DODATKOWE losowanie permanentnego VIP-a: szansa ro\u015Bnie z kwot\u0105 stawki, od 0,001% do maks. 0,10% po wygranej i 10 razy mniej po przegranej (0,0001%\u20130,01%); mi\u0119dzy progami jest interpolowana, a przy 500 000\u002B osi\u0105ga limit. Bonus jest niezale\u017Cny od wyniku punktowego i nie jest gwarantowany.",
+    "usage": "!gamble <kwota|procent%|all>",
+    "description": "Stawiasz YURA Points na losowy wynik. Przykłady: !gamble 2000 (kwota), !gamble 25% (część salda), !gamble all (całe saldo). Wygrana zwiększa, a przegrana zmniejsza saldo. Tylko !gamble all ze stawką co najmniej 1000 pkt uruchamia DODATKOWE losowanie permanentnego VIP-a: szansa rośnie z kwotą stawki, od 0,001% do maks. 0,10% po wygranej i 10 razy mniej po przegranej (0,0001%–0,01%); między progami jest interpolowana, a przy 500 000+ osiąga limit. Bonus jest niezależny od wyniku punktowego i nie jest gwarantowany.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
   {
     "command": "!pokemon",
     "aliases": [],
-    "permission": "Everyone",
+    "permission": "Follower",
     "usage": "!pokemon",
-    "description": "Tylko dla os\u00F3b obserwuj\u0105cych kana\u0142 (Follow). Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
+    "description": "Tylko dla osób obserwujących kanał (Follow). Pierwsze użycie losuje Ci Pokémona bezpłatnie i przypisuje go na stałe do konta Twitch. Następne użycia wyświetlają już przypisanego Pokémona. Wszystko odbywa się na czacie, bez logowania na stronie.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
   {
     "command": "!pokeroll",
     "aliases": [],
-    "permission": "Everyone",
+    "permission": "Follower",
     "usage": "!pokeroll",
-    "description": "Tylko dla obserwuj\u0105cych kana\u0142 (Follow). Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
+    "description": "Tylko dla obserwujących kanał (Follow). Losuje nowego, innego Pokémona za 5 000 Y.U.R.A. Points. Wymaga wcześniejszego użycia !pokemon i odpowiedniego salda. Jeśli nie uda się wykonać losowania, punkty nie zostaną pobrane.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -166,7 +168,7 @@
     ],
     "permission": "Everyone",
     "usage": "!top",
-    "description": "Pokazuje pi\u0119ciu widz\u00F3w z najwi\u0119kszym aktualnym saldem YURA Points (bez bot\u00F3w). Ranking POINTS na YURA Network r\u00F3\u017Cni si\u0119 od LEVEL (poziom og\u00F3lny) i GAINS (miesi\u0119czny przyrost EXP).",
+    "description": "Pokazuje pięciu widzów z największym aktualnym saldem YURA Points (bez botów). Ranking POINTS na YURA Network różni się od LEVEL (poziom ogólny) i GAINS (miesięczny przyrost EXP).",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -177,9 +179,9 @@
       "!addpkt"
     ],
     "permission": "Moderator",
-    "usage": "!add @nick \u003Cliczba\u003E / !add all \u003Cliczba\u003E",
-    "description": "Komenda administracyjna: przyznaje podan\u0105 liczb\u0119 YURA Points wskazanemu @nick lub wszystkim obecnym widzom za pomoc\u0105 all. Wymaga uprawnie\u0144 nadanych w YURZE.",
-    "category": "PUNKTY \u2014 ADMIN",
+    "usage": "!add @nick <liczba> / !add all <liczba>",
+    "description": "Komenda administracyjna: przyznaje podaną liczbę YURA Points wskazanemu @nick lub wszystkim obecnym widzom za pomocą all. Wymaga uprawnień nadanych w YURZE.",
+    "category": "PUNKTY — ADMIN",
     "source": "YURA"
   },
   {
@@ -189,53 +191,53 @@
       "!removepkt"
     ],
     "permission": "Moderator",
-    "usage": "!remove @nick \u003Cliczba\u003E",
-    "description": "Komenda administracyjna: odejmuje podan\u0105 liczb\u0119 YURA Points od salda wybranego u\u017Cytkownika. Wymaga uprawnie\u0144 nadanych w YURZE.",
-    "category": "PUNKTY \u2014 ADMIN",
+    "usage": "!remove @nick <liczba>",
+    "description": "Komenda administracyjna: odejmuje podaną liczbę YURA Points od salda wybranego użytkownika. Wymaga uprawnień nadanych w YURZE.",
+    "category": "PUNKTY — ADMIN",
     "source": "YURA"
   },
   {
     "command": "!start",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!start",
-    "description": "Uruchamia lub wznawia odtwarzanie muzyki w Pear / YouTube Music, bez usuwania kolejki Song Request. Komenda steruj\u0105ca dost\u0119pna tylko uprawnionym osobom.",
+    "description": "Uruchamia lub wznawia odtwarzanie muzyki w Pear / YouTube Music, bez usuwania kolejki Song Request. Komenda sterująca dostępna tylko uprawnionym osobom.",
     "category": "MUZYKA",
     "source": "YURA"
   },
   {
     "command": "!pause",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!pause",
-    "description": "Pauzuje bie\u017C\u0105cy utw\u00F3r w Pear / YouTube Music, ale nie usuwa kolejki Song Request. Ponowne odtwarzanie: !start. Komenda dla uprawnionych os\u00F3b.",
+    "description": "Pauzuje bieżący utwór w Pear / YouTube Music, ale nie usuwa kolejki Song Request. Ponowne odtwarzanie: !start. Komenda dla uprawnionych osób.",
     "category": "MUZYKA",
     "source": "YURA"
   },
   {
     "command": "!stop",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!stop",
-    "description": "Zatrzymuje odtwarzanie muzyki i resetuje bie\u017C\u0105cy utw\u00F3r w Pear. Nie usuwa listy zapisanych piosenek.",
+    "description": "Zatrzymuje odtwarzanie muzyki i resetuje bieżący utwór w Pear. Nie usuwa listy zapisanych piosenek.",
     "category": "MUZYKA",
     "source": "YURA"
   },
   {
     "command": "!restart",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!restart",
-    "description": "Uruchamia bie\u017C\u0105cy utw\u00F3r ponownie od pocz\u0105tku bez zmiany kolejki Song Request.",
+    "description": "Uruchamia bieżący utwór ponownie od początku bez zmiany kolejki Song Request.",
     "category": "MUZYKA",
     "source": "YURA"
   },
   {
     "command": "!skip",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!skip",
-    "description": "Pomija aktualnie odtwarzany utw\u00F3r w Pear i pr\u00F3buje przej\u015B\u0107 do nast\u0119pnego w kolejce. Dost\u0119pno\u015B\u0107 komendy zale\u017Cy od uprawnie\u0144 ustawionych przez streamera.",
+    "description": "Pomija aktualnie odtwarzany utwór w Pear i próbuje przejść do następnego w kolejce. Dostępność komendy zależy od uprawnień ustawionych przez streamera.",
     "category": "MUZYKA",
     "source": "YURA"
   },
@@ -244,9 +246,9 @@
     "aliases": [
       "!vol up"
     ],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!volume up",
-    "description": "Podnosi g\u0142o\u015Bno\u015B\u0107 odtwarzacza Pear o 5 punkt\u00F3w procentowych; nie zmienia g\u0142o\u015Bno\u015Bci ca\u0142ego OBS.",
+    "description": "Podnosi głośność odtwarzacza Pear o 5 punktów procentowych; nie zmienia głośności całego OBS.",
     "category": "MUZYKA",
     "source": "YURA"
   },
@@ -255,18 +257,18 @@
     "aliases": [
       "!vol down"
     ],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!volume down",
-    "description": "Obni\u017Ca g\u0142o\u015Bno\u015B\u0107 odtwarzacza Pear o 5 punkt\u00F3w procentowych; nie zmienia g\u0142o\u015Bno\u015Bci ca\u0142ego OBS.",
+    "description": "Obniża głośność odtwarzacza Pear o 5 punktów procentowych; nie zmienia głośności całego OBS.",
     "category": "MUZYKA",
     "source": "YURA"
   },
   {
     "command": "!sr off",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Moderator + list",
     "usage": "!sr off",
-    "description": "Blokuje nowe pro\u015Bby o utwory przez !sr. Zapisana kolejka pozostaje dost\u0119pna.",
+    "description": "Blokuje nowe prośby o utwory przez !sr. Zapisana kolejka pozostaje dostępna.",
     "category": "MUZYKA",
     "source": "YURA"
   },
@@ -277,7 +279,7 @@
     ],
     "permission": "Everyone",
     "usage": "!ref",
-    "description": "Podaje kod polecaj\u0105cy Recruit a Friend do FFXIV i instrukcj\u0119 jego u\u017Cycia. Recruit a Friend: EP6YK5PJ \u2014 wpisz kod przed pierwsz\u0105 p\u0142atno\u015Bci\u0105 za subskrypcj\u0119, aby otrzyma\u0107 bonusowe nagrody! :blue_heart: https://na.finalfantasyxiv.com/lodestone/special/friend_recruit/",
+    "description": "Podaje kod polecający Recruit a Friend do FFXIV i instrukcję jego użycia. Recruit a Friend: EP6YK5PJ — wpisz kod przed pierwszą płatnością za subskrypcję, aby otrzymać bonusowe nagrody! :blue_heart: https://na.finalfantasyxiv.com/lodestone/special/friend_recruit/",
     "category": "FINAL FANTASY XIV",
     "source": "YURA"
   },
@@ -288,8 +290,8 @@
     ],
     "permission": "Everyone",
     "usage": "!dc",
-    "description": "Wy\u015Bwietla zaproszenie na serwer Discord naszej spo\u0142eczno\u015Bci. Link do discorda: https://discord.gg/8NHhFsRed5",
-    "category": "SPO\u0141ECZNO\u015A\u0106",
+    "description": "Wyświetla zaproszenie na serwer Discord naszej społeczności. Link do discorda: https://discord.gg/8NHhFsRed5",
+    "category": "SPOŁECZNOŚĆ",
     "source": "YURA"
   },
   {
@@ -300,8 +302,8 @@
     ],
     "permission": "Everyone",
     "usage": "!commands",
-    "description": "Podaje link do aktualnej publicznej listy komend kana\u0142u na YURA Network. \uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
-    "category": "OG\u00D3LNE",
+    "description": "Podaje link do aktualnej publicznej listy komend kanału na YURA Network. 📟 Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
+    "category": "OGÓLNE",
     "source": "YURA"
   },
   {
@@ -312,8 +314,8 @@
     ],
     "permission": "Everyone",
     "usage": "!web",
-    "description": "Podaje adres strony YURA Network z informacjami o kanale, harmonogramem i rankingiem. Zapraszam na moj\u0105 stron\u0119 internetow\u0105: https://its-hei.github.io/YURA-Network/",
-    "category": "OG\u00D3LNE",
+    "description": "Podaje adres strony YURA Network z informacjami o kanale, harmonogramem i rankingiem. Zapraszam na moją stronę internetową: https://its-hei.github.io/YURA-Network/",
+    "category": "OGÓLNE",
     "source": "YURA"
   },
   {
@@ -321,9 +323,9 @@
     "aliases": [
       "!afkon"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!afk",
-    "description": "W\u0142\u0105cza nak\u0142adk\u0119 AFK na streamie. Przydatne, gdy streamer odchodzi na chwil\u0119 od komputera; wy\u0142\u0105czenie: !afkoff.",
+    "description": "Włącza nakładkę AFK na streamie. Przydatne, gdy streamer odchodzi na chwilę od komputera; wyłączenie: !afkoff.",
     "category": "OVERLAY",
     "source": "STREAMER.BOT"
   },
@@ -332,9 +334,9 @@
     "aliases": [
       "!offafk"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!afkoff",
-    "description": "Wy\u0142\u0105cza nak\u0142adk\u0119 AFK i przywraca normalny widok transmisji. W\u0142\u0105czenie: !afk.",
+    "description": "Wyłącza nakładkę AFK i przywraca normalny widok transmisji. Włączenie: !afk.",
     "category": "OVERLAY",
     "source": "STREAMER.BOT"
   },
@@ -343,36 +345,27 @@
     "aliases": [
       "!alert"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!alerts",
-    "description": "Uruchamia skonfigurowan\u0105 w Streamer.bot akcj\u0119 sprawdzania alert\u00F3w (Alerts Check). Jej szczeg\u00F3\u0142y zale\u017C\u0105 od ustawie\u0144 kana\u0142u.",
+    "description": "Uruchamia skonfigurowaną w Streamer.bot akcję sprawdzania alertów (Alerts Check). Jej szczegóły zależą od ustawień kanału.",
     "category": "ALERTY",
-    "source": "STREAMER.BOT"
-  },
-  {
-    "command": "!deska",
-    "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
-    "usage": "!deska",
-    "description": "Obs\u0142uguje powi\u0105zan\u0105 z licznikiem \u015Bmierci akcj\u0119 Deaths w Streamer.bot. Szczeg\u00F3\u0142y i wymagane uprawnienia zale\u017C\u0105 od konfiguracji tej akcji.",
-    "category": "OVERLAY",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!doggoff",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!doggoff",
-    "description": "Ukrywa nak\u0142adk\u0119 Doggos na transmisji. W\u0142\u0105czenie: !doggon.",
+    "description": "Ukrywa nakładkę Doggos na transmisji. Włączenie: !doggon.",
     "category": "OVERLAY",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!doggon",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!doggon",
-    "description": "W\u0142\u0105cza nak\u0142adk\u0119 Doggos na transmisji. Ukrycie: !doggoff.",
+    "description": "Włącza nakładkę Doggos na transmisji. Ukrycie: !doggoff.",
     "category": "OVERLAY",
     "source": "STREAMER.BOT"
   },
@@ -381,27 +374,27 @@
     "aliases": [
       "!dono"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
-    "usage": "!donation [tytu\u0142]",
-    "description": "Uruchamia akcj\u0119 zmiany tytu\u0142u celu wp\u0142at Donation Goal. Obs\u0142uga argument\u00F3w zale\u017Cy od konfiguracji Streamer.bot.",
+    "permission": "Moderator",
+    "usage": "!donation [tytuł]",
+    "description": "Uruchamia akcję zmiany tytułu celu wpłat Donation Goal. Obsługa argumentów zależy od konfiguracji Streamer.bot.",
     "category": "DONATIONS",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!donocel",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!donocel [kwota]",
-    "description": "Obs\u0142uguje warto\u015B\u0107 celu wp\u0142at wy\u015Bwietlanego w Donation Goal. Dok\u0142adna sk\u0142adnia zale\u017Cy od ustawie\u0144 Streamer.bot.",
+    "description": "Obsługuje wartość celu wpłat wyświetlanego w Donation Goal. Dokładna składnia zależy od ustawień Streamer.bot.",
     "category": "DONATIONS",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!donoreset",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!donoreset",
-    "description": "Uruchamia skonfigurowany reset Donation Goal. Komenda administracyjna \u2014 sprawd\u017A uprawnienia w Streamer.bot.",
+    "description": "Uruchamia skonfigurowany reset Donation Goal. Komenda administracyjna — sprawdź uprawnienia w Streamer.bot.",
     "category": "DONATIONS",
     "source": "STREAMER.BOT"
   },
@@ -410,9 +403,9 @@
     "aliases": [
       "!mutealerts"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!mutealert",
-    "description": "Wycisza d\u017Awi\u0119k alert\u00F3w na transmisji za po\u015Brednictwem Streamer.bot. Cofni\u0119cie: !unmute.",
+    "description": "Wycisza dźwięk alertów na transmisji za pośrednictwem Streamer.bot. Cofnięcie: !unmute.",
     "category": "ALERTY",
     "source": "STREAMER.BOT"
   },
@@ -421,9 +414,9 @@
     "aliases": [
       "!pausealerts"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!pausealert",
-    "description": "Wstrzymuje odtwarzanie alert\u00F3w w kolejce. Wznowienie: !unpausealert.",
+    "description": "Wstrzymuje odtwarzanie alertów w kolejce. Wznowienie: !unpausealert.",
     "category": "ALERTY",
     "source": "STREAMER.BOT"
   },
@@ -432,27 +425,27 @@
     "aliases": [
       "!skipalerts"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!skipalert",
-    "description": "Pomija bie\u017C\u0105cy alert i przechodzi do nast\u0119pnego, je\u015Bli jest dost\u0119pny. Nie anuluje zdarzenia Twitch ani wp\u0142aty.",
+    "description": "Pomija bieżący alert i przechodzi do następnego, jeśli jest dostępny. Nie anuluje zdarzenia Twitch ani wpłaty.",
     "category": "ALERTY",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!tits",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!tits [tekst]",
-    "description": "Uruchamia czytanie wiadomo\u015Bci g\u0142osem \u017Ce\u0144skim (TTS) przez Streamer.bot. Dost\u0119pno\u015B\u0107 i spos\u00F3b przekazywania tekstu zale\u017C\u0105 od konfiguracji.",
+    "description": "Uruchamia czytanie wiadomości głosem żeńskim (TTS) przez Streamer.bot. Dostępność i sposób przekazywania tekstu zależą od konfiguracji.",
     "category": "TTS",
     "source": "STREAMER.BOT"
   },
   {
     "command": "!tts",
     "aliases": [],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!tts [tekst]",
-    "description": "Uruchamia czytanie wiadomo\u015Bci g\u0142osem m\u0119skim (TTS) przez Streamer.bot. Dost\u0119pno\u015B\u0107 i spos\u00F3b przekazywania tekstu zale\u017C\u0105 od konfiguracji.",
+    "description": "Uruchamia czytanie wiadomości głosem męskim (TTS) przez Streamer.bot. Dostępność i sposób przekazywania tekstu zależą od konfiguracji.",
     "category": "TTS",
     "source": "STREAMER.BOT"
   },
@@ -462,9 +455,9 @@
       "!unmutealert",
       "!unmutealerts"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!unmute",
-    "description": "Przywraca d\u017Awi\u0119k alert\u00F3w wyciszonych przez !mutealert.",
+    "description": "Przywraca dźwięk alertów wyciszonych przez !mutealert.",
     "category": "ALERTY",
     "source": "STREAMER.BOT"
   },
@@ -473,7 +466,7 @@
     "aliases": [
       "!unpausealerts"
     ],
-    "permission": "Wed\u0142ug Streamer.bot",
+    "permission": "Moderator",
     "usage": "!unpausealert",
     "description": "Wznawia alerty wstrzymane przez !pausealert.",
     "category": "ALERTY",
