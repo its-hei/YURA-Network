@@ -4877,3 +4877,32 @@ body > .shell > .view-panel > .hero > div:first-child,
   border-radius:3px;
   background:var(--legend-color);
 }
+
+
+/* FLAT COMMAND CATALOG V128 — every command in one grid, without categories. */
+#commandsView #commandsBody.commands-catalog{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:start;
+  gap:10px;
+  width:100%;
+  min-width:0;
+  padding:0;
+  margin-top:15px;
+  border:0;
+  background:transparent;
+}
+#commandsView #commandsBody > .command-info-card{
+  min-width:0;
+  width:100%;
+}
+#commandsView #commandsBody > .commands-catalog-error,
+#commandsView #commandsBody > .commands-catalog-loading{
+  grid-column:1/-1;
+}
+@media(max-width:700px){
+  #commandsView #commandsBody.commands-catalog{
+    grid-template-columns:minmax(0,1fr);
+    gap:9px;
+  }
+}
