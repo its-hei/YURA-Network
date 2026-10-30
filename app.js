@@ -27,8 +27,8 @@ function esc(value = "") {
 function commandDisplayRows(commands){
   // YURA Desktop refreshes commands.json automatically. Keep public role
   // overrides here so routine syncs cannot reset the channel's access labels.
-  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll"]);
-  const explicitMods=new Set(["!tts","!tits","!donation","!donocel","!donoreset"]);
+  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!tts","!tits"]);
+  const explicitMods=new Set(["!donation","!donocel","!donoreset"]);
   const prepared=commands
     .filter(entry=>String(entry.command||"").toLowerCase()!=="!deska")
     .map(entry=>{
@@ -59,7 +59,7 @@ function commandDisplayRows(commands){
       ...male,
       command:"!tts / !tits",
       usage:"!tts [tekst] · !tits [tekst]",
-      description:"Dwie osobne komendy czytania tekstu przez Streamer.bot: !tts używa głosu męskiego, a !tits głosu żeńskiego. Obie są dostępne od moderatora wzwyż.",
+      description:"Dwie komendy czytania tekstu przez Streamer.bot: !tts używa głosu męskiego, a !tits głosu żeńskiego. Obie są dostępne dla osób obserwujących kanał (Follow).",
       aliases:[],
       copyUsage:male.usage,
       secondaryCommand:{command:female.command,usage:female.usage,description:female.description}
