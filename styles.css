@@ -4678,3 +4678,202 @@ body > .shell > .view-panel > .hero > div:first-child,
     height:6px;
   }
 }
+
+
+/* COMMAND ACCESS STRIP V126 — compact match-history-inspired horizontal cards.
+   Role palette: broadcaster red, moderator green, VIP pink, artist blue,
+   follower gold, everyone white. Unknown Streamer.bot permissions remain grey. */
+#commandsView .command-info-card{
+  --command-role-color:#778390;
+  border:1px solid #2b333c;
+  border-left:3px solid var(--command-role-color);
+  border-radius:6px;
+  background:#11171b;
+  box-shadow:none;
+  overflow:hidden;
+  transition:background-color .16s ease,border-color .16s ease;
+}
+#commandsView .command-role-broadcaster{--command-role-color:#e95760}
+#commandsView .command-role-moderator{--command-role-color:#91c84b}
+#commandsView .command-role-vip{--command-role-color:#ed78b9}
+#commandsView .command-role-artist{--command-role-color:#65a9e9}
+#commandsView .command-role-follower{--command-role-color:#dcad54}
+#commandsView .command-role-everyone{--command-role-color:#f2f4f7}
+#commandsView .command-role-unknown{--command-role-color:#788592}
+#commandsView .command-info-card:hover{
+  border-color:#44505c;
+  border-left-color:var(--command-role-color);
+  background:#151c21;
+}
+#commandsView .command-info-card[open]{
+  border-color:#46535e;
+  border-left-color:var(--command-role-color);
+  background:#141c22;
+  box-shadow:none;
+}
+#commandsView .command-info-summary{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) minmax(0,max-content);
+  align-items:center;
+  align-content:center;
+  gap:12px;
+  min-height:76px;
+  padding:10px 14px 10px 13px;
+  list-style:none;
+}
+#commandsView .command-info-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 42px;
+  box-sizing:border-box;
+  width:42px;
+  height:42px;
+  border:1px solid color-mix(in srgb,var(--command-role-color) 31%,#2d3945);
+  border-radius:6px;
+  background:color-mix(in srgb,var(--command-role-color) 8%,#18212a);
+  color:#e4ebf3;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.01em;
+  line-height:1;
+  font-family:var(--font-ui,Inter,system-ui,sans-serif);
+  user-select:none;
+}
+#commandsView .command-info-primary{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+  min-width:0;
+}
+#commandsView .command-info-name{
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
+  color:#f4f6f8;
+}
+#commandsView .command-info-secondary{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:4px 8px;
+  min-width:0;
+}
+#commandsView .command-info-usage{
+  font-size:10px;
+  font-weight:500;
+  color:#95a7ba;
+}
+#commandsView .command-info-secondary .alias-count{
+  font-size:9px;
+  border-radius:5px;
+  padding:2px 6px;
+}
+#commandsView .command-info-trailing{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-end;
+  align-self:center;
+  gap:5px;
+  max-width:118px;
+  min-width:0;
+}
+#commandsView .command-info-permission{
+  display:block;
+  font-size:10px;
+  line-height:1.3;
+  font-weight:750;
+  text-align:right;
+  color:var(--command-role-color);
+  overflow-wrap:anywhere;
+}
+#commandsView .command-info-arrow{
+  position:static;
+  display:block;
+  color:#99a8b5;
+  font-size:16px;
+  transform:none;
+  font-weight:800;
+  line-height:1;
+}
+#commandsView .command-info-card[open] .command-info-arrow{
+  transform:rotate(180deg);
+  color:var(--command-role-color);
+}
+#commandsView .command-info-details{
+  border-top:1px solid #2a343e;
+  background:rgba(4,9,14,.17);
+}
+#commandsView .command-card-grid{
+  gap:10px;
+}
+@media(max-width:700px){
+  #commandsView .command-info-summary{
+    grid-template-columns:38px minmax(0,1fr) minmax(0,max-content);
+    min-height:70px;
+    gap:9px;
+    padding:9px 10px;
+  }
+  #commandsView .command-info-icon{
+    width:38px;
+    height:38px;
+    font-size:12px;
+  }
+  #commandsView .command-info-name{font-size:13px}
+  #commandsView .command-info-permission{font-size:9px}
+}
+@media(max-width:375px){
+  #commandsView .command-info-summary{
+    grid-template-columns:36px minmax(0,1fr) minmax(0,max-content);
+    gap:7px;
+    padding:9px 8px;
+  }
+  #commandsView .command-info-icon{width:36px;height:36px}
+  #commandsView .command-info-trailing{max-width:88px}
+}
+
+/* Optional key is closed by default and does not expand the page header. */
+#commandsView .command-role-legend{
+  margin:9px 0 0 auto;
+  width:max-content;
+  max-width:100%;
+  color:#98a8b7;
+  font-size:10px;
+  line-height:1.45;
+}
+#commandsView .command-role-legend summary{
+  cursor:pointer;
+  width:max-content;
+  margin-left:auto;
+  color:#9aabba;
+  padding:4px 1px;
+}
+#commandsView .command-role-legend[open] summary{color:#f4ab53}
+#commandsView .command-role-legend-items{
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:8px 13px;
+  max-width:580px;
+  margin:6px 0 0 auto;
+  padding:11px;
+  border:1px solid #303944;
+  border-radius:8px;
+  background:#11181d;
+}
+#commandsView .command-role-legend-items span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+#commandsView .command-role-legend-items i{
+  display:inline-block;
+  flex:0 0 4px;
+  width:4px;
+  height:15px;
+  border-radius:3px;
+  background:var(--legend-color);
+}
