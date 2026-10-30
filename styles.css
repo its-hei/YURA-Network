@@ -4906,3 +4906,28 @@ body > .shell > .view-panel > .hero > div:first-child,
     gap:9px;
   }
 }
+
+
+/* FLAT COMMAND GROUP SEPARATORS V132 — line only, no category headings. */
+#commandsView #commandsBody > .command-group-divider{
+  display:block;
+  grid-column:1 / -1;
+  box-sizing:border-box;
+  width:100%;
+  height:1px;
+  min-height:1px;
+  padding:0;
+  margin:13px 0 11px;
+  border:0;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    #29333d 3%,
+    #29333d 97%,
+    transparent 100%);
+  pointer-events:none;
+}
+@media(max-width:700px){
+  #commandsView #commandsBody > .command-group-divider{
+    margin:11px 0 9px;
+  }
+}
