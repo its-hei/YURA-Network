@@ -4466,3 +4466,97 @@ body > .shell > .view-panel > .hero > div:first-child,
   #commandsView .command-info-name{font-size:15px}
   #commandsView .command-info-details{padding:13px}
 }
+
+
+/* PUBLIC COMMANDS COMPACT V124 — restrained type and denser cards. */
+#commandsView .commands-catalog{
+  gap:10px;
+  margin-top:15px;
+}
+#commandsView .command-category-toggle{
+  min-height:49px;
+  padding:11px 15px;
+}
+#commandsView .command-category-toggle .group-label{
+  font-size:11px;
+}
+#commandsView .command-category-toggle .group-count,
+#commandsView .command-category-toggle .group-state{
+  font-size:10px;
+}
+#commandsView .command-card-grid{
+  gap:9px;
+  padding:12px;
+}
+#commandsView .command-info-summary{
+  min-height:83px;
+  gap:8px;
+  padding:12px 34px 12px 13px;
+}
+#commandsView .command-info-name{
+  font-size:14px;
+  line-height:1.25;
+}
+#commandsView .command-info-heading{
+  gap:6px 9px;
+}
+#commandsView .command-info-heading .badge{
+  font-size:9px;
+  padding:4px 7px;
+}
+#commandsView .command-info-secondary{
+  gap:5px 8px;
+}
+#commandsView .command-info-usage{
+  font-size:10px;
+}
+#commandsView .command-info-secondary .alias-count{
+  font-size:9px;
+  padding:2px 6px;
+}
+#commandsView .command-info-arrow{
+  top:14px;
+  right:12px;
+  font-size:18px;
+}
+#commandsView .command-info-details{
+  gap:13px;
+  padding:13px;
+}
+#commandsView .command-info-description{
+  font-size:11.5px;
+  line-height:1.58;
+}
+#commandsView .command-info-label{
+  font-size:10px;
+}
+#commandsView .command-info-properties{
+  font-size:10px;
+}
+#commandsView .tab{
+  font-size:12px;
+}
+@media(max-width:700px){
+  #commandsView .command-card-grid{
+    gap:8px;
+    padding:9px;
+  }
+  #commandsView .command-category-toggle{
+    min-height:46px;
+    padding:10px 12px;
+  }
+  #commandsView .command-info-summary{
+    min-height:76px;
+    gap:7px;
+    padding:11px 32px 11px 12px;
+  }
+  #commandsView .command-info-name{
+    font-size:14px;
+  }
+  #commandsView .command-info-details{
+    padding:12px;
+  }
+  #commandsView .tab{
+    font-size:11px;
+  }
+}
