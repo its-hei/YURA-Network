@@ -262,7 +262,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=25", { cache: "no-store" })
+fetch("./commands.json?v=26", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
