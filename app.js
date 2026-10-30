@@ -103,7 +103,7 @@ function commandMonogram(command){
 // Show the combined channel-basics block (nuke, commands, web, ref, dc,
 // dedge/deska) last, while leaving other topical groups together.
 const commandGroupOrder=[
-  "info","points","overlay","music","donations","alerts","tts","other","general"
+  "info","points","overlay","music","alerts","tts","other","general","donations"
 ];
 function commandVisualGroup(command){
   const name=String(command.command||"").trim().toLowerCase();
