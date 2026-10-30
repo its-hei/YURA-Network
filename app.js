@@ -100,8 +100,10 @@ function commandMonogram(command){
 }
 // Public display groups are deliberately visual only: there are no nested
 // tabs or accordions. YURA Desktop may rewrite the source categories on sync.
+// Show the combined channel-basics block (nuke, commands, web, ref, dc,
+// dedge/deska) last, while leaving other topical groups together.
 const commandGroupOrder=[
-  "general","info","points","custom","overlay","music","donations","alerts","tts","other"
+  "info","points","overlay","music","donations","alerts","tts","other","general"
 ];
 function commandVisualGroup(command){
   const name=String(command.command||"").trim().toLowerCase();
@@ -140,7 +142,11 @@ function render(){
   })).sort((a,b)=>{
     const orderA=commandGroupOrder.indexOf(a.group);
     const orderB=commandGroupOrder.indexOf(b.group);
-    return orderA-orderB || a.index-b.index;
+    if(orderA!==orderB)return orderA-orderB;
+    // Within each group, follower-only cards come after Everyone cards.
+    const followerA=commandRole(a.command)==="follower"?1:0;
+    const followerB=commandRole(b.command)==="follower"?1:0;
+    return followerA-followerB || a.index-b.index;
   });
   body.innerHTML = sorted.map((item,index) => {
       const command=item.command;
