@@ -2,13 +2,11 @@ const state = {
   commands: [],
   filter: "all",
   query: "",
-  openGroups: new Set(),
   openCommands: new Set(),
   leaderboardQuery: "",
   leaderboardEntries: [],
   leaderboardUpdatedAt: null,
-  leaderboardHidePrivileged: false,
-  initialGroupOpened: false
+  leaderboardHidePrivileged: false
 };
 
 const body = document.getElementById("commandsBody");
@@ -81,22 +79,8 @@ function render(){
     ].join(" ").toLowerCase();
     return permissionMatches && (!query || searchSpace.includes(query));
   });
-  const groups = [];
-  filtered.forEach(command => {
-    const category = command.category || "INNE";
-    let group = groups.find(item => item.category === category);
-    if (!group){group = { category, commands: [] };groups.push(group);}
-    group.commands.push(command);
-  });
-  const firstCategory = groups[0]?.category || null;
-  if (!state.initialGroupOpened && query.length === 0 && firstCategory) {
-    state.openGroups.clear();
-    state.openGroups.add(firstCategory);
-    state.initialGroupOpened = true;
-  }
-  body.innerHTML = groups.map(group => {
-    const isOpen = query.length > 0 || state.openGroups.has(group.category);
-    const cards = group.commands.map(command => {
+  // One uninterrupted grid: no category sections or nested accordions.
+  body.innerHTML = filtered.map(command => {
       const aliases = Array.isArray(command.aliases) ? command.aliases : [];
       const permission = String(command.permission || "Według konfiguracji");
       const role = commandRole(command);
@@ -150,20 +134,6 @@ function render(){
             ${metadata ? `<div class="command-info-properties">${metadata}</div>` : ""}
           </div>
         </details>`;
-    }).join("");
-    return `
-      <section class="command-category ${isOpen ? "open" : ""}">
-        <button class="group-toggle command-category-toggle" type="button"
-          data-category="${esc(group.category)}" aria-expanded="${isOpen ? "true" : "false"}">
-          <span class="group-heading">
-            <span class="group-chevron" aria-hidden="true">›</span>
-            <span class="group-label">${esc(group.category)}</span>
-            <span class="group-count">${group.commands.length}</span>
-          </span>
-          <span class="group-state">${isOpen ? "ZWIŃ" : "ROZWIŃ"}</span>
-        </button>
-        <div class="command-card-grid" ${isOpen ? "" : "hidden"}>${cards}</div>
-      </section>`;
   }).join("");
   empty.hidden = filtered.length !== 0;
 }
@@ -228,32 +198,11 @@ body.addEventListener("toggle", event => {
 
 body.addEventListener("click", event => {
   const copyButton = event.target.closest(".copy-command");
-
-  if (copyButton) {
-    copyText(copyButton.dataset.copy);
-    return;
-  }
-
-  const toggle = event.target.closest(".group-toggle");
-  if (!toggle) return;
-
-  const category = toggle.dataset.category;
-  if (!category) return;
-
-  if (state.openGroups.has(category)) {
-    state.openGroups.delete(category);
-  } else {
-    state.openGroups.add(category);
-  }
-
-  render();
+  if (copyButton) copyText(copyButton.dataset.copy);
 });
 
 filterSelect?.addEventListener("change", () => {
   state.filter = filterSelect.value;
-  // On filter changes the first matching category is expanded by default.
-  state.openGroups.clear();
-  state.initialGroupOpened = false;
   render();
 });
 
