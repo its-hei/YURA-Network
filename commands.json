@@ -381,7 +381,7 @@
     "aliases": [
       "!dono"
     ],
-    "permission": "Według Streamer.bot",
+    "permission": "Moderator",
     "usage": "!donation [tytuł]",
     "description": "Uruchamia akcję zmiany tytułu celu wpłat Donation Goal. Obsługa argumentów zależy od konfiguracji Streamer.bot.",
     "category": "DONATIONS",
@@ -390,7 +390,7 @@
   {
     "command": "!donocel",
     "aliases": [],
-    "permission": "Według Streamer.bot",
+    "permission": "Moderator",
     "usage": "!donocel [kwota]",
     "description": "Obsługuje wartość celu wpłat wyświetlanego w Donation Goal. Dokładna składnia zależy od ustawień Streamer.bot.",
     "category": "DONATIONS",
@@ -399,7 +399,7 @@
   {
     "command": "!donoreset",
     "aliases": [],
-    "permission": "Według Streamer.bot",
+    "permission": "Moderator",
     "usage": "!donoreset",
     "description": "Uruchamia skonfigurowany reset Donation Goal. Komenda administracyjna — sprawdź uprawnienia w Streamer.bot.",
     "category": "DONATIONS",
