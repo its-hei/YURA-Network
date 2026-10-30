@@ -3,6 +3,7 @@ const state = {
   filter: "Everyone",
   query: "",
   openGroups: new Set(),
+  openCommands: new Set(),
   leaderboardQuery: "",
   leaderboardEntries: [],
   leaderboardUpdatedAt: null,
@@ -34,109 +35,88 @@ function renderCounts() {
     state.commands.filter(c => c.permission === "Moderator").length;
 }
 
-function render() {
+function render(){
   const query = state.query.trim().toLowerCase();
-
   const filtered = state.commands.filter(command => {
-    const permissionMatches =
-      state.filter === "all" || command.permission === state.filter;
-
+    const permissionMatches = state.filter === "all" || command.permission === state.filter;
     const searchSpace = [
-      command.command,
-      ...(command.aliases || []),
-      command.usage,
-      command.description,
-      command.permission,
-      command.category || ""
+      command.command, ...(command.aliases || []), command.usage,
+      command.description, command.permission, command.category || ""
     ].join(" ").toLowerCase();
-
     return permissionMatches && (!query || searchSpace.includes(query));
   });
-
   const groups = [];
   filtered.forEach(command => {
     const category = command.category || "INNE";
     let group = groups.find(item => item.category === category);
-    if (!group) {
-      group = { category, commands: [] };
-      groups.push(group);
-    }
+    if (!group){group = { category, commands: [] };groups.push(group);}
     group.commands.push(command);
   });
-
   const firstCategory = groups[0]?.category || null;
-
   if (!state.initialGroupOpened && query.length === 0 && firstCategory) {
     state.openGroups.clear();
     state.openGroups.add(firstCategory);
     state.initialGroupOpened = true;
   }
-
   body.innerHTML = groups.map(group => {
-    // Po starcie i po zmianie filtra pierwsza grupa otwiera się automatycznie.
-    // Podczas wyszukiwania rozwijamy trafienia, żeby wynik nie był schowany.
-    const isOpen =
-      query.length > 0 ||
-      state.openGroups.has(group.category);
-
-    const rows = group.commands.map(command => {
-      const aliases = command.aliases || [];
-      const badgeClass = command.permission.toLowerCase();
-
+    const isOpen = query.length > 0 || state.openGroups.has(group.category);
+    const cards = group.commands.map(command => {
+      const aliases = Array.isArray(command.aliases) ? command.aliases : [];
+      const badgeClass = String(command.permission || "Everyone").toLowerCase();
+      const opened = state.openCommands.has(command.command);
+      const usage = command.usage || command.command;
+      const metadata = [
+        command.source ? `<span><b>Źródło:</b> ${esc(command.source)}</span>` : "",
+        command.userCooldown != null ? `<span><b>User CD:</b> ${esc(command.userCooldown)} s</span>` : "",
+        command.globalCooldown != null ? `<span><b>Global CD:</b> ${esc(command.globalCooldown)} s</span>` : ""
+      ].filter(Boolean).join("");
       return `
-        <tr class="command-row" ${isOpen ? "" : "hidden"}>
-          <td>
-            <div class="command-main">
-              <button
-                class="command copy-command"
-                type="button"
-                data-copy="${esc(command.command)}"
-                title="Kliknij, aby skopiować"
-              >${esc(command.command)}</button>
-              ${aliases.length ? `<span class="alias-count">+${aliases.length}</span>` : ""}
-            </div>
-            ${aliases.length ? `<div class="aliases">${aliases.map(alias => `
-              <button
-                class="alias-copy copy-command"
-                type="button"
-                data-copy="${esc(alias)}"
-                title="Kliknij, aby skopiować"
-              >${esc(alias)}</button>
-            `).join('<span class="alias-separator"> · </span>')}</div>` : ""}
-          </td>
-          <td>
-            <span class="badge ${badgeClass}">${esc(command.permission)}</span>
-          </td>
-          <td>
-            <div class="usage">${esc(command.usage)}</div>
-            <div class="description">${esc(command.description)}</div>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-    return `
-      <tr class="group-row ${isOpen ? "open" : ""}">
-        <td colspan="3">
-          <button
-            class="group-toggle"
-            type="button"
-            data-category="${esc(group.category)}"
-            aria-expanded="${isOpen ? "true" : "false"}"
-          >
-            <span class="group-heading">
-              <span class="group-chevron" aria-hidden="true">›</span>
-              <span class="group-label">${esc(group.category)}</span>
-              <span class="group-count">${group.commands.length}</span>
+        <details class="command-info-card" data-command="${esc(command.command)}" ${opened ? "open" : ""}>
+          <summary class="command-info-summary">
+            <span class="command-info-heading">
+              <strong class="command-info-name">${esc(command.command)}</strong>
+              <span class="badge ${esc(badgeClass)}">${esc(command.permission || "Everyone")}</span>
             </span>
-            <span class="group-state">${isOpen ? "ZWIŃ" : "ROZWIŃ"}</span>
-          </button>
-        </td>
-      </tr>
-      ${rows}
-    `;
+            <span class="command-info-secondary">
+              <span class="command-info-usage">${esc(usage)}</span>
+              ${aliases.length ? `<span class="alias-count">+${aliases.length} ${aliases.length === 1 ? "alias" : "aliasy"}</span>` : ""}
+            </span>
+            <span class="command-info-arrow" aria-hidden="true">⌄</span>
+          </summary>
+          <div class="command-info-details">
+            <p class="command-info-description">${esc(command.description || "Brak dodatkowego opisu.")}</p>
+            <div class="command-info-field">
+              <span class="command-info-label">Składnia</span>
+              <div class="command-info-copy-line">
+                <code>${esc(usage)}</code>
+                <button class="command-copy-action copy-command" type="button" data-copy="${esc(usage)}" title="Kopiuj składnię">Kopiuj</button>
+              </div>
+            </div>
+            ${aliases.length ? `
+              <div class="command-info-field">
+                <span class="command-info-label">Aliasy</span>
+                <div class="command-info-aliases">
+                  ${aliases.map(alias => `<button class="command-alias-copy copy-command" type="button" data-copy="${esc(alias)}" title="Kopiuj alias ${esc(alias)}">${esc(alias)}</button>`).join("")}
+                </div>
+              </div>` : ""}
+            ${metadata ? `<div class="command-info-properties">${metadata}</div>` : ""}
+          </div>
+        </details>`;
+    }).join("");
+    return `
+      <section class="command-category ${isOpen ? "open" : ""}">
+        <button class="group-toggle command-category-toggle" type="button"
+          data-category="${esc(group.category)}" aria-expanded="${isOpen ? "true" : "false"}">
+          <span class="group-heading">
+            <span class="group-chevron" aria-hidden="true">›</span>
+            <span class="group-label">${esc(group.category)}</span>
+            <span class="group-count">${group.commands.length}</span>
+          </span>
+          <span class="group-state">${isOpen ? "ZWIŃ" : "ROZWIŃ"}</span>
+        </button>
+        <div class="command-card-grid" ${isOpen ? "" : "hidden"}>${cards}</div>
+      </section>`;
   }).join("");
-
   empty.hidden = filtered.length !== 0;
 }
 
@@ -188,6 +168,15 @@ async function copyText(value) {
     copyToast.classList.remove("is-error");
   }, 1600);
 }
+
+body.addEventListener("toggle", event => {
+  const card = event.target.closest(".command-info-card");
+  if (!card || !body.contains(card)) return;
+  const key = card.dataset.command;
+  if (!key) return;
+  if (card.open) state.openCommands.add(key);
+  else state.openCommands.delete(key);
+}, true);
 
 body.addEventListener("click", event => {
   const copyButton = event.target.closest(".copy-command");
@@ -242,11 +231,8 @@ fetch("./commands.json?v=24", { cache: "no-store" })
     render();
   })
   .catch(error => {
-    body.innerHTML = `
-      <tr class="loading-row">
-        <td colspan="3">Błąd ładowania danych: ${esc(error.message)}</td>
-      </tr>
-    `;
+    body.innerHTML = `<div class="commands-catalog-error">Błąd ładowania danych: ${esc(error.message)}</div>`;
+
   });
 
 
