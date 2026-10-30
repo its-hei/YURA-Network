@@ -45,7 +45,9 @@ function commandDisplayRows(commands){
 
 // Both visibility groups together cover the complete public command catalog.
 function isViewerCommand(command) {
-  return String(command.permission || "").trim().toLowerCase() === "everyone";
+  // Public commands for all viewers and followers share the Widzowie tab.
+  const role=String(command.permission || "").trim().toLowerCase();
+  return role === "everyone" || role === "follower" || role === "followers";
 }
 
 function renderCounts() {
@@ -216,7 +218,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=27", { cache: "no-store" })
+fetch("./commands.json?v=28", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
