@@ -2201,6 +2201,11 @@ async function listCloudFollowers(env: Env): Promise<{ total: number; rows: Clou
     const body:any = text ? JSON.parse(text) : {};
     if (page === 0) total = Math.max(0, Number(body?.total ?? 0) || 0);
     const data = Array.isArray(body?.data) ? body.data : [];
+    // Twitch can return only the public follower total without the private
+    // user list when moderator:read:followers is missing. Never overwrite a
+    // valid snapshot or generate fake unfollows from this partial response.
+    if(page === 0 && total > 0 && data.length === 0)
+      throw new Error("Twitch followers user list unavailable: moderator:read:followers scope missing or denied.");
     for (const x of data) {
       const id = String(x?.user_id ?? "").trim();
       const login = String(x?.user_login ?? "").trim();
@@ -2280,6 +2285,19 @@ function tierLabel(tier: string) {
   return tier === "3000" ? "T3" : tier === "2000" ? "T2" : tier === "1000" ? "T1/Prime" : (tier || "?");
 }
 
+function communityTwitchReportError(error:unknown,requiredScope:string):string {
+  const detail=String((error as any)?.message ?? error ?? "").toLowerCase();
+  if (/401|invalid access token|invalid oauth token|token refresh|unauthorized/.test(detail))
+    return "Autoryzacja Twitch jest nieważna — YURA Desktop → Settings → Connections → Twitch → CHECK AUTH / REAUTHORIZE.";
+  if (/403|forbidden|scope|permission|not authorized/.test(detail))
+    return "Brak uprawnienia "+requiredScope+" — YURA Desktop → Settings → Connections → Twitch → UPGRADE BROADCASTER AUTH.";
+  if (/429|rate.limit|too many requests/.test(detail))
+    return "Limit Twitch API — ponów odczyt później.";
+  if (/safety stop/.test(detail))
+    return "Podejrzana zmiana danych — poprzedni zapis został zachowany.";
+  return "Błąd odczytu Twitch — sprawdź autoryzację w YURA Desktop.";
+}
+
 async function pollCloudCommunityChanges(env: Env) {
   const enabled = (await getMetaValue(env, "community_daily_enabled")) === "1";
   const followersEnabled = (await getMetaValue(env, "community_watch_followers_enabled")) !== "0";
@@ -2335,7 +2353,7 @@ async function pollCloudCommunityChanges(env: Env) {
       ]);
     } catch (e:any) {
       errors.push("followers: " + String(e?.message ?? e));
-      lines.push("👁 **Followers:** `BŁĄD`");
+      lines.push("👁 **Followers:** `BŁĄD` • "+communityTwitchReportError(e,"moderator:read:followers"));
     }
   }
 
@@ -2388,7 +2406,7 @@ async function pollCloudCommunityChanges(env: Env) {
       ]);
     } catch (e:any) {
       errors.push("subscribers: " + String(e?.message ?? e));
-      lines.push("⭐ **Suby:** `BŁĄD`");
+      lines.push("⭐ **Suby:** `BŁĄD` • "+communityTwitchReportError(e,"channel:read:subscriptions"));
     }
   }
 
