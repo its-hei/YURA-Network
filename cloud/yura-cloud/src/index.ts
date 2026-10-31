@@ -1728,6 +1728,10 @@ async function awardExpForChat(env: Env, event: TwitchChatEvent, login: string) 
   await ensureMonthlyLevelProgress(env);
   const levelUp = tibiaLevelForExp(totalAfter) > tibiaLevelForExp(totalBefore);
   const now = nowIso();
+  // A newly seen viewer gets a keyed baseline captured before this EXP award.
+  await env.DB.prepare(`INSERT OR IGNORE INTO vip_monthly_levels(month_key,login,base_exp,created_at_utc)
+    VALUES(?1,?2,?3,?4)`)
+    .bind(monthKeyWarsaw(),login,totalBefore,now).run();
   await env.DB.prepare(`UPDATE accounts SET exp=?1,exp_stream=?2,exp_stream_key=?3,last_level_up_utc=CASE WHEN ?4=1 THEN ?5 ELSE last_level_up_utc END,last_exp_message_id=CASE WHEN ?6<>'' THEN ?6 ELSE last_exp_message_id END,last_write_utc=?5 WHERE login=?7`)
     .bind(totalAfter, streamAfter, streamKey, levelUp ? 1 : 0, now, messageId, login).run();
 }
@@ -1887,6 +1891,8 @@ async function flushPendingPresence(env: Env, pending: PendingPresenceState, flu
       ]);
     } else {
       await env.DB.batch([
+        ...(expToAdd > 0 ? [env.DB.prepare(`INSERT OR IGNORE INTO vip_monthly_levels(month_key,login,base_exp,created_at_utc)
+          VALUES(?1,?2,?3,?4)`).bind(monthKey,login,oldExp,flushAt)] : []),
         env.DB.prepare(`UPDATE accounts SET
             twitch_user_id=CASE WHEN ?1<>'' THEN ?1 ELSE twitch_user_id END,
             display_name=?2,
@@ -2646,6 +2652,9 @@ function monthKeyWarsaw(when=new Date()):string {
 async function ensureMonthlyLevelProgress(env:Env):Promise<void> {
   const month=monthKeyWarsaw();
   const old=await getMetaValue(env,'levels_active_month_key');
+  // Month snapshots are immutable once initialized; avoid a full accounts scan
+  // on every chat message, scheduled tick and public leaderboard request.
+  if (old === month) return;
   if (old && old!==month) {
     // Freeze completed month before a new baseline is created. Safe on repeated cron ticks.
     await env.DB.prepare(`UPDATE vip_monthly_levels SET end_exp=COALESCE(end_exp,
