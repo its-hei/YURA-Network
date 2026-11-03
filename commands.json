@@ -317,5 +317,159 @@
     "description": "Podaje adres strony YURA Network z informacjami o kanale, harmonogramem i rankingiem. Zapraszam na moj\u0105 stron\u0119 internetow\u0105: https://its-hei.github.io/YURA-Network/",
     "category": "OG\u00D3LNE",
     "source": "YURA"
+  },
+  {
+    "command": "!afk",
+    "aliases": [
+      "!afkon"
+    ],
+    "permission": "Moderator",
+    "usage": "!afk",
+    "description": "W\u0142\u0105cza nak\u0142adk\u0119 AFK na streamie. Przydatne, gdy streamer odchodzi na chwil\u0119 od komputera; wy\u0142\u0105czenie: !afkoff.",
+    "category": "OVERLAY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!afkoff",
+    "aliases": [
+      "!offafk"
+    ],
+    "permission": "Moderator",
+    "usage": "!afkoff",
+    "description": "Wy\u0142\u0105cza nak\u0142adk\u0119 AFK i przywraca normalny widok transmisji. W\u0142\u0105czenie: !afk.",
+    "category": "OVERLAY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!alerts",
+    "aliases": [
+      "!alert"
+    ],
+    "permission": "Moderator",
+    "usage": "!alerts",
+    "description": "Uruchamia skonfigurowan\u0105 w Streamer.bot akcj\u0119 sprawdzania alert\u00F3w (Alerts Check). Jej szczeg\u00F3\u0142y zale\u017C\u0105 od ustawie\u0144 kana\u0142u.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!doggoff",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!doggoff",
+    "description": "Ukrywa nak\u0142adk\u0119 Doggos na transmisji. W\u0142\u0105czenie: !doggon.",
+    "category": "OVERLAY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!doggon",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!doggon",
+    "description": "W\u0142\u0105cza nak\u0142adk\u0119 Doggos na transmisji. Ukrycie: !doggoff.",
+    "category": "OVERLAY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donation",
+    "aliases": [
+      "!dono"
+    ],
+    "permission": "Moderator",
+    "usage": "!donation [tytu\u0142]",
+    "description": "Uruchamia akcj\u0119 zmiany tytu\u0142u celu wp\u0142at Donation Goal. Obs\u0142uga argument\u00F3w zale\u017Cy od konfiguracji Streamer.bot.",
+    "category": "DONATIONS",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donocel",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donocel [kwota]",
+    "description": "Obs\u0142uguje warto\u015B\u0107 celu wp\u0142at wy\u015Bwietlanego w Donation Goal. Dok\u0142adna sk\u0142adnia zale\u017Cy od ustawie\u0144 Streamer.bot.",
+    "category": "DONATIONS",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!donoreset",
+    "aliases": [],
+    "permission": "Moderator",
+    "usage": "!donoreset",
+    "description": "Uruchamia skonfigurowany reset Donation Goal. Komenda administracyjna \u2014 sprawd\u017A uprawnienia w Streamer.bot.",
+    "category": "DONATIONS",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!mutealert",
+    "aliases": [
+      "!mutealerts"
+    ],
+    "permission": "Moderator",
+    "usage": "!mutealert",
+    "description": "Wycisza d\u017Awi\u0119k alert\u00F3w na transmisji za po\u015Brednictwem Streamer.bot. Cofni\u0119cie: !unmute.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!pausealert",
+    "aliases": [
+      "!pausealerts"
+    ],
+    "permission": "Moderator",
+    "usage": "!pausealert",
+    "description": "Wstrzymuje odtwarzanie alert\u00F3w w kolejce. Wznowienie: !unpausealert.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!skipalert",
+    "aliases": [
+      "!skipalerts"
+    ],
+    "permission": "Moderator",
+    "usage": "!skipalert",
+    "description": "Pomija bie\u017C\u0105cy alert i przechodzi do nast\u0119pnego, je\u015Bli jest dost\u0119pny. Nie anuluje zdarzenia Twitch ani wp\u0142aty.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!tits",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!tits [tekst]",
+    "description": "Uruchamia czytanie wiadomo\u015Bci g\u0142osem \u017Ce\u0144skim (TTS) przez Streamer.bot. Dost\u0119pne dla obserwuj\u0105cych kana\u0142 (Follow).",
+    "category": "TTS",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!tts",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!tts [tekst]",
+    "description": "Uruchamia czytanie wiadomo\u015Bci g\u0142osem m\u0119skim (TTS) przez Streamer.bot. Dost\u0119pne dla obserwuj\u0105cych kana\u0142 (Follow).",
+    "category": "TTS",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!unmute",
+    "aliases": [
+      "!unmutealert",
+      "!unmutealerts"
+    ],
+    "permission": "Moderator",
+    "usage": "!unmute",
+    "description": "Przywraca d\u017Awi\u0119k alert\u00F3w wyciszonych przez !mutealert.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!unpausealert",
+    "aliases": [
+      "!unpausealerts"
+    ],
+    "permission": "Moderator",
+    "usage": "!unpausealert",
+    "description": "Wznawia alerty wstrzymane przez !pausealert.",
+    "category": "ALERTY",
+    "source": "STREAMER.BOT"
   }
 ]
