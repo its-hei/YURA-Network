@@ -87,10 +87,10 @@
     "source": "YURA"
   },
   {
-    "command": "!cancelraffle",
+    "command": "!cancelraffle !ca",
     "aliases": [],
     "permission": "Moderator",
-    "usage": "!cancelraffle",
+    "usage": "!cancelraffle !ca",
     "description": "Anuluje trwaj\u0105ce losowanie (!raffle, !sraffle lub !jackpot) bez wybierania zwyci\u0119zcy. Je\u017Celi w !jackpot pobrano wpisowe, uczestnikom zostaj\u0105 zwr\u00F3cone ich wp\u0142aty. Dost\u0119pna dla os\u00F3b z wymaganymi uprawnieniami.",
     "category": "RAFFLE",
     "source": "YURA"
