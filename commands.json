@@ -58,17 +58,6 @@
     "source": "YURA"
   },
   {
-    "command": "!dedge",
-    "aliases": [
-      "!deska"
-    ],
-    "permission": "Follower",
-    "usage": "!dedge [liczba]",
-    "description": "Dla obserwuj\u0105cych kana\u0142 (Follow). !dedge i !deska steruj\u0105 tym samym licznikiem \u015Bmierci; bez argumentu \u002B1, wi\u0119ksz\u0105 liczb\u0119 mog\u0105 poda\u0107 VIP oraz moderatorzy.",
-    "category": "OVERLAY",
-    "source": "YURA"
-  },
-  {
     "command": "!raffle",
     "aliases": [],
     "permission": "Moderator",
@@ -349,6 +338,17 @@
     "usage": "!alerts",
     "description": "Uruchamia skonfigurowan\u0105 w Streamer.bot akcj\u0119 sprawdzania alert\u00F3w (Alerts Check). Jej szczeg\u00F3\u0142y zale\u017C\u0105 od ustawie\u0144 kana\u0142u.",
     "category": "ALERTY",
+    "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!dedge",
+    "aliases": [
+      "!deska"
+    ],
+    "permission": "Moderator",
+    "usage": "!dedge",
+    "description": "Uruchamia akcj\u0119 \u201EDeaths\u201D przypisan\u0105 w Streamer.bot. Administrator kana\u0142u mo\u017Ce uzupe\u0142ni\u0107 szczeg\u00F3\u0142owy opis w YURA \u2192 Network \u2192 Commands; dost\u0119p zale\u017Cy od uprawnie\u0144 w Streamer.bot.",
+    "category": "STREAMER.BOT \u2022 Overlay",
     "source": "STREAMER.BOT"
   },
   {
