@@ -383,7 +383,8 @@
   {
     "command": "!skipalert",
     "aliases": [
-      "!alertskip"
+      "!alertskip",
+      "!askip"
     ],
     "permission": "Moderator",
     "usage": "!skipalert",
