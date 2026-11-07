@@ -359,17 +359,6 @@
     "source": "STREAMER.BOT"
   },
   {
-    "command": "!mutealert",
-    "aliases": [
-      "!mutealerts"
-    ],
-    "permission": "Moderator",
-    "usage": "!mutealert",
-    "description": "Wycisza d\u017Awi\u0119k alert\u00F3w na transmisji za po\u015Brednictwem Streamer.bot. Cofni\u0119cie: !unmute.",
-    "category": "ALERTY",
-    "source": "STREAMER.BOT"
-  },
-  {
     "command": "!pausealert",
     "aliases": [
       "!pausealerts"
