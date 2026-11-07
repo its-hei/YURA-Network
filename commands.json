@@ -330,24 +330,6 @@
     "source": "STREAMER.BOT"
   },
   {
-    "command": "!doggoff",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!doggoff",
-    "description": "Ukrywa nak\u0142adk\u0119 Doggos na transmisji. W\u0142\u0105czenie: !doggon.",
-    "category": "OVERLAY",
-    "source": "STREAMER.BOT"
-  },
-  {
-    "command": "!doggon",
-    "aliases": [],
-    "permission": "Moderator",
-    "usage": "!doggon",
-    "description": "W\u0142\u0105cza nak\u0142adk\u0119 Doggos na transmisji. Ukrycie: !doggoff.",
-    "category": "OVERLAY",
-    "source": "STREAMER.BOT"
-  },
-  {
     "command": "!donation",
     "aliases": [
       "!dono"
