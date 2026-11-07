@@ -330,17 +330,6 @@
     "source": "STREAMER.BOT"
   },
   {
-    "command": "!afkoff",
-    "aliases": [
-      "!offafk"
-    ],
-    "permission": "Moderator",
-    "usage": "!afkoff",
-    "description": "Wy\u0142\u0105cza nak\u0142adk\u0119 AFK i przywraca normalny widok transmisji. W\u0142\u0105czenie: !afk.",
-    "category": "OVERLAY",
-    "source": "STREAMER.BOT"
-  },
-  {
     "command": "!alerts",
     "aliases": [
       "!alert"
