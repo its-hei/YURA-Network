@@ -423,7 +423,7 @@
   {
     "command": "!skipalert",
     "aliases": [
-      "!skipalerts"
+      "!alertskip"
     ],
     "permission": "Moderator",
     "usage": "!skipalert",
