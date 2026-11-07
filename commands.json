@@ -319,17 +319,6 @@
     "source": "YURA"
   },
   {
-    "command": "!afk",
-    "aliases": [
-      "!afkon"
-    ],
-    "permission": "Moderator",
-    "usage": "!afk",
-    "description": "W\u0142\u0105cza nak\u0142adk\u0119 AFK na streamie. Przydatne, gdy streamer odchodzi na chwil\u0119 od komputera; wy\u0142\u0105czenie: !afkoff.",
-    "category": "OVERLAY",
-    "source": "STREAMER.BOT"
-  },
-  {
     "command": "!alerts",
     "aliases": [
       "!alert"
