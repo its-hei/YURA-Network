@@ -382,6 +382,15 @@
     "source": "STREAMER.BOT"
   },
   {
+    "command": "!tits",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!tits [tekst]",
+    "description": "Uruchamia czytanie wiadomo\u015Bci g\u0142osem \u017Ce\u0144skim (TTS) przez Streamer.bot. Dost\u0119pne dla obserwuj\u0105cych kana\u0142 (Follow).",
+    "category": "TTS",
+    "source": "STREAMER.BOT"
+  },
+  {
     "command": "!tts",
     "aliases": [],
     "permission": "Follower",
