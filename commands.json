@@ -400,18 +400,6 @@
     "source": "STREAMER.BOT"
   },
   {
-    "command": "!unmute",
-    "aliases": [
-      "!unmutealert",
-      "!unmutealerts"
-    ],
-    "permission": "Moderator",
-    "usage": "!unmute",
-    "description": "Przywraca d\u017Awi\u0119k alert\u00F3w wyciszonych przez !mutealert.",
-    "category": "ALERTY",
-    "source": "STREAMER.BOT"
-  },
-  {
     "command": "!unpausealert",
     "aliases": [
       "!unpausealerts"
