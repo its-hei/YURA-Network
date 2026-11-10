@@ -471,8 +471,8 @@ function defaultCommandSettings(env: Env): CommandSettings {
   return {
     points: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!points,!pkt,!yura", permission:"EVERYONE", userCooldown:0, globalCooldown:0 },
     gamble: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!gamble", permission:"EVERYONE", userCooldown:num(env.GAMBLE_COOLDOWN_SECONDS,30), globalCooldown:0, winPercent:50, critWinPercent:1 },
-    pokemon: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokemon", permission:"EVERYONE", userCooldown:3, globalCooldown:0 },
-    pokeroll: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeroll", permission:"EVERYONE", userCooldown:5, globalCooldown:0 },
+    pokemon: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokemon", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokeroll: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeroll", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     top: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!top,!toppoints", permission:"EVERYONE", userCooldown:0, globalCooldown:0 },
     accountage: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!accountage", permission:"EVERYONE", userCooldown:15, globalCooldown:5 },
     followage: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!followage", permission:"EVERYONE", userCooldown:15, globalCooldown:5 },
