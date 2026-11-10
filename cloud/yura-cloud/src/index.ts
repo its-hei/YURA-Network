@@ -473,6 +473,10 @@ function defaultCommandSettings(env: Env): CommandSettings {
     gamble: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!gamble", permission:"EVERYONE", userCooldown:num(env.GAMBLE_COOLDOWN_SECONDS,30), globalCooldown:0, winPercent:50, critWinPercent:1 },
     pokemon: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokemon", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokeroll: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeroll", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokesell: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokesell", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokeaccept: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeaccept", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokecancel: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokecancel", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokedecline: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokedecline", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     top: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!top,!toppoints", permission:"EVERYONE", userCooldown:0, globalCooldown:0 },
     accountage: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!accountage", permission:"EVERYONE", userCooldown:15, globalCooldown:5 },
     followage: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!followage", permission:"EVERYONE", userCooldown:15, globalCooldown:5 },
@@ -593,6 +597,7 @@ function commandUsageForSuggestion(key: string, cfg: CommandConfig) {
   if (key === "gamble") return `${primary} <kwota|procent%|all>`;
   if (key === "pokemon") return `${primary} (darmowe pierwsze losowanie / sprawdzenie)`;
   if (key === "pokeroll") return `${primary} (nowy Pokémon za 5 000 YURA)`;
+  if (key === "pokesell") return `${primary} @nick <min. 10000 YURA>`;
   if (key === "watchtime") return `${primary} [@nick]`;
   if (key === "add") return `${primary} @nick <liczba> lub ${primary} all <liczba>`;
   if (key === "remove") return `${primary} @nick <liczba>`;
@@ -600,7 +605,7 @@ function commandUsageForSuggestion(key: string, cfg: CommandConfig) {
 }
 
 function findYuraPointsCommandSuggestion(cmd: string, settings: CommandSettings, masterEnabled = true) {
-  const keys = ["points","gamble","pokemon","pokeroll","top","watchtime","add","remove"];
+  const keys = ["points","gamble","pokemon","pokeroll","pokesell","pokeaccept","pokecancel","pokedecline","top","watchtime","add","remove"];
   if (!cmd.startsWith("!") || cmd.length < 4) return "";
   let best = "";
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -943,10 +948,12 @@ function randomPokemonId(): number {
   do { n = crypto.getRandomValues(new Uint32Array(1))[0]; } while (n >= range);
   return (n % POKEMON_MAX_SPECIES_ID) + 1;
 }
-async function randomPokemon(excludeId?:number):Promise<{id:number,name:string}|null> {
+async function randomPokemon(env:Env,excludeId?:number):Promise<{id:number,name:string}|null> {
   for (let attempt=0;attempt<4;attempt++) {
     const id=randomPokemonId();
     if(id===excludeId)continue;
+    const owned=await env.DB.prepare("SELECT 1 x FROM pokemon_profiles WHERE pokemon_id=?1 LIMIT 1").bind(id).first<any>();
+    if(owned)continue;
     try {
       const res=await fetch('https://pokeapi.co/api/v2/pokemon-species/'+id+'/',{
         signal:AbortSignal.timeout(5000)
@@ -1076,7 +1083,7 @@ async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<
       WHERE twitch_user_id=?2 AND avatar_mode<>'pokemon'`).bind(nowIso(),id).run();
     return {id:Number(saved.pokemon_id),name:formatPokemonName(String(saved.pokemon_name)),created:false};
   }
-  const chosen=await randomPokemon();
+  const chosen=await randomPokemon(env);
   if(!chosen)return null;
   const joinedAt=nowIso();
   const insert=await env.DB.prepare(`INSERT OR IGNORE INTO pokemon_profiles
@@ -1105,13 +1112,14 @@ async function rerollPokemonForChat(env:Env,event:TwitchChatEvent) {
   const saved=await env.DB.prepare('SELECT pokemon_id FROM pokemon_profiles WHERE twitch_user_id=?1')
     .bind(id).first<any>();
   if(!saved)return {status:'unassigned',balance:0,pokemon:null};
+  if(await hasOpenPokemonTrade(env,id))return {status:'trade-pending',balance:0,pokemon:null};
   const duplicate=await env.DB.prepare('SELECT 1 FROM pokemon_rerolls WHERE event_id=?1')
     .bind(messageId).first<any>();
   if(duplicate)return {status:'duplicate',balance:0,pokemon:null};
   await ensureAccount(env,id,login,display);
   const current=await getAccount(env,login);
   if(Number(current?.points||0)<POKEROLL_PRICE)return {status:'insufficient',balance:Number(current?.points||0),pokemon:null};
-  const chosen=await randomPokemon(Number(saved.pokemon_id));
+  const chosen=await randomPokemon(env,Number(saved.pokemon_id));
   if(!chosen)return {status:'unavailable',balance:Number(current?.points||0),pokemon:null};
   const at=nowIso();
   // D1 batch is a transaction. Every write after the debit checks changes()
@@ -1144,6 +1152,115 @@ async function rerollPokemonForChat(env:Env,event:TwitchChatEvent) {
   if(debited && recorded && audited && assigned)
     return {status:'changed',balance:Number(account?.points||0),pokemon:chosen};
   return {status:'duplicate',balance:Number(account?.points||0),pokemon:null};
+}
+
+
+const POKEMON_TRADE_MIN_PRICE=10000;
+const POKEMON_TRADE_TTL_MS=300000;
+
+async function expirePokemonTrades(env:Env):Promise<void> {
+  await env.DB.prepare("UPDATE pokemon_trade_offers SET status='expired',responded_at_utc=?1 WHERE status='pending' AND expires_at_utc<=?1")
+    .bind(nowIso()).run();
+}
+async function hasOpenPokemonTrade(env:Env,userId:string):Promise<boolean>{
+  return !!await env.DB.prepare("SELECT 1 x FROM pokemon_trade_offers WHERE status='pending' AND expires_at_utc>?1 AND (seller_user_id=?2 OR buyer_user_id=?2) LIMIT 1")
+    .bind(nowIso(),userId).first<any>();
+}
+async function handlePokemonTradeCommand(env:Env,event:TwitchChatEvent,key:string,parts:string[],display:string):Promise<void>{
+  const id=String(event.chatter_user_id||'').trim(),login=norm(event.chatter_user_login);
+  if(!/^[0-9]+$/.test(id)||!login||knownBotLogin(login))return;
+  await expirePokemonTrades(env);
+  const money=(value:number)=>value.toLocaleString("pl-PL");
+  if(key==="pokesell"){
+    const price=Number(parts[2]||0);
+    if(parts.length!==3||!/^[0-9]+$/.test(parts[2])||!Number.isSafeInteger(price)||price<POKEMON_TRADE_MIN_PRICE||price>1000000000){
+      await sendChat(env,"@"+display+" użyj !pokesell @nick 10000 (min. 10 000 YURA, 5 minut).");return;
+    }
+    const target=norm(parts[1]||"");
+    if(!/^[a-z0-9_]{2,25}$/.test(target)||target===login||knownBotLogin(target)){
+      await sendChat(env,"@"+display+" podaj prawidłowego innego trenera.");return;
+    }
+    const user=await twitchUserByLogin(env,target),buyerId=String(user?.id||"");
+    if(!/^[0-9]+$/.test(buyerId)||buyerId===id){
+      await sendChat(env,"@"+display+" nie odnaleziono trenera @"+target+" na Twitchu.");return;
+    }
+    const [seller,buyer]=await Promise.all([
+      env.DB.prepare("SELECT login,pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1").bind(id).first<any>(),
+      env.DB.prepare("SELECT login,pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1").bind(buyerId).first<any>()
+    ]);
+    if(!seller||!buyer){
+      await sendChat(env,"@"+display+" oboje musicie już mieć po jednym Pokémonie (!pokemon).");return;
+    }
+    if(norm(String(buyer.login))!==target||norm(String(seller.login))!==login){
+      await sendChat(env,"@"+display+" zapisany nick trenera jest nieaktualny; wymiana zablokowana dla bezpieczeństwa.");return;
+    }
+    const at=nowIso(),expiry=new Date(Date.now()+POKEMON_TRADE_TTL_MS).toISOString();
+    try{
+      await env.DB.prepare("INSERT INTO pokemon_trade_offers (id,seller_user_id,buyer_user_id,seller_login,buyer_login,seller_pokemon_id,seller_pokemon_name,buyer_pokemon_id,buyer_pokemon_name,price,status,created_at_utc,expires_at_utc) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,'pending',?11,?12)")
+        .bind(crypto.randomUUID(),id,buyerId,login,target,Number(seller.pokemon_id),String(seller.pokemon_name),
+          Number(buyer.pokemon_id),String(buyer.pokemon_name),price,at,expiry).run();
+    }catch{
+      await sendChat(env,"@"+display+" ktoś uczestniczy już w aktywnej ofercie. !pokecancel lub poczekaj do 5 minut.");return;
+    }
+    await sendChat(env,"🤝 @"+display+" oferuje @"+target+" "+formatPokemonName(String(seller.pokemon_name))+
+      " za "+formatPokemonName(String(buyer.pokemon_name))+" + "+money(price)+" YURA. @"+target+
+      ": !pokeaccept w 5 minut. Anuluj: !pokecancel; odrzuć: !pokedecline.");
+    return;
+  }
+  if(parts.length!==1){
+    await sendChat(env,"@"+display+" wpisz !pokeaccept, !pokecancel lub !pokedecline bez argumentów.");return;
+  }
+  if(key==="pokecancel"||key==="pokedecline"){
+    const seller=key==="pokecancel";
+    const column=seller?"seller_user_id":"buyer_user_id";
+    const offer=await env.DB.prepare("SELECT id FROM pokemon_trade_offers WHERE status='pending' AND "+column+"=?1 AND expires_at_utc>?2 LIMIT 1")
+      .bind(id,nowIso()).first<any>();
+    if(!offer){await sendChat(env,"@"+display+" brak aktywnej oferty.");return;}
+    const changed=await env.DB.prepare("UPDATE pokemon_trade_offers SET status=?1,responded_at_utc=?2 WHERE id=?3 AND status='pending' AND expires_at_utc>?2")
+      .bind(seller?"cancelled":"declined",nowIso(),String(offer.id)).run();
+    if(Number(changed.meta?.changes||0)===1)
+      await sendChat(env,"🤝 @"+display+" "+(seller?"anulował":"odrzucił")+" wymianę. Pokémony i punkty bez zmian.");
+    return;
+  }
+  if(key==="pokeaccept"){
+    const now=nowIso();
+    const offer=await env.DB.prepare("SELECT * FROM pokemon_trade_offers WHERE buyer_user_id=?1 AND status='pending' AND expires_at_utc>?2 LIMIT 1")
+      .bind(id,now).first<any>();
+    if(!offer){await sendChat(env,"@"+display+" nie masz aktywnej oferty; oferty wygasają po 5 minutach.");return;}
+    const account=await getAccount(env,login);
+    if(!account||account.points<Number(offer.price)){
+      await sendChat(env,"@"+display+" potrzebujesz "+money(Number(offer.price))+" YURA; masz "+money(Number(account?.points||0))+".");return;
+    }
+    try{
+      // SQLite trigger executes both profile swaps and the point transfer atomically.
+      const result=await env.DB.prepare("UPDATE pokemon_trade_offers SET status='accepted',responded_at_utc=?1 WHERE id=?2 AND buyer_user_id=?3 AND status='pending' AND expires_at_utc>?1")
+        .bind(now,String(offer.id),id).run();
+      if(Number(result.meta?.changes||0)!==1){
+        await sendChat(env,"@"+display+" oferta została już zakończona lub wygasła. Nic nie pobrano.");return;
+      }
+    }catch(error:any){
+      const reason=String(error?.message||"");
+      await sendChat(env,"@"+display+" "+(reason.includes("insufficient_funds")?"za mało punktów.":
+        reason.includes("_changed")?"Pokémon któregoś z trenerów się zmienił.":
+        reason.includes("expired")?"oferta wygasła.":"nie można bezpiecznie wykonać wymiany.")+
+        " Żadna część transakcji nie została wykonana.");
+      return;
+    }
+    await sendChat(env,"✅ @"+display+" otrzymuje "+formatPokemonName(String(offer.seller_pokemon_name))+
+      " za "+formatPokemonName(String(offer.buyer_pokemon_name))+" i "+money(Number(offer.price))+
+      " YURA. @"+String(offer.seller_login)+" otrzymuje "+formatPokemonName(String(offer.buyer_pokemon_name))+
+      " + "+money(Number(offer.price))+" YURA.");
+  }
+}
+async function apiPokemonMarket(env:Env):Promise<Response>{
+  const offers=await env.DB.prepare("SELECT seller_login,buyer_login,seller_pokemon_id,seller_pokemon_name,buyer_pokemon_id,buyer_pokemon_name,price,created_at_utc,expires_at_utc FROM pokemon_trade_offers WHERE status='pending' AND expires_at_utc>?1 ORDER BY expires_at_utc ASC LIMIT 100")
+    .bind(nowIso()).all<any>();
+  return json({ok:true,minPrice:10000,ttlSeconds:300,updatedAt:nowIso(),offers:(offers.results||[]).map((o:any)=>({
+    seller:String(o.seller_login),buyer:String(o.buyer_login),
+    pokemonId:Number(o.seller_pokemon_id),pokemonName:formatPokemonName(String(o.seller_pokemon_name)),
+    wantedPokemonId:Number(o.buyer_pokemon_id),wantedPokemonName:formatPokemonName(String(o.buyer_pokemon_name)),
+    price:Number(o.price),createdAt:String(o.created_at_utc),expiresAt:String(o.expires_at_utc)
+  }))});
 }
 
 async function handleCommand(env: Env, event: TwitchChatEvent) {
@@ -1255,7 +1372,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
   // These explicit Follow requirements cannot be overridden by older
   // persisted EVERYONE or moderator permission settings.
-  const followerCommands=["jackpot","deaths","pokemon","pokeroll"];
+  const followerCommands=["jackpot","deaths","pokemon","pokeroll","pokesell","pokeaccept"];
   if(followerCommands.includes(key) && !await allowFollowOnlyCommand(env,event,display,cmd))return;
   if(!followerCommands.includes(key) && !commandPermissionAllows(event,env,cfg.permission))return;
   if (key !== "jackpot" && key !== "raffle" && key !== "sraffle" && key !== "autoraffle" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
@@ -1426,12 +1543,17 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     await sendChat(env, `@${display} ${target}: ${(row?.points ?? 0).toLocaleString("pl-PL")} YURA.`);
     return;
   }
+  if (key === "pokesell" || key === "pokeaccept" || key === "pokecancel" || key === "pokedecline") {
+    await handlePokemonTradeCommand(env,event,key,parts,display);return;
+  }
   if (key === "pokemon") {
     if(parts.length!==1) {
       await sendChat(env,`@${display} użyj !pokemon, aby wylosować pierwszego Pokémona za darmo lub sprawdzić już przypisanego. Nowe losowanie: !pokeroll (5 000 YURA).`);
       return;
     }
-    const assigned=await assignFirstPokemonForChat(env,event);
+    let assigned=null;
+    try { assigned=await assignFirstPokemonForChat(env,event); }
+    catch (ex) { console.warn("Pokemon initial draw unavailable",String((ex as Error)?.name||"error")); }
     if(!assigned) {
       await sendChat(env,`@${display} nie udało się pobrać Pokémona. Spróbuj ponownie za chwilę; żadne punkty nie zostały pobrane.`);
     } else if(assigned.created) {
@@ -1443,13 +1565,20 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
   if (key === "pokeroll") {
     if(parts.length!==1){await sendChat(env,`@${display} użyj !pokeroll (5 000 YURA). Pierwszy Pokémon: !pokemon za darmo.`);return;}
-    const result=await rerollPokemonForChat(env,event);
+    let result;
+    try { result=await rerollPokemonForChat(env,event); }
+    catch (ex) { console.warn("Pokemon reroll rejected",String((ex as Error)?.name||"error"));
+      await sendChat(env,`@${display} Pokémon zajęty lub losowanie niedostępne. Spróbuj ponownie; punkty nie zostały pobrane.`);
+      return;
+    }
     if(result.status==='changed' && result.pokemon) {
       await sendChat(env,`🎲 @${display} wylosowano ${result.pokemon.name} (#${result.pokemon.id}) za 5 000 YURA! Saldo: ${result.balance.toLocaleString('pl-PL')} YURA.`);
     } else if(result.status==='unassigned') {
       await sendChat(env,`@${display} najpierw użyj !pokemon — pierwszy Pokémon jest za darmo.`);
     } else if(result.status==='insufficient') {
       await sendChat(env,`@${display} !pokeroll kosztuje 5 000 YURA. Masz: ${result.balance.toLocaleString('pl-PL')} YURA.`);
+    } else if(result.status==='trade-pending') {
+      await sendChat(env,`@${display} masz otwartą wymianę. Użyj !pokecancel / !pokedecline lub poczekaj 5 minut.`);
     } else if(result.status==='unavailable') {
       await sendChat(env,`@${display} chwilowo nie udało się wylosować Pokémona. Nie pobrano punktów.`);
     }
@@ -2997,6 +3126,9 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
         UNION ALL
         SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
           'purchase' AS event_type FROM pokemon_purchases
+        UNION ALL
+        SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
+          'trade' AS event_type FROM pokemon_trade_history
       )
       ORDER BY created_at_utc ASC,event_type ASC
       LIMIT 10000`).all<any>();
@@ -3512,6 +3644,7 @@ export default {
     if (url.pathname === "/api/ranking" && req.method === "GET") return apiYuraRanking(env);
     if (url.pathname === "/api/raffle/public" && req.method === "GET") return apiRaffleOverlayState(env);
     if (url.pathname === "/api/pokemon/collection" && req.method === "GET") return apiPokemonCollection(env);
+    if (url.pathname === "/api/pokemon/market" && req.method === "GET") return apiPokemonMarket(env);
     if (url.pathname === "/api/avatars" && req.method === "GET") return apiPublicAvatarBatch(req,env);
     if (url.pathname === "/api/public-stats" && req.method === "GET") return apiYuraPublicStats(env);
     if (url.pathname === "/api/levels-revision" && req.method === "GET") return apiLevelsRevision(env);
