@@ -960,23 +960,96 @@ async function randomPokemon(excludeId?:number):Promise<{id:number,name:string}|
   }
   return null;
 }
-// Followers-only participation in Pokémon, verified server-side before any D1 write.
-// Twitch OAuth/API errors fail closed; no assignments and no charges.
-async function pokemonFollowerAccess(env:Env,event:TwitchChatEvent):Promise<'allowed'|'not-following'|'unavailable'> {
-  const id=String(event.chatter_user_id||'').trim();
-  if(!/^\d+$/.test(id))return 'unavailable';
-  if(id===String(env.TWITCH_BROADCASTER_ID||''))return 'allowed';
+// Follow eligibility is shared by !pokemon, !pokeroll, !dedge and Jackpot.
+// Never allow an unverified user to mutate points or Pokémon state.
+// Twitch may revoke/rotate the broadcaster grant independently of the bot's
+// authorization. Try both OAuth grants (where permitted), and distinguish a
+// verified non-follower from API errors or missing OAuth scopes.
+type FollowAccess = 'allowed' | 'not-following' | 'unavailable';
+const FOLLOW_POSITIVE_GRACE_MS = 15 * 60_000;
+
+async function checkFollowerWithGrant(
+  env: Env, chatterId: string, kind: 'broadcaster' | 'bot'
+): Promise<FollowAccess> {
   try {
-    const url=new URL('https://api.twitch.tv/helix/channels/followers');
-    url.searchParams.set('broadcaster_id',String(env.TWITCH_BROADCASTER_ID));
-    url.searchParams.set('user_id',id);
-    url.searchParams.set('first','1');
-    const res=await twitchApi(env,url.toString(),{},'broadcaster');
-    if(!res.ok)return 'unavailable';
-    const body:any=await res.json();
-    if(!Array.isArray(body?.data))return 'unavailable';
-    return body.data.some((r:any)=>String(r?.user_id||'')===id)?'allowed':'not-following';
-  }catch{return 'unavailable';}
+    const url = new URL('https://api.twitch.tv/helix/channels/followers');
+    url.searchParams.set('broadcaster_id', String(env.TWITCH_BROADCASTER_ID));
+    url.searchParams.set('user_id', chatterId);
+    url.searchParams.set('first', '1');
+    const response = await twitchApi(env, url.toString(), {}, kind);
+    if (!response.ok) {
+      console.warn('YURA FOLLOW check unavailable', kind, 'status', response.status);
+      return 'unavailable';
+    }
+    const data: any = await response.json();
+    if (!Array.isArray(data?.data)) return 'unavailable';
+
+    // A matching Twitch user_id returned by the followers endpoint is proof
+    // of Follow. This endpoint must never be interpreted using the public
+    // aggregate follower total alone.
+    if (data.data.some((row: any) => String(row?.user_id ?? '') === chatterId))
+      return 'allowed';
+    if (data.data.length > 0) return 'unavailable';
+
+    // Twitch can return HTTP 200 with only a PUBLIC follower count when
+    // moderator:read:followers is missing. Verify the grant's scopes before
+    // treating an empty data array as "not following".
+    const access = await getUserToken(env, kind);
+    if (!access) return 'unavailable';
+    const validation = await fetch('https://id.twitch.tv/oauth2/validate', {
+      headers: { Authorization: 'OAuth ' + access },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!validation.ok) return 'unavailable';
+    const tokenInfo: any = await validation.json();
+    const scopes: string[] = Array.isArray(tokenInfo?.scopes) ? tokenInfo.scopes : [];
+    const authenticatedId = String(tokenInfo?.user_id ?? '');
+    const expectedId = kind === 'broadcaster'
+      ? String(env.TWITCH_BROADCASTER_ID ?? '')
+      : String(env.TWITCH_BOT_USER_ID ?? '');
+    if (!scopes.includes('moderator:read:followers') || authenticatedId !== expectedId)
+      return 'unavailable';
+
+    // A scoped broadcaster or moderator grant confirmed the empty result.
+    return 'not-following';
+  } catch (error: any) {
+    // Do not log OAuth tokens, refresh responses or authorization headers.
+    console.warn('YURA FOLLOW check failed', kind, String(error?.name ?? 'error'));
+    return 'unavailable';
+  }
+}
+
+async function pokemonFollowerAccess(env: Env, event: TwitchChatEvent): Promise<FollowAccess> {
+  const id = String(event.chatter_user_id || '').trim();
+  if (!/^\d+$/.test(id)) return 'unavailable';
+  if (id === String(env.TWITCH_BROADCASTER_ID || '')) return 'allowed';
+  const key = 'follower_verified_' + id;
+
+  const broadcasterCheck = await checkFollowerWithGrant(env, id, 'broadcaster');
+  const check = broadcasterCheck === 'unavailable'
+    ? await checkFollowerWithGrant(env, id, 'bot')
+    : broadcasterCheck;
+
+  if (check === 'allowed') {
+    // Keep a short-lived, positive-only proof for temporary Twitch outages.
+    await setMeta(env, key, nowIso());
+    return 'allowed';
+  }
+  if (check === 'not-following') {
+    await setMeta(env, key, '');
+    return 'not-following';
+  }
+
+  // Strict fail-closed: a known, recently Twitch-verified Follow is the ONLY
+  // offline grace condition. Unknown viewers and stale proof cannot join.
+  try {
+    const lastVerified = Date.parse(await getMetaValue(env, key));
+    if (Number.isFinite(lastVerified) && lastVerified > 0 &&
+        Date.now() >= lastVerified &&
+        Date.now() - lastVerified <= FOLLOW_POSITIVE_GRACE_MS)
+      return 'allowed';
+  } catch { /* No verified proof available. */ }
+  return 'unavailable';
 }
 // Server-side Follow requirement shared by Jackpot, Dedge and Pokémon.
 // No changes to Points or state if Twitch cannot confirm a follow.
