@@ -9,6 +9,12 @@
   const search = root.querySelector('#pokemonSearch');
   const dexPanel = root.querySelector('#pokemonDexPanel');
   const trainersPanel = root.querySelector('#pokemonTrainersPanel');
+  const marketPanel = root.querySelector('#pokemonMarketPanel');
+  const marketGrid = root.querySelector('#pokemonMarketGrid');
+  const marketCount = root.querySelector('#pokemonMarketCount');
+  const marketSummary = root.querySelector('#pokemonMarketSummary');
+  const marketResultCount = root.querySelector('#pokemonMarketResultCount');
+  const marketRefresh = root.querySelector('#pokemonMarketRefresh');
   const dexGrid = root.querySelector('#pokemonDexGrid');
   const trainersGrid = root.querySelector('#pokemonTrainersGrid');
   const dexCount = root.querySelector('#pokemonDexCount');
@@ -24,6 +30,7 @@
   const batchSize = 24;
   let entries = [], species = [], loadedAt = 0, inflight = null;
   let mode = 'dex', shownDex = 0, shownTrainers = 0;
+  let offers = [], marketLoadedAt = 0, marketLoading = null;
   const norm = x => String(x ?? '').trim().toLocaleLowerCase('pl-PL');
   const fmt = n => nf.format(n);
   const formatPokemonName = raw => String(raw ?? '').trim().replace(/-/g, ' ')
@@ -318,13 +325,83 @@
       fmt(Math.min(batchSize, results.length - shownTrainers)) + ')';
   }
 
+
+  async function loadMarket(force = false) {
+    if (!force && marketLoadedAt && Date.now() - marketLoadedAt < 15000) return;
+    if (marketLoading) return marketLoading;
+    marketLoading = (async () => {
+      const response = await fetch(cloud + '/api/pokemon/market', {cache:'no-store'});
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const payload = await response.json();
+      if (payload?.ok !== true || !Array.isArray(payload.offers))
+        throw new Error('Niepoprawna odpowiedź z rynku Pokémon.');
+      offers = payload.offers.filter(item => Number.isInteger(Number(item.pokemonId)) &&
+        Number(item.pokemonId) >= 1 && Number(item.pokemonId) <= 1025 &&
+        Number(item.price) >= 10000 && Date.parse(item.expiresAt) > Date.now());
+      marketLoadedAt = Date.now();
+    })().finally(() => { marketLoading = null; });
+    return marketLoading;
+  }
+  function renderMarket() {
+    if (!marketPanel) return;
+    const term = query();
+    const live = offers.filter(o => Date.parse(o.expiresAt) > Date.now() &&
+      (!term || [o.seller,o.buyer,o.pokemonName,o.wantedPokemonName,
+        String(o.pokemonId),String(o.wantedPokemonId)].some(v => norm(v).includes(term))));
+    marketCount.textContent = fmt(offers.filter(o => Date.parse(o.expiresAt) > Date.now()).length);
+    marketResultCount.textContent = fmt(live.length) + ' AKTYWNYCH OFERT';
+    marketGrid.replaceChildren();
+    if (!live.length) {
+      errorMessage(marketGrid, term ? 'Nie znaleziono pasującej oferty.' : 'Brak aktywnych ofert.',
+        'Na Twitchu wystaw wymianę komendą !pokesell @nick 10000. Oferta będzie widoczna tutaj przez maksymalnie 5 minut.');
+      return;
+    }
+    for (const offer of live) {
+      const card = make('article','pokemon-market-card');
+      const top = make('div','pokemon-market-top');
+      top.append(make('span','pokemon-market-label','WYSTAWIA @' + String(offer.seller).slice(0,25)));
+      const exp = new Date(offer.expiresAt);
+      const expiry = Number.isFinite(exp.getTime())
+        ? exp.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})
+        : '—';
+      top.append(make('span','pokemon-market-expiry','WYGASA ' + expiry));
+      const item = make('div','pokemon-market-pokemon');
+      item.append(artwork({
+        pokemonId:Number(offer.pokemonId),
+        pokemonName:formatPokemonName(offer.pokemonName)
+      }));
+      const info = make('div','pokemon-market-info');
+      info.append(make('strong','',formatPokemonName(offer.pokemonName)),
+        make('span','pokemon-number','#' + String(offer.pokemonId).padStart(4,'0')));
+      item.append(info);
+      const bottom = make('div','pokemon-market-bottom');
+      bottom.append(make('span','pokemon-market-target','Dla @' + String(offer.buyer).slice(0,25) +
+        ' • oddaje ' + formatPokemonName(offer.wantedPokemonName)));
+      bottom.append(make('strong','pokemon-market-price','+ ' + fmt(Number(offer.price)) + ' YURA'));
+      card.append(top,item,bottom);
+      marketGrid.append(card);
+    }
+  }
+  async function showMarket(force = false) {
+    if (mode !== 'market' || !visible()) return;
+    marketCount.textContent = '…';
+    try {
+      await loadMarket(force);
+      if (mode === 'market' && visible()) renderMarket();
+    } catch {
+      errorMessage(marketGrid,'Nie można pobrać ofert z YURA Cloud.','Spróbuj odświeżyć później.');
+      marketCount.textContent = '—';
+    }
+  }
+
   function render() {
     if (!loadedAt) return;
     if (mode === 'dex') renderDex();
-    else renderTrainers();
+    else if (mode === 'trainers') renderTrainers();
+    else renderMarket();
   }
   function setMode(next) {
-    if (next !== 'dex' && next !== 'trainers') return;
+    if (next !== 'dex' && next !== 'trainers' && next !== 'market') return;
     mode = next;
     tabs.forEach(tab => {
       const active = tab.dataset.pokemonMode === mode;
@@ -334,24 +411,28 @@
     });
     dexPanel.hidden = mode !== 'dex';
     trainersPanel.hidden = mode !== 'trainers';
+    marketPanel.hidden = mode !== 'market';
     dexSummary.hidden = mode !== 'dex';
     trainersSummary.hidden = mode !== 'trainers';
+    marketSummary.hidden = mode !== 'market';
     search.placeholder = mode === 'dex' ? 'Szukaj Pokémona lub numeru…' :
-      'Szukaj trenera lub Pokémona…';
+      mode === 'trainers' ? 'Szukaj trenera lub Pokémona…' : 'Szukaj oferty, trenera lub Pokémona…';
     search.value = '';
     render();
+    if (mode === 'market') void showMarket(true);
   }
   tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.pokemonMode)));
   root.querySelector('.pokemon-tabs').addEventListener('keydown', event => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
-    const next = mode === 'dex' ? 'trainers' : 'dex';
+    const next = mode === 'dex' ? 'trainers' : mode === 'trainers' ? 'market' : 'dex';
     setMode(next);
     tabs.find(tab => tab.dataset.pokemonMode === next)?.focus();
   });
   search.addEventListener('input', render);
   dexMore.addEventListener('click', () => renderDex(true));
   trainersMore.addEventListener('click', () => renderTrainers(true));
+  marketRefresh.addEventListener('click', () => void showMarket(true));
 
   async function open() {
     if (!visible()) return;
