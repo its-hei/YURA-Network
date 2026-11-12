@@ -25,6 +25,9 @@
   let applying = false;
 
   const currentUrl = () => new URL(window.location.href);
+  const scheduleAllowed = () =>
+    typeof window.yuraSchedulePublicIsVisible !== 'function' ||
+    window.yuraSchedulePublicIsVisible() !== false;
   const cleanPath = pathname =>
     ('/' + String(pathname).replace(/\/+/g, '/').replace(/^\/+|\/+$/g, ''))
       .replace(/\/+$/g, '') || '/';
@@ -109,7 +112,11 @@
   }
 
   function applyUrl() {
-    const loc = lookup();
+    let loc = lookup();
+    // Canonical /grafik and old ?yuraView=schedule links must never open
+    // a schedule marked hidden by the published network configuration.
+    if (loc.view === 'schedule' && !scheduleAllowed())
+      loc = {view:'about',sub:null,legacy:true};
     applying = true;
     try {
       if (typeof switchView === 'function') switchView(loc.view);
@@ -133,6 +140,12 @@
     const view = link.dataset.view;
     if (paths[view]) link.href = urlFor(view);
     link.addEventListener('click', event => {
+      if (view === 'schedule' && !scheduleAllowed()) {
+        event.preventDefault();
+        if (typeof switchView === 'function') switchView('about');
+        navigate('about',null,true);
+        return;
+      }
       if (event.button !== 0 || event.metaKey || event.ctrlKey ||
           event.shiftKey || event.altKey || applying) return;
       applying = true;
@@ -153,5 +166,6 @@
   }));
 
   window.addEventListener('popstate',applyUrl);
+  document.addEventListener('yura:schedule-visibility', applyUrl);
   applyUrl();
 })();
