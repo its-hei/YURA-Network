@@ -879,6 +879,9 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 function switchView(view) {
+  // A hidden public schedule cannot be opened through an old nav link.
+  if (view === "schedule" && yuraScheduleVisibilityLoaded &&
+      yuraScheduleConfig.publicScheduleVisible === false) view = "about";
   activeView = view;
 
   viewButtons.forEach(button => {
@@ -888,7 +891,7 @@ function switchView(view) {
   commandsView.hidden = view !== "commands";
   leaderboardView.hidden = view !== "leaderboard";
   aboutView.hidden = view !== "about";
-  scheduleView.hidden = view !== "schedule";
+  scheduleView.hidden = view !== "schedule" || !yuraScheduleVisibilityLoaded;
   if (statisticsView) statisticsView.hidden = view !== "statistics";
   if (view === "statistics") document.dispatchEvent(new CustomEvent("yura:statistics-open"));
   if (pokemonView) pokemonView.hidden = view !== "pokemon";
@@ -1008,6 +1011,7 @@ const YURA_SCHEDULE_DEFAULT_CONFIG = {
   sundayStart: "16:00",
   sundayEnd: "20:00",
   publicLayout: "MODERN",
+  publicScheduleVisible: true, // Existing published schedules stay visible by default.
   weeklyRules: {
     "0": { enabled: true, category: "FFXIV" },
     "1": { enabled: true, category: "FFXIV" },
@@ -1022,6 +1026,30 @@ const YURA_SCHEDULE_DEFAULT_CONFIG = {
 };
 let yuraScheduleConfig = YURA_SCHEDULE_DEFAULT_CONFIG;
 let yuraScheduleTimer = null;
+let yuraScheduleVisibilityLoaded = false;
+
+// Route-navigation.js also checks this, so direct /grafik and legacy links
+// cannot bypass the visibility choice after network-config.json is loaded.
+window.yuraSchedulePublicIsVisible = () =>
+  !yuraScheduleVisibilityLoaded ? null : yuraScheduleConfig.publicScheduleVisible !== false;
+
+function yuraScheduleApplyVisibility() {
+  const visible = yuraScheduleConfig.publicScheduleVisible !== false;
+  document.querySelectorAll('.top-navigation [data-view="schedule"]').forEach(link => {
+    link.hidden = !visible;
+    link.style.display = visible ? "" : "none";
+    link.setAttribute("aria-hidden", visible ? "false" : "true");
+  });
+  if (!visible) {
+    // Remove any previously rendered dates when an already-open tab sees a hide.
+    scheduleView.replaceChildren();
+    scheduleView.hidden = true;
+    if (activeView === "schedule") switchView("about");
+  } else if (activeView === "schedule") {
+    scheduleView.hidden = false;
+  }
+  document.dispatchEvent(new CustomEvent("yura:schedule-visibility", { detail: { visible } }));
+}
 
 function yuraSchedulePositiveMod(value, modulo) {
   return ((value % modulo) + modulo) % modulo;
@@ -1059,7 +1087,10 @@ async function yuraScheduleLoadConfig() {
     yuraScheduleConfig = yuraScheduleNormalizeConfig(yuraScheduleConfig);
     console.warn("YURA Network schedule config unavailable; using local defaults.", error);
   }
-  renderYuraLiveSchedule();
+  yuraScheduleVisibilityLoaded = true;
+  yuraScheduleApplyVisibility();
+  if (yuraScheduleConfig.publicScheduleVisible !== false)
+    renderYuraLiveSchedule();
 }
 
 function yuraScheduleWarsawNowParts() {
