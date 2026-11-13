@@ -156,8 +156,8 @@
     "command": "!pokeroll",
     "aliases": [],
     "permission": "Follower",
-    "usage": "!pokeroll",
-    "description": "Tylko dla obserwujących kanał (Follow). Losuje nowego, innego Pokémona za 5 000 Y.U.R.A. Points. Wymaga wcześniejszego użycia !pokemon i odpowiedniego salda. Jeśli nie uda się wykonać losowania, punkty nie zostaną pobrane.",
+    "usage": "!pokeroll [nazwa Pokémona]",
+    "description": "Losuje nowego Pokémona za 5 000 YURA Points. Jeśli masz wolne odblokowane miejsce, dodaje go do kolekcji. Aby zastąpić wskazanego Pokémona, wpisz np. !pokeroll charizard. Dostępne dla obserwujących.",
     "category": "PUNKTY Y.U.R.A.",
     "source": "YURA"
   },
@@ -409,5 +409,23 @@
     "description": "Wznawia alerty wstrzymane przez !pausealert.",
     "category": "ALERTY",
     "source": "STREAMER.BOT"
+  },
+  {
+    "command": "!pokeslots",
+    "usage": "!pokeslots",
+    "description": "Pokazuje wszystkie aktualne Pokémony trenera, liczbę odblokowanych miejsc oraz cenę kolejnego. Maksymalnie 5 miejsc.",
+    "permission": "Follower",
+    "aliases": [],
+    "source": "YURA",
+    "category": "POKÉMON"
+  },
+  {
+    "command": "!pokebuy",
+    "usage": "!pokebuy",
+    "description": "Kupuje następne permanentne miejsce na Pokémona: 2. za 30 000, 3. za 120 000, 4. za 250 000, 5. za 400 000 YURA Points. Łącznie 800 000.",
+    "permission": "Follower",
+    "aliases": [],
+    "source": "YURA",
+    "category": "POKÉMON"
   }
 ]
