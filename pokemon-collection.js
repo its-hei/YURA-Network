@@ -431,9 +431,9 @@
   }
 
   const pokemonCommands = [
-    {command:'!pokemon',usage:'!pokemon',role:'FOLLOWER',cost:'DARMOWE',description:'Pierwszy raz losuje darmowego Pokémona. Później pokazuje aktualnie posiadanego.'},
-    {command:'!pokeslots',usage:'!pokeslots',role:'FOLLOWER',cost:'DARMOWE',description:'Pokazuje Twoje Pokémony, liczbę kupionych miejsc (maksymalnie 5) oraz koszt następnego miejsca.'},
-    {command:'!pokebuy',usage:'!pokebuy',role:'FOLLOWER',cost:'30K / 120K / 250K / 400K',description:'Kupuje permanentnie kolejne miejsce na Pokémona. Cztery miejsca kosztują łącznie 800 000 YURA Points.'},
+    {command:'!pokemon',usage:'!pokemon',role:'FOLLOWER',cost:'DARMOWE',description:'Pierwszy raz losuje darmowego Pokémona. Później wyświetla wszystkie aktualnie posiadane Pokémony.'},
+    {command:'!pokeslots',usage:'!pokeslots / !pokeslot',role:'FOLLOWER',cost:'DARMOWE',description:'Obie komendy pokazują liczbę odblokowanych miejsc (max. 5), posiadane Pokémony i cenę następnego miejsca.'},
+    {command:'!pokebuy',usage:'!pokebuy',role:'FOLLOWER',cost:'30K / 120K / 250K / 400K',description:'Kupuje miejsce i automatycznie losuje do niego Pokémona bez dopłaty. Gdy losowanie się nie powiedzie, zakup jest anulowany bez pobrania punktów.'},
     {command:'!pokeroll',usage:'!pokeroll [nazwa Pokémona]',role:'FOLLOWER',cost:'5 000 YURA',description:'Przy więcej niż jednym odblokowanym miejscu wymagane jest podanie nazwy, np. !pokeroll charizard. Wolne miejsce zostaje wypełnione bez utraty Charizarda; przy pełnej kolekcji zostaje on zastąpiony.'},
     {command:'!pokesell',usage:'!pokesell @nick 10000',role:'FOLLOWER',cost:'MIN. 10 000 YURA',description:'Wystawia ofertę wymiany Pokémonów z dopłatą od kupującego. Oferta jest ważna 5 minut.'},
     {command:'!pokeaccept',usage:'!pokeaccept',role:'FOLLOWER',cost:'WYMIANA',description:'Akceptuje otrzymaną ofertę. Pokémony są wymieniane, a kupujący przekazuje ustaloną kwotę sprzedającemu.'},
