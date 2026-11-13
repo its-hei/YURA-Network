@@ -5177,3 +5177,62 @@ body > .shell > .view-panel > .hero > div:first-child,
   }
   #pokemonView .pokemon-trainer-previews{width:82px;gap:4px}
 }
+
+/* 92px featured art (original size), tiny right thumbnails and explicit empty slots. */
+#pokemonView .pokemon-trainer-roster-selector .pokemon-trainer-featured .pokemon-artwork{
+  flex:0 0 92px;
+  width:92px;
+  height:92px;
+}
+#pokemonView .pokemon-trainer-featured{
+  position:relative;
+  overflow:visible;
+}
+#pokemonView .pokemon-trainer-featured-name{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  box-sizing:border-box;
+  margin:0;
+  padding:3px 4px;
+  border-radius:0 0 7px 7px;
+  background:linear-gradient(180deg,transparent,rgba(10,15,20,.9));
+  font-size:10px;
+  line-height:1.15;
+  text-shadow:0 1px 3px #080b0e;
+}
+#pokemonView .pokemon-trainer-preview-empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  cursor:default;
+  border-style:dashed;
+}
+#pokemonView .pokemon-trainer-preview-free{
+  border-color:#715529;
+  background:rgba(140,93,34,.09);
+  color:#e2af64;
+}
+#pokemonView .pokemon-trainer-preview-locked{
+  border-color:#2a3540;
+  background:rgba(14,20,26,.45);
+  color:#6f7d8b;
+}
+#pokemonView .pokemon-trainer-empty-symbol{
+  font-size:17px;
+  font-weight:750;
+  line-height:1;
+}
+#pokemonView .pokemon-trainer-empty-label{
+  font-size:7px;
+  font-weight:800;
+  letter-spacing:.02em;
+  line-height:1.1;
+}
+#pokemonView .pokemon-trainer-preview-empty:hover{
+  border-color:inherit;
+  background:inherit;
+}
