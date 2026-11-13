@@ -1670,8 +1670,8 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       else if(result.status==='unavailable')await sendChat(env,`@${display} nie udało się wylosować wolnego Pokémona. Nie pobrano punktów.`);
       return;
     }
-    if(places.unlocked>1 && !selected){
-      await sendChat(env,`@${display} kolekcja jest pełna! Wskaż Pokémona do zastąpienia, np. !pokeroll charizard.`);return;
+    if(!selected){
+      await sendChat(env,`@${display} wszystkie odblokowane miejsca są zajęte. Wskaż Pokémona do zastąpienia, np. !pokeroll charizard, albo kup kolejne miejsce komendą !pokebuy.`);return;
     }
     if(selected && selected.slot>1){
       const result=await rollExtraPokemon(env,event,selected.slot,selected.id);
