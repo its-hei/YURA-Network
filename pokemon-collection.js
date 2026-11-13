@@ -94,6 +94,7 @@
   const matches = (item, term) => !term ||
     norm(item.pokemonName).includes(term) ||
     String(item.pokemonId).includes(term) ||
+    (item.roster||[]).some(p => norm(p.pokemonName).includes(term) || String(p.pokemonId).includes(term)) ||
     norm(item.login).includes(term) ||
     norm(item.name).includes(term);
 
@@ -122,7 +123,13 @@
           joinOrder: Number.isInteger(Number(row?.joinOrder)) && Number(row?.joinOrder) > 0 ? Number(row.joinOrder) : null,
           joinedAt: String(row?.joinedAt || '').slice(0,40),
           joinEstimated: row?.joinEstimated === true,
-          history: Array.isArray(row?.history) ? row.history.map(historyEvent).filter(Boolean) : []
+          history: Array.isArray(row?.history) ? row.history.map(historyEvent).filter(Boolean) : [],
+          slotsUnlocked:Math.max(1,Math.min(5,Number(row?.slotsUnlocked)||1)),
+          roster:Array.isArray(row?.roster) ? row.roster.filter(p=>
+            Number.isInteger(Number(p?.slot)) && Number(p.slot)>=1 && Number(p.slot)<=5 &&
+            Number.isInteger(Number(p?.pokemonId)) && Number(p.pokemonId)>=1 && Number(p.pokemonId)<=1025)
+            .map(p=>({slot:Number(p.slot),pokemonId:Number(p.pokemonId),
+              pokemonName:formatPokemonName(p.pokemonName)})) : []
         });
       }
       if (next.some(row => !row.pokemonName)) {
@@ -155,8 +162,9 @@
         return record;
       };
       for (const row of next) {
-        addSpecies(row.pokemonId, row.pokemonName).trainers.push({
-          login:row.login, name:row.name
+        const owned = row.roster.length ? row.roster : [{pokemonId:row.pokemonId,pokemonName:row.pokemonName}];
+        for (const pokemon of owned) addSpecies(pokemon.pokemonId,pokemon.pokemonName).trainers.push({
+          login:row.login,name:row.name
         });
         for (const old of row.history) addSpecies(old.pokemonId, old.pokemonName);
       }
@@ -282,7 +290,21 @@
     assigned.append(data);
     summary.append(user, assigned);
     const details = make('div', 'pokemon-trainer-details');
-    details.append(trainerHistory(item));
+    const rosterSection=make('section','pokemon-trainer-roster');
+    rosterSection.append(make('div','pokemon-trainer-history-head',
+      'KOLEKCJA  ' + (item.roster.length||1) + '/' + (item.slotsUnlocked||1) + ' • MAX 5'));
+    const rosterList=make('div','pokemon-trainer-roster-list');
+    for(const pokemon of (item.roster.length ? item.roster : [item])){
+      const chip=make('span','pokemon-trainer-history-chip');
+      chip.append(make('small','', '#' + String(pokemon.pokemonId).padStart(4,'0')),
+        make('span','',pokemon.pokemonName));
+      rosterList.append(chip);
+    }
+    if((item.slotsUnlocked||1)<5)
+      rosterList.append(make('small','pokemon-trainer-history-note',
+        'Następne miejsce: ' + ({1:'30 000',2:'120 000',3:'250 000',4:'400 000'}[item.slotsUnlocked]||'—') + ' YURA'));
+    rosterSection.append(rosterList);
+    details.append(rosterSection,trainerHistory(item));
     card.append(summary, details);
     return card;
   };
