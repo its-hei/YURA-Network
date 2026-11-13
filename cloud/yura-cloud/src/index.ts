@@ -473,7 +473,7 @@ function defaultCommandSettings(env: Env): CommandSettings {
     gamble: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!gamble", permission:"EVERYONE", userCooldown:num(env.GAMBLE_COOLDOWN_SECONDS,30), globalCooldown:0, winPercent:50, critWinPercent:1 },
     pokemon: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokemon", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokeroll: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeroll", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
-    pokeslots: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeslots", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokeslots: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeslots,!pokeslot", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokebuy: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokebuy", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokesell: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokesell", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokeaccept: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeaccept", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
@@ -1415,6 +1415,9 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
 
   let match = Object.entries(settings).find(([,cfg]) => commandMatchesConfig(cmd,cfg,masterEnabled));
+  // A permanent spelling alias, including for accounts with older saved settings.
+  if(!match && cmd==="!pokeslot" && settings.pokeslots?.enabled)
+    match=["pokeslots",settings.pokeslots];
   // Build 311: numeric death increments belong to the same DEDGE command/policy.
   // The legacy DEDGES config is retained only for settings compatibility and is not executable.
   if (match?.[0] === "deathsAmount") match = undefined;
