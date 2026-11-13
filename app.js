@@ -24,12 +24,30 @@ function esc(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+// Preserve Cloud-owned Pokémon documentation even if an older running
+// YURA Desktop instance republishes a stale commands.json.
+const pokemonCloudCommands=[
+  {command:"!pokemon",usage:"!pokemon",permission:"Follower",aliases:[],description:"Pierwsze użycie losuje darmowego Pokémona. Kolejne wypisują wszystkie aktualnie posiadane Pokémony (maks. 5)."},
+  {command:"!pokeslots",usage:"!pokeslots / !pokeslot",permission:"Follower",aliases:["!pokeslot"],description:"Obie komendy pokazują odblokowane sloty, posiadane Pokémony i cenę następnego miejsca."},
+  {command:"!pokebuy",usage:"!pokebuy",permission:"Follower",aliases:[],description:"Kupuje kolejne miejsce na stałe i automatycznie losuje Pokémona bez dodatkowej opłaty. Ceny kolejnych miejsc: 30 000, 120 000, 250 000, 400 000 YURA. Jeśli losowanie się nie uda, punkty nie są pobierane."},
+  {command:"!pokeroll",usage:"!pokeroll [nazwa Pokémona]",permission:"Follower",aliases:[],description:"Ponowne losowanie kosztuje 5 000 YURA. Przy 2–5 odblokowanych miejscach zawsze podaj nazwę posiadanego Pokémona, np. !pokeroll charizard. Wolny slot dodaje nowego, pełna kolekcja zastępuje wskazanego."},
+  {command:"!pokesell",usage:"!pokesell @nick 10000",permission:"Follower",aliases:[],description:"Oferuje wymianę Pokémonów z dopłatą minimum 10 000 YURA od kupującego. Oferta ważna 5 minut."},
+  {command:"!pokeaccept",usage:"!pokeaccept",permission:"Follower",aliases:[],description:"Akceptuje otrzymaną ofertę wymiany Pokémonów i ustaloną dopłatę."},
+  {command:"!pokecancel",usage:"!pokecancel",permission:"Everyone",aliases:[],description:"Anuluje własną aktywną ofertę handlu bez pobierania punktów."},
+  {command:"!pokedecline",usage:"!pokedecline",permission:"Everyone",aliases:[],description:"Odrzuca otrzymaną ofertę wymiany bez pobierania punktów."}
+].map(command=>({...command,category:"POKÉMON",source:"YURA Cloud"}));
+
 function commandDisplayRows(commands){
   // YURA Desktop refreshes commands.json automatically. Keep public role
   // overrides here so routine syncs cannot reset the channel's access labels.
   const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!pokeslots","!pokebuy","!pokesell","!pokeaccept","!tts","!tits"]);
   const explicitMods=new Set(["!donation","!donocel","!donoreset"]);
-  const prepared=commands
+  const activeCommands=new Map(commands.map(entry=>[String(entry.command||"").toLowerCase(),entry]));
+  for(const command of pokemonCloudCommands)
+    activeCommands.set(command.command.toLowerCase(),{
+      ...(activeCommands.get(command.command.toLowerCase())||{}),...command
+    });
+  const prepared=[...activeCommands.values()]
     .filter(entry=>String(entry.command||"").toLowerCase()!=="!deska")
     .map(entry=>{
       const key=String(entry.command||"").toLowerCase();
