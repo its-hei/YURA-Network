@@ -30,7 +30,7 @@
   const batchSize = 24;
   let entries = [], species = [], loadedAt = 0, inflight = null;
   let mode = 'dex', shownDex = 0, shownTrainers = 0;
-  let offers = [], marketLoadedAt = 0, marketLoading = null;
+  let trades = [], marketLoadedAt = 0, marketLoading = null;
   const norm = x => String(x ?? '').trim().toLocaleLowerCase('pl-PL');
   const fmt = n => nf.format(n);
   const formatPokemonName = raw => String(raw ?? '').trim().replace(/-/g, ' ')
@@ -330,14 +330,16 @@
     if (!force && marketLoadedAt && Date.now() - marketLoadedAt < 15000) return;
     if (marketLoading) return marketLoading;
     marketLoading = (async () => {
-      const response = await fetch(cloud + '/api/pokemon/market', {cache:'no-store'});
+      const response = await fetch(cloud + '/api/pokemon/market/history', {cache:'no-store'});
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const payload = await response.json();
-      if (payload?.ok !== true || !Array.isArray(payload.offers))
-        throw new Error('Niepoprawna odpowiedź z rynku Pokémon.');
-      offers = payload.offers.filter(item => Number.isInteger(Number(item.pokemonId)) &&
-        Number(item.pokemonId) >= 1 && Number(item.pokemonId) <= 1025 &&
-        Number(item.price) >= 10000 && Date.parse(item.expiresAt) > Date.now());
+      if (payload?.ok !== true || !Array.isArray(payload.trades))
+        throw new Error('Niepoprawna odpowiedź historii transakcji.');
+      trades = payload.trades.filter(item =>
+        [item.pokemonId,item.wantedPokemonId].every(id =>
+          Number.isInteger(Number(id)) && Number(id) >= 1 && Number(id) <= 1025) &&
+        Number.isFinite(Number(item.price)) && Number(item.price) >= 10000 &&
+        Number.isFinite(Date.parse(item.completedAt)));
       marketLoadedAt = Date.now();
     })().finally(() => { marketLoading = null; });
     return marketLoading;
@@ -345,39 +347,44 @@
   function renderMarket() {
     if (!marketPanel) return;
     const term = query();
-    const live = offers.filter(o => Date.parse(o.expiresAt) > Date.now() &&
-      (!term || [o.seller,o.buyer,o.pokemonName,o.wantedPokemonName,
-        String(o.pokemonId),String(o.wantedPokemonId)].some(v => norm(v).includes(term))));
-    marketCount.textContent = fmt(offers.filter(o => Date.parse(o.expiresAt) > Date.now()).length);
-    marketResultCount.textContent = fmt(live.length) + ' AKTYWNYCH OFERT';
+    const filtered = trades.filter(t => !term ||
+      [t.seller,t.buyer,t.pokemonName,t.wantedPokemonName,
+        String(t.pokemonId),String(t.wantedPokemonId),String(t.price)].some(v => norm(v).includes(term)));
+    marketCount.textContent = fmt(trades.length);
+    marketResultCount.textContent = fmt(filtered.length) + ' ZAKOŃCZONYCH TRANSAKCJI';
     marketGrid.replaceChildren();
-    if (!live.length) {
-      errorMessage(marketGrid, term ? 'Nie znaleziono pasującej oferty.' : 'Brak aktywnych ofert.',
-        'Na Twitchu wystaw wymianę komendą !pokesell @nick 10000. Oferta będzie widoczna tutaj przez maksymalnie 5 minut.');
+    if (!filtered.length) {
+      errorMessage(marketGrid,
+        term ? 'Nie znaleziono pasującej transakcji.' : 'Brak zakończonych wymian.',
+        term ? 'Spróbuj wyszukać trenera, nazwę Pokémona lub kwotę.' :
+          'Po zaakceptowaniu wymiany na Twitchu pojawi się tutaj zapis transakcji.');
       return;
     }
-    for (const offer of live) {
+    for (const trade of filtered) {
       const card = make('article','pokemon-market-card');
       const top = make('div','pokemon-market-top');
-      top.append(make('span','pokemon-market-label','WYSTAWIA @' + String(offer.seller).slice(0,25)));
-      const exp = new Date(offer.expiresAt);
-      const expiry = Number.isFinite(exp.getTime())
-        ? exp.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})
-        : '—';
-      top.append(make('span','pokemon-market-expiry','WYGASA ' + expiry));
+      top.append(make('span','pokemon-market-label','WYMIANA ZAKOŃCZONA'));
+      const completed = new Date(trade.completedAt);
+      top.append(make('span','pokemon-market-expiry',
+        completed.toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})));
       const item = make('div','pokemon-market-pokemon');
       item.append(artwork({
-        pokemonId:Number(offer.pokemonId),
-        pokemonName:formatPokemonName(offer.pokemonName)
+        pokemonId:Number(trade.pokemonId),
+        pokemonName:formatPokemonName(trade.pokemonName)
       }));
       const info = make('div','pokemon-market-info');
-      info.append(make('strong','',formatPokemonName(offer.pokemonName)),
-        make('span','pokemon-number','#' + String(offer.pokemonId).padStart(4,'0')));
+      info.append(
+        make('strong','',formatPokemonName(trade.pokemonName) + '  ↔  ' + formatPokemonName(trade.wantedPokemonName)),
+        make('span','pokemon-number','#' + String(trade.pokemonId).padStart(4,'0') +
+          '  ↔  #' + String(trade.wantedPokemonId).padStart(4,'0')));
       item.append(info);
       const bottom = make('div','pokemon-market-bottom');
-      bottom.append(make('span','pokemon-market-target','Dla @' + String(offer.buyer).slice(0,25) +
-        ' • oddaje ' + formatPokemonName(offer.wantedPokemonName)));
-      bottom.append(make('strong','pokemon-market-price','+ ' + fmt(Number(offer.price)) + ' YURA'));
+      bottom.append(make('span','pokemon-market-target',
+        '@' + String(trade.seller).slice(0,25) + ' otrzymał(a) ' +
+        formatPokemonName(trade.wantedPokemonName) + ' i ' + fmt(Number(trade.price)) + ' YURA. ' +
+        '@' + String(trade.buyer).slice(0,25) + ' otrzymał(a) ' +
+        formatPokemonName(trade.pokemonName) + '.'));
+      bottom.append(make('strong','pokemon-market-price','+' + fmt(Number(trade.price)) + ' YURA'));
       card.append(top,item,bottom);
       marketGrid.append(card);
     }
@@ -389,7 +396,7 @@
       await loadMarket(force);
       if (mode === 'market' && visible()) renderMarket();
     } catch {
-      errorMessage(marketGrid,'Nie można pobrać ofert z YURA Cloud.','Spróbuj odświeżyć później.');
+      errorMessage(marketGrid,'Nie można pobrać historii z YURA Cloud.','Spróbuj odświeżyć później.');
       marketCount.textContent = '—';
     }
   }
@@ -416,7 +423,7 @@
     trainersSummary.hidden = mode !== 'trainers';
     marketSummary.hidden = mode !== 'market';
     search.placeholder = mode === 'dex' ? 'Szukaj Pokémona lub numeru…' :
-      mode === 'trainers' ? 'Szukaj trenera lub Pokémona…' : 'Szukaj oferty, trenera lub Pokémona…';
+      mode === 'trainers' ? 'Szukaj trenera lub Pokémona…' : 'Szukaj transakcji, trenera lub Pokémona…';
     search.value = '';
     render();
     if (mode === 'market') void showMarket(true);
