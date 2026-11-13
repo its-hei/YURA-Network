@@ -428,7 +428,9 @@
 
   const pokemonCommands = [
     {command:'!pokemon',usage:'!pokemon',role:'FOLLOWER',cost:'DARMOWE',description:'Pierwszy raz losuje darmowego Pokémona. Później pokazuje aktualnie posiadanego.'},
-    {command:'!pokeroll',usage:'!pokeroll',role:'FOLLOWER',cost:'5 000 YURA',description:'Losuje nowego Pokémona i zastępuje dotychczasowego. Wymaga posiadania Pokémona i wystarczającej liczby punktów.'},
+    {command:'!pokeslots',usage:'!pokeslots',role:'FOLLOWER',cost:'DARMOWE',description:'Pokazuje Twoje Pokémony, liczbę kupionych miejsc (maksymalnie 5) oraz koszt następnego miejsca.'},
+    {command:'!pokebuy',usage:'!pokebuy',role:'FOLLOWER',cost:'30K / 120K / 250K / 400K',description:'Kupuje permanentnie kolejne miejsce na Pokémona. Cztery miejsca kosztują łącznie 800 000 YURA Points.'},
+    {command:'!pokeroll',usage:'!pokeroll [nazwa Pokémona]',role:'FOLLOWER',cost:'5 000 YURA',description:'Przy wolnym miejscu dodaje nowego Pokémona. Aby zastąpić konkretnego, wpisz np. !pokeroll charizard.'},
     {command:'!pokesell',usage:'!pokesell @nick 10000',role:'FOLLOWER',cost:'MIN. 10 000 YURA',description:'Wystawia ofertę wymiany Pokémonów z dopłatą od kupującego. Oferta jest ważna 5 minut.'},
     {command:'!pokeaccept',usage:'!pokeaccept',role:'FOLLOWER',cost:'WYMIANA',description:'Akceptuje otrzymaną ofertę. Pokémony są wymieniane, a kupujący przekazuje ustaloną kwotę sprzedającemu.'},
     {command:'!pokecancel',usage:'!pokecancel',role:'EVERYONE',cost:'BEZ OPŁAT',description:'Anuluje własną aktywną ofertę wymiany bez przenoszenia Pokémonów ani punktów.'},
