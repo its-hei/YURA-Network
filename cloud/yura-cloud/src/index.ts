@@ -3221,7 +3221,8 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
       pokemonId:Number(r.pokemon_id),pokemonName:formatPokemonName(String(r.pokemon_name||'')),
       updatedAt:String(r.updated_at_utc||''),
       joinedAt:String(r.joined_at_utc||''),
-      joinOrder:index+1,joinEstimated:estimated,history:[] as any[]
+      joinOrder:index+1,joinEstimated:estimated,history:[] as any[],
+      slotsUnlocked:1,roster:[{slot:1,pokemonId:Number(r.pokemon_id),pokemonName:formatPokemonName(String(r.pokemon_name||''))}]
     };
     byId.set(id,entry);
     remember(entry.pokemonId,entry.pokemonName);
@@ -3236,6 +3237,22 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
     return entry;
   });
   if(items.length){
+    const [unlocks,extraRoster]=await Promise.all([
+      env.DB.prepare("SELECT twitch_user_id,slot FROM pokemon_slot_unlocks ORDER BY slot").all<any>(),
+      env.DB.prepare("SELECT twitch_user_id,slot,pokemon_id,pokemon_name FROM pokemon_extra_roster ORDER BY slot").all<any>()
+    ]);
+    for(const row of unlocks.results||[]){
+      const entry=byId.get(String(row.twitch_user_id||''));
+      if(entry)entry.slotsUnlocked=Math.max(Number(entry.slotsUnlocked||1),Number(row.slot));
+    }
+    for(const row of extraRoster.results||[]){
+      const entry=byId.get(String(row.twitch_user_id||''));
+      if(!entry)continue;
+      const item={slot:Number(row.slot),pokemonId:Number(row.pokemon_id),
+        pokemonName:formatPokemonName(String(row.pokemon_name))};
+      entry.roster.push(item);
+      remember(item.pokemonId,item.pokemonName);
+    }
     // No event IDs, charges, OAuth tokens or user IDs enter the public payload.
     const events=await env.DB.prepare(`SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,event_type
       FROM (
@@ -3244,6 +3261,9 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
         UNION ALL
         SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
           'purchase' AS event_type FROM pokemon_purchases
+        UNION ALL
+        SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
+          'slot-roll' AS event_type FROM pokemon_slot_rolls
         UNION ALL
         SELECT twitch_user_id,pokemon_id,pokemon_name,created_at_utc,
           'trade' AS event_type FROM pokemon_trade_history
@@ -3269,7 +3289,7 @@ async function apiPokemonCollection(env:Env):Promise<Response> {
       entry.history=history.slice(-60);
     }
   }
-  return json({schemaVersion:3,source:'YURA Cloud',updatedAt:nowIso(),
+  return json({schemaVersion:4,source:'YURA Cloud',updatedAt:nowIso(),
     count:items.length,entries:items,
     discovered:[...discovered].sort((a,b)=>a[0]-b[0]).map(([pokemonId,pokemonName])=>({pokemonId,pokemonName}))});
 }
