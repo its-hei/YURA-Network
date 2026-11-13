@@ -473,6 +473,8 @@ function defaultCommandSettings(env: Env): CommandSettings {
     gamble: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!gamble", permission:"EVERYONE", userCooldown:num(env.GAMBLE_COOLDOWN_SECONDS,30), globalCooldown:0, winPercent:50, critWinPercent:1 },
     pokemon: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokemon", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokeroll: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeroll", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokeslots: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeslots", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
+    pokebuy: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokebuy", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokesell: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokesell", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokeaccept: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokeaccept", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
     pokecancel: { enabled:true, alwaysOnline:true, streamOn:true, aliases:"!pokecancel", permission:"EVERYONE", userCooldown:0, globalCooldown:1 },
@@ -596,7 +598,9 @@ function commandUsageForSuggestion(key: string, cfg: CommandConfig) {
   const primary = cfg.aliases.split(",").map(x=>x.trim()).find(Boolean) || `!${key}`;
   if (key === "gamble") return `${primary} <kwota|procent%|all>`;
   if (key === "pokemon") return `${primary} (darmowe pierwsze losowanie / sprawdzenie)`;
-  if (key === "pokeroll") return `${primary} (nowy Pokémon za 5 000 YURA)`;
+  if (key === "pokeroll") return `${primary} [nazwa Pokémona] (5 000 YURA)`;
+  if (key === "pokeslots") return `${primary} (kolekcja i ceny miejsc)`;
+  if (key === "pokebuy") return `${primary} (kup następne miejsce)`;
   if (key === "pokesell") return `${primary} @nick <min. 10000 YURA>`;
   if (key === "watchtime") return `${primary} [@nick]`;
   if (key === "add") return `${primary} @nick <liczba> lub ${primary} all <liczba>`;
@@ -605,7 +609,7 @@ function commandUsageForSuggestion(key: string, cfg: CommandConfig) {
 }
 
 function findYuraPointsCommandSuggestion(cmd: string, settings: CommandSettings, masterEnabled = true) {
-  const keys = ["points","gamble","pokemon","pokeroll","pokesell","pokeaccept","pokecancel","pokedecline","top","watchtime","add","remove"];
+  const keys = ["points","gamble","pokemon","pokeroll","pokeslots","pokebuy","pokesell","pokeaccept","pokecancel","pokedecline","top","watchtime","add","remove"];
   if (!cmd.startsWith("!") || cmd.length < 4) return "";
   let best = "";
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -952,7 +956,7 @@ async function randomPokemon(env:Env,excludeId?:number):Promise<{id:number,name:
   for (let attempt=0;attempt<4;attempt++) {
     const id=randomPokemonId();
     if(id===excludeId)continue;
-    const owned=await env.DB.prepare("SELECT 1 x FROM pokemon_profiles WHERE pokemon_id=?1 LIMIT 1").bind(id).first<any>();
+    const owned=await env.DB.prepare("SELECT 1 x FROM pokemon_profiles WHERE pokemon_id=?1 UNION ALL SELECT 1 x FROM pokemon_extra_roster WHERE pokemon_id=?1 LIMIT 1").bind(id).first<any>();
     if(owned)continue;
     try {
       const res=await fetch('https://pokeapi.co/api/v2/pokemon-species/'+id+'/',{
@@ -1101,6 +1105,60 @@ async function assignFirstPokemonForChat(env:Env,event:TwitchChatEvent):Promise<
   const actual=await env.DB.prepare('SELECT pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1')
     .bind(id).first<any>();
   return actual?{id:Number(actual.pokemon_id),name:formatPokemonName(String(actual.pokemon_name)),created:false}:null;
+}
+const POKEMON_SLOT_PRICES=[0,0,30000,120000,250000,400000];
+type PokemonPlace={slot:number;id:number;name:string};
+async function getPokemonPlaces(env:Env,userId:string):Promise<{unlocked:number;owned:PokemonPlace[]}>{
+  const primary=await env.DB.prepare("SELECT pokemon_id,pokemon_name FROM pokemon_profiles WHERE twitch_user_id=?1").bind(userId).first<any>();
+  if(!primary)return {unlocked:0,owned:[]};
+  const unlocks=await env.DB.prepare("SELECT slot FROM pokemon_slot_unlocks WHERE twitch_user_id=?1 ORDER BY slot").bind(userId).all<any>();
+  const extras=await env.DB.prepare("SELECT slot,pokemon_id,pokemon_name FROM pokemon_extra_roster WHERE twitch_user_id=?1 ORDER BY slot").bind(userId).all<any>();
+  const unlocked=Math.min(5,1+(unlocks.results||[]).length);
+  return {unlocked,owned:[{slot:1,id:Number(primary.pokemon_id),name:formatPokemonName(String(primary.pokemon_name))},
+    ...(extras.results||[]).map((x:any)=>({slot:Number(x.slot),id:Number(x.pokemon_id),name:formatPokemonName(String(x.pokemon_name))}))]};
+}
+async function buyPokemonPlace(env:Env,event:TwitchChatEvent){
+  const id=String(event.chatter_user_id||''),login=norm(event.chatter_user_login);
+  const eventId=String(event.message_id||'').trim();
+  if(!/^\d+$/.test(id)||!login||!eventId||eventId.length>180)return {status:'invalid',slot:0,price:0};
+  const current=await getPokemonPlaces(env,id);
+  if(!current.unlocked)return {status:'unassigned',slot:0,price:0};
+  if(current.unlocked>=5)return {status:'max',slot:5,price:0};
+  const slot=current.unlocked+1,price=POKEMON_SLOT_PRICES[slot];
+  await ensureAccount(env,id,login,String(event.chatter_user_name||login));
+  try{
+    await env.DB.prepare("INSERT INTO pokemon_slot_unlocks(twitch_user_id,slot,login,event_id,price,created_at_utc) VALUES(?1,?2,?3,?4,?5,?6)")
+      .bind(id,slot,login,eventId,price,nowIso()).run();
+    return {status:'bought',slot,price};
+  }catch(error:any){
+    const message=String(error?.message||'');
+    if(message.includes('insufficient_funds'))return {status:'insufficient',slot,price};
+    if(message.includes('UNIQUE')||message.includes('unique'))return {status:'duplicate',slot,price};
+    if(message.includes('trade_pending'))return {status:'trade-pending',slot,price};
+    throw error;
+  }
+}
+async function rollExtraPokemon(env:Env,event:TwitchChatEvent,slot:number,excludeId?:number){
+  const id=String(event.chatter_user_id||''),login=norm(event.chatter_user_login);
+  const eventId=String(event.message_id||'').trim();
+  if(!/^\d+$/.test(id)||!login||!eventId||eventId.length>180)return {status:'invalid',pokemon:null as {id:number;name:string}|null};
+  await ensureAccount(env,id,login,String(event.chatter_user_name||login));
+  const account=await getAccount(env,login);
+  if(Number(account?.points||0)<POKEROLL_PRICE)return {status:'insufficient',pokemon:null};
+  const chosen=await randomPokemon(env,excludeId);
+  if(!chosen)return {status:'unavailable',pokemon:null};
+  try{
+    await env.DB.prepare("INSERT INTO pokemon_slot_rolls(event_id,twitch_user_id,login,slot,pokemon_id,pokemon_name,price,created_at_utc) VALUES(?1,?2,?3,?4,?5,?6,5000,?7)")
+      .bind(eventId,id,login,slot,chosen.id,chosen.name,nowIso()).run();
+    return {status:'changed',pokemon:chosen};
+  }catch(error:any){
+    const message=String(error?.message||'');
+    if(message.includes('insufficient_funds'))return {status:'insufficient',pokemon:null};
+    if(message.includes('trade_pending'))return {status:'trade-pending',pokemon:null};
+    if(message.includes('UNIQUE')||message.includes('unique'))return {status:'duplicate',pokemon:null};
+    if(message.includes('species_taken'))return {status:'unavailable',pokemon:null};
+    throw error;
+  }
 }
 async function rerollPokemonForChat(env:Env,event:TwitchChatEvent) {
   const id=String(event.chatter_user_id||'');
@@ -1385,7 +1443,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
   // These explicit Follow requirements cannot be overridden by older
   // persisted EVERYONE or moderator permission settings.
-  const followerCommands=["jackpot","deaths","pokemon","pokeroll","pokesell","pokeaccept"];
+  const followerCommands=["jackpot","deaths","pokemon","pokeroll","pokeslots","pokebuy","pokesell","pokeaccept"];
   if(followerCommands.includes(key) && !await allowFollowOnlyCommand(env,event,display,cmd))return;
   if(!followerCommands.includes(key) && !commandPermissionAllows(event,env,cfg.permission))return;
   if (key !== "jackpot" && key !== "raffle" && key !== "sraffle" && key !== "autoraffle" && !await tryEnterCloudCommandCooldown(env,key,event.chatter_user_id,cfg)) return;
