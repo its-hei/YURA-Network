@@ -280,14 +280,18 @@
     const genChip = make('span', 'pokemon-gen', gen.label);
     genChip.title = gen.region;
     user.append(badge, who, genChip);
-    const assigned = make('div', 'pokemon-trainer-assigned');
-    assigned.append(artwork(item));
-    const data = make('div', 'pokemon-trainer-pokemon');
-    data.append(
-      make('span', 'pokemon-number', '#' + String(item.pokemonId).padStart(4,'0')),
-      make('strong', '', item.pokemonName || 'Pokémon #' + item.pokemonId)
-    );
-    assigned.append(data);
+    // Always show every owned species in the collapsed card; never grow its height.
+    const assigned = make('div', 'pokemon-trainer-assigned pokemon-trainer-roster-compact');
+    const roster = (item.roster.length ? item.roster : [{slot:1,pokemonId:item.pokemonId,pokemonName:item.pokemonName}])
+      .slice().sort((a,b)=>a.slot-b.slot);
+    assigned.setAttribute('aria-label', 'Posiadane Pokémony: ' +
+      roster.map(p=>p.pokemonName).join(', '));
+    for (const pokemon of roster) {
+      const tile = make('div','pokemon-trainer-mini');
+      tile.title = pokemon.pokemonName + ' (#' + String(pokemon.pokemonId).padStart(4,'0') + ')';
+      tile.append(artwork(pokemon),make('span','pokemon-trainer-mini-name',pokemon.pokemonName));
+      assigned.append(tile);
+    }
     summary.append(user, assigned);
     const details = make('div', 'pokemon-trainer-details');
     const rosterSection=make('section','pokemon-trainer-roster');
@@ -430,7 +434,7 @@
     {command:'!pokemon',usage:'!pokemon',role:'FOLLOWER',cost:'DARMOWE',description:'Pierwszy raz losuje darmowego Pokémona. Później pokazuje aktualnie posiadanego.'},
     {command:'!pokeslots',usage:'!pokeslots',role:'FOLLOWER',cost:'DARMOWE',description:'Pokazuje Twoje Pokémony, liczbę kupionych miejsc (maksymalnie 5) oraz koszt następnego miejsca.'},
     {command:'!pokebuy',usage:'!pokebuy',role:'FOLLOWER',cost:'30K / 120K / 250K / 400K',description:'Kupuje permanentnie kolejne miejsce na Pokémona. Cztery miejsca kosztują łącznie 800 000 YURA Points.'},
-    {command:'!pokeroll',usage:'!pokeroll [nazwa Pokémona]',role:'FOLLOWER',cost:'5 000 YURA',description:'Przy wolnym miejscu dodaje nowego Pokémona. Aby zastąpić konkretnego, wpisz np. !pokeroll charizard.'},
+    {command:'!pokeroll',usage:'!pokeroll [nazwa Pokémona]',role:'FOLLOWER',cost:'5 000 YURA',description:'Przy więcej niż jednym odblokowanym miejscu wymagane jest podanie nazwy, np. !pokeroll charizard. Wolne miejsce zostaje wypełnione bez utraty Charizarda; przy pełnej kolekcji zostaje on zastąpiony.'},
     {command:'!pokesell',usage:'!pokesell @nick 10000',role:'FOLLOWER',cost:'MIN. 10 000 YURA',description:'Wystawia ofertę wymiany Pokémonów z dopłatą od kupującego. Oferta jest ważna 5 minut.'},
     {command:'!pokeaccept',usage:'!pokeaccept',role:'FOLLOWER',cost:'WYMIANA',description:'Akceptuje otrzymaną ofertę. Pokémony są wymieniane, a kupujący przekazuje ustaloną kwotę sprzedającemu.'},
     {command:'!pokecancel',usage:'!pokecancel',role:'EVERYONE',cost:'BEZ OPŁAT',description:'Anuluje własną aktywną ofertę wymiany bez przenoszenia Pokémonów ani punktów.'},
