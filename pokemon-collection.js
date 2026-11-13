@@ -280,19 +280,43 @@
     const genChip = make('span', 'pokemon-gen', gen.label);
     genChip.title = gen.region;
     user.append(badge, who, genChip);
-    // Always show every owned species in the collapsed card; never grow its height.
-    const assigned = make('div', 'pokemon-trainer-assigned pokemon-trainer-roster-compact');
+    // Single featured Pokémon on the left, up to four selectable previews on the right.
+    // Switching the featured species never opens the history or changes card dimensions.
+    const assigned = make('div','pokemon-trainer-assigned pokemon-trainer-roster-selector');
     const roster = (item.roster.length ? item.roster : [{slot:1,pokemonId:item.pokemonId,pokemonName:item.pokemonName}])
-      .slice().sort((a,b)=>a.slot-b.slot);
-    assigned.setAttribute('aria-label', 'Posiadane Pokémony: ' +
-      roster.map(p=>p.pokemonName).join(', '));
-    for (const pokemon of roster) {
-      const tile = make('div','pokemon-trainer-mini');
-      tile.title = pokemon.pokemonName + ' (#' + String(pokemon.pokemonId).padStart(4,'0') + ')';
-      tile.append(artwork(pokemon),make('span','pokemon-trainer-mini-name',pokemon.pokemonName));
-      assigned.append(tile);
-    }
-    summary.append(user, assigned);
+      .slice().sort((a,b)=>a.slot-b.slot).slice(0,5);
+    const featured = make('div','pokemon-trainer-featured');
+    const previews = make('div','pokemon-trainer-previews');
+    assigned.setAttribute('aria-label','Posiadane Pokémony: '+roster.map(p=>p.pokemonName).join(', '));
+    let selectedIndex=0;
+    const showPokemon = index => {
+      selectedIndex=index;
+      const selected=roster[selectedIndex];
+      const name=make('span','pokemon-trainer-featured-name',selected.pokemonName);
+      featured.replaceChildren(artwork(selected),name);
+      featured.title=selected.pokemonName+' (#'+String(selected.pokemonId).padStart(4,'0')+')';
+      previews.replaceChildren();
+      roster.forEach((pokemon,i) => {
+        if(i===selectedIndex)return;
+        const button=make('button','pokemon-trainer-preview');
+        button.type='button';
+        button.title='Pokaż '+pokemon.pokemonName+' jako głównego Pokémona';
+        button.setAttribute('aria-label',button.title);
+        button.append(artwork(pokemon));
+        button.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          showPokemon(i);
+        });
+        button.addEventListener('keydown',event => {
+          if(event.key==='Enter'||event.key===' '){event.stopPropagation();}
+        });
+        previews.append(button);
+      });
+    };
+    showPokemon(0);
+    assigned.append(featured,previews);
+    summary.append(user,assigned);
     const details = make('div', 'pokemon-trainer-details');
     const rosterSection=make('section','pokemon-trainer-roster');
     rosterSection.append(make('div','pokemon-trainer-history-head',
