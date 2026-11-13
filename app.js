@@ -27,7 +27,7 @@ function esc(value = "") {
 function commandDisplayRows(commands){
   // YURA Desktop refreshes commands.json automatically. Keep public role
   // overrides here so routine syncs cannot reset the channel's access labels.
-  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!tts","!tits"]);
+  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!pokesell","!pokeaccept","!tts","!tits"]);
   const explicitMods=new Set(["!donation","!donocel","!donoreset"]);
   const prepared=commands
     .filter(entry=>String(entry.command||"").toLowerCase()!=="!deska")
