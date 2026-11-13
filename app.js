@@ -27,7 +27,7 @@ function esc(value = "") {
 function commandDisplayRows(commands){
   // YURA Desktop refreshes commands.json automatically. Keep public role
   // overrides here so routine syncs cannot reset the channel's access labels.
-  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!pokesell","!pokeaccept","!tts","!tits"]);
+  const followers=new Set(["!dedge","!jackpot","!pokemon","!pokeroll","!pokeslots","!pokebuy","!pokesell","!pokeaccept","!tts","!tits"]);
   const explicitMods=new Set(["!donation","!donocel","!donoreset"]);
   const prepared=commands
     .filter(entry=>String(entry.command||"").toLowerCase()!=="!deska")
@@ -110,7 +110,7 @@ function commandVisualGroup(command){
   const category=String(command.category||"").trim().toUpperCase();
   // The channel basics and manual commands form one shared block.
   if(["!ref","!dc","!dedge"].includes(name))return "general";
-  if(category==="POKÉMON" || ["!pokemon","!pokeroll","!pokesell","!pokeaccept","!pokecancel","!pokedecline"].includes(name))return "pokemon";
+  if(category==="POKÉMON" || ["!pokemon","!pokeroll","!pokeslots","!pokebuy","!pokesell","!pokeaccept","!pokecancel","!pokedecline"].includes(name))return "pokemon";
   if(category==="PUNKTY — ADMIN" || ["!add","!remove"].includes(name))return "points-admin";
   if(category==="RAFFLE" || ["!raffle","!sraffle","!cancelraffle","!autoraffle","!jackpot","!join"].includes(name))return "raffle";
   if(name==="!gamble")return "gamble";
@@ -285,7 +285,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=29", { cache: "no-store" })
+fetch("./commands.json?v=30", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
