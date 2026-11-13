@@ -1252,6 +1252,19 @@ async function handlePokemonTradeCommand(env:Env,event:TwitchChatEvent,key:strin
       " + "+money(Number(offer.price))+" YURA.");
   }
 }
+// Completed trades are retained in pokemon_trade_offers; never expose pending or rejected offers here.
+async function apiPokemonMarketHistory(env:Env):Promise<Response>{
+  const trades=await env.DB.prepare(
+    "SELECT seller_login,buyer_login,seller_pokemon_id,seller_pokemon_name,buyer_pokemon_id,buyer_pokemon_name,price,responded_at_utc FROM pokemon_trade_offers WHERE status='accepted' AND responded_at_utc<>'' ORDER BY responded_at_utc DESC, id DESC LIMIT 200"
+  ).all<any>();
+  return json({ok:true,updatedAt:nowIso(),trades:(trades.results||[]).map((t:any)=>({
+    seller:String(t.seller_login),buyer:String(t.buyer_login),
+    pokemonId:Number(t.seller_pokemon_id),pokemonName:formatPokemonName(String(t.seller_pokemon_name)),
+    wantedPokemonId:Number(t.buyer_pokemon_id),wantedPokemonName:formatPokemonName(String(t.buyer_pokemon_name)),
+    price:Number(t.price),completedAt:String(t.responded_at_utc)
+  }))});
+}
+
 async function apiPokemonMarket(env:Env):Promise<Response>{
   const offers=await env.DB.prepare("SELECT seller_login,buyer_login,seller_pokemon_id,seller_pokemon_name,buyer_pokemon_id,buyer_pokemon_name,price,created_at_utc,expires_at_utc FROM pokemon_trade_offers WHERE status='pending' AND expires_at_utc>?1 ORDER BY expires_at_utc ASC LIMIT 100")
     .bind(nowIso()).all<any>();
@@ -3644,6 +3657,7 @@ export default {
     if (url.pathname === "/api/ranking" && req.method === "GET") return apiYuraRanking(env);
     if (url.pathname === "/api/raffle/public" && req.method === "GET") return apiRaffleOverlayState(env);
     if (url.pathname === "/api/pokemon/collection" && req.method === "GET") return apiPokemonCollection(env);
+    if (url.pathname === "/api/pokemon/market/history" && req.method === "GET") return apiPokemonMarketHistory(env);
     if (url.pathname === "/api/pokemon/market" && req.method === "GET") return apiPokemonMarket(env);
     if (url.pathname === "/api/avatars" && req.method === "GET") return apiPublicAvatarBatch(req,env);
     if (url.pathname === "/api/public-stats" && req.method === "GET") return apiYuraPublicStats(env);
