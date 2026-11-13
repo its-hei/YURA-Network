@@ -1634,8 +1634,55 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     }
     return;
   }
+  if (key === "pokeslots" || key === "pokebuy") {
+    if(parts.length!==1){await sendChat(env,`@${display} użyj !${key} bez argumentów.`);return;}
+    const userId=String(event.chatter_user_id||'');
+    const places=await getPokemonPlaces(env,userId);
+    if(!places.unlocked){await sendChat(env,`@${display} najpierw użyj !pokemon, aby otrzymać darmowego Pokémona.`);return;}
+    if(key==="pokeslots"){
+      const names=places.owned.map(x=>x.name).join(', ');
+      const next=places.unlocked<5 ? ' Następne miejsce: '+POKEMON_SLOT_PRICES[places.unlocked+1].toLocaleString('pl-PL')+' YURA (!pokebuy).' : ' Wszystkie miejsca odblokowane.';
+      await sendChat(env,`🎮 @${display} Pokémony ${places.owned.length}/${places.unlocked} (max. 5): ${names}.`+next);return;
+    }
+    const result=await buyPokemonPlace(env,event);
+    if(result.status==='bought')await sendChat(env,`✅ @${display} kupiono miejsce ${result.slot}/5 za ${result.price.toLocaleString('pl-PL')} YURA. Użyj !pokeroll, aby wylosować nowego Pokémona do wolnego miejsca.`);
+    else if(result.status==='insufficient')await sendChat(env,`@${display} miejsce ${result.slot}/5 kosztuje ${result.price.toLocaleString('pl-PL')} YURA. Sprawdź !points.`);
+    else if(result.status==='max')await sendChat(env,`@${display} wszystkie 5 miejsc masz już odblokowane.`);
+    else if(result.status==='trade-pending')await sendChat(env,`@${display} zakończ najpierw aktywną ofertę wymiany.`);
+    return;
+  }
   if (key === "pokeroll") {
-    if(parts.length!==1){await sendChat(env,`@${display} użyj !pokeroll (5 000 YURA). Pierwszy Pokémon: !pokemon za darmo.`);return;}
+    if(parts.length>2){await sendChat(env,`@${display} użyj !pokeroll [nazwa Pokémona] (5 000 YURA).`);return;}
+    const places=await getPokemonPlaces(env,String(event.chatter_user_id||''));
+    if(!places.unlocked){await sendChat(env,`@${display} najpierw użyj !pokemon — pierwszy Pokémon jest za darmo.`);return;}
+    const target=parts[1] ? norm(parts[1]).replace(/-/g,' ') : '';
+    const selected=target ? places.owned.find(p=>norm(p.name).replace(/-/g,' ')===target) : null;
+    if(target && !selected){
+      await sendChat(env,`@${display} nie masz Pokémona ${parts[1]}. Użyj !pokeslots, aby sprawdzić kolekcję.`);return;
+    }
+    const openSlot=Array.from({length:places.unlocked},(_,i)=>i+1).find(n=>!places.owned.some(x=>x.slot===n));
+    if(!selected && openSlot){
+      const result=await rollExtraPokemon(env,event,openSlot);
+      if(result.status==='changed' && result.pokemon)
+        await sendChat(env,`🎲 @${display} nowy Pokémon: ${result.pokemon.name} (#${result.pokemon.id})! Kolekcja ${places.owned.length+1}/${places.unlocked}. Koszt 5 000 YURA.`);
+      else if(result.status==='insufficient')await sendChat(env,`@${display} !pokeroll wymaga 5 000 YURA.`);
+      else if(result.status==='trade-pending')await sendChat(env,`@${display} najpierw zakończ aktywną wymianę.`);
+      else if(result.status==='unavailable')await sendChat(env,`@${display} nie udało się wylosować wolnego Pokémona. Nie pobrano punktów.`);
+      return;
+    }
+    if(places.unlocked>1 && !selected){
+      await sendChat(env,`@${display} kolekcja jest pełna! Wskaż Pokémona do zastąpienia, np. !pokeroll charizard.`);return;
+    }
+    if(selected && selected.slot>1){
+      const result=await rollExtraPokemon(env,event,selected.slot,selected.id);
+      if(result.status==='changed' && result.pokemon)
+        await sendChat(env,`🎲 @${display} ${selected.name} został zastąpiony przez ${result.pokemon.name} (#${result.pokemon.id}) za 5 000 YURA.`);
+      else if(result.status==='insufficient')await sendChat(env,`@${display} !pokeroll wymaga 5 000 YURA.`);
+      else if(result.status==='trade-pending')await sendChat(env,`@${display} najpierw zakończ aktywną wymianę.`);
+      else if(result.status==='unavailable')await sendChat(env,`@${display} nie udało się wylosować wolnego Pokémona. Bez opłaty.`);
+      return;
+    }
+    // Legacy primary position remains owned by pokemon_profiles and retains its existing audit.
     let result;
     try { result=await rerollPokemonForChat(env,event); }
     catch (ex) { console.warn("Pokemon reroll rejected",String((ex as Error)?.name||"error"));
