@@ -309,14 +309,14 @@
           <button class="pokemon-tab" id="pokemonTrainersTab" type="button" role="tab"
                   aria-selected="false" aria-controls="pokemonTrainersPanel" data-pokemon-mode="trainers">Pokémon Trainers</button>
           <button class="pokemon-tab" id="pokemonMarketTab" type="button" role="tab"
-                  aria-selected="false" aria-controls="pokemonMarketPanel" data-pokemon-mode="market">Pokémon Market</button>
+                  aria-selected="false" aria-controls="pokemonMarketPanel" data-pokemon-mode="market">Market History</button>
         </div>
         <div class="pokemon-tools-right">
           <div class="pokemon-count-chip" id="pokemonDexSummary" aria-label="Odkryte gatunki">
             <span>GATUNKI</span><strong id="pokemonSpeciesCount">—</strong>
           </div>
-          <div class="pokemon-count-chip" id="pokemonMarketSummary" aria-label="Aktywne oferty" hidden>
-            <span>OFERTY</span><strong id="pokemonMarketCount">—</strong>
+          <div class="pokemon-count-chip" id="pokemonMarketSummary" aria-label="Zakończone transakcje" hidden>
+            <span>TRANSAKCJE</span><strong id="pokemonMarketCount">—</strong>
           </div>
           <div class="pokemon-count-chip" id="pokemonTrainersSummary" aria-label="Liczba trenerów" hidden>
             <span>TRENERZY</span><strong id="pokemonTrainersCount">—</strong>
@@ -349,21 +349,18 @@
       <section class="pokemon-panel" id="pokemonMarketPanel" role="tabpanel" aria-labelledby="pokemonMarketTab" hidden>
         <div class="pokemon-panel-head">
           <div>
-            <div class="eyebrow">Y.U.R.A. / HANDEL</div>
-            <h2>Pokémon Market</h2>
-            <p>Trener za trenera, Pokémon za Pokémona i dopłata od 10 000 YURA Points. Oferta wygasa po 5 minutach.</p>
+            <div class="eyebrow">Y.U.R.A. / HISTORIA WYMIAN</div>
+            <h2>Market History</h2>
+            <p>Historia udanych wymian Pokémonów pomiędzy trenerami, od najnowszej. Zapis obejmuje otrzymane Pokémony, dopłatę YURA Points oraz datę transakcji.</p>
           </div>
-          <button type="button" class="pokemon-more" id="pokemonMarketRefresh">Odśwież oferty</button>
+          <button type="button" class="pokemon-more" id="pokemonMarketRefresh">Odśwież historię</button>
         </div>
-        <div class="pokemon-market-commands" aria-label="Komendy rynku">
-          <span>Wystaw: <code>!pokesell @nick 10000</code></span>
-          <span>Akceptuj: <code>!pokeaccept</code></span>
-          <span>Anuluj: <code>!pokecancel</code></span>
-          <span>Odrzuć: <code>!pokedecline</code></span>
+        <div class="pokemon-market-commands" aria-label="Zasady historii">
+          <span>Zapisywane są tylko zakończone wymiany zatwierdzone komendą <code>!pokeaccept</code>.</span>
         </div>
         <span class="pokemon-sr-only" id="pokemonMarketResultCount" role="status">—</span>
         <div class="pokemon-market-grid" id="pokemonMarketGrid" aria-live="polite">
-          <p class="pokemon-empty">Ładowanie ofert Pokémon Market…</p>
+          <p class="pokemon-empty">Ładowanie historii wymian…</p>
         </div>
       </section>
     </section>
