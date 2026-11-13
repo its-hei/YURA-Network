@@ -1645,7 +1645,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       await sendChat(env,`🎮 @${display} Pokémony ${places.owned.length}/${places.unlocked} (max. 5): ${names}.`+next);return;
     }
     const result=await buyPokemonPlace(env,event);
-    if(result.status==='bought')await sendChat(env,`✅ @${display} kupiono miejsce ${result.slot}/5 za ${result.price.toLocaleString('pl-PL')} YURA. Użyj !pokeroll, aby wylosować nowego Pokémona do wolnego miejsca.`);
+    if(result.status==='bought')await sendChat(env,`✅ @${display} kupiono miejsce ${result.slot}/5 za ${result.price.toLocaleString('pl-PL')} YURA. Użyj !pokeroll [nazwa posiadanego Pokémona], aby zapełnić wolne miejsce.`);
     else if(result.status==='insufficient')await sendChat(env,`@${display} miejsce ${result.slot}/5 kosztuje ${result.price.toLocaleString('pl-PL')} YURA. Sprawdź !points.`);
     else if(result.status==='max')await sendChat(env,`@${display} wszystkie 5 miejsc masz już odblokowane.`);
     else if(result.status==='trade-pending')await sendChat(env,`@${display} zakończ najpierw aktywną ofertę wymiany.`);
@@ -1656,15 +1656,18 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const places=await getPokemonPlaces(env,String(event.chatter_user_id||''));
     if(!places.unlocked){await sendChat(env,`@${display} najpierw użyj !pokemon — pierwszy Pokémon jest za darmo.`);return;}
     const target=parts[1] ? norm(parts[1]).replace(/-/g,' ') : '';
+    if(places.unlocked>1 && !target){
+      await sendChat(env,`@${display} masz ${places.unlocked} odblokowanych miejsc. Podaj nazwę posiadanego Pokémona, np. !pokeroll charizard (!pokeslots pokaże kolekcję).`);return;
+    }
     const selected=target ? places.owned.find(p=>norm(p.name).replace(/-/g,' ')===target) : null;
     if(target && !selected){
       await sendChat(env,`@${display} nie masz Pokémona ${parts[1]}. Użyj !pokeslots, aby sprawdzić kolekcję.`);return;
     }
     const openSlot=Array.from({length:places.unlocked},(_,i)=>i+1).find(n=>!places.owned.some(x=>x.slot===n));
-    if(!selected && openSlot){
+    if(openSlot && (selected || places.unlocked===1)){
       const result=await rollExtraPokemon(env,event,openSlot);
       if(result.status==='changed' && result.pokemon)
-        await sendChat(env,`🎲 @${display} nowy Pokémon: ${result.pokemon.name} (#${result.pokemon.id})! Kolekcja ${places.owned.length+1}/${places.unlocked}. Koszt 5 000 YURA.`);
+        await sendChat(env,`🎲 @${display} nowy Pokémon: ${result.pokemon.name} (#${result.pokemon.id})! Kolekcja ${places.owned.length+1}/${places.unlocked}. Koszt 5 000 YURA. ${selected ? selected.name + ' pozostaje w kolekcji.' : ''}`);
       else if(result.status==='insufficient')await sendChat(env,`@${display} !pokeroll wymaga 5 000 YURA.`);
       else if(result.status==='trade-pending')await sendChat(env,`@${display} najpierw zakończ aktywną wymianę.`);
       else if(result.status==='unavailable')await sendChat(env,`@${display} nie udało się wylosować wolnego Pokémona. Nie pobrano punktów.`);
