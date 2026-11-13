@@ -4970,3 +4970,50 @@ body > .shell > .view-panel > .hero > div:first-child,
   #pokemonView .pokemon-market-grid{grid-template-columns:minmax(0,1fr)}
   #pokemonView .pokemon-market-pokemon .pokemon-artwork{flex-basis:84px;width:84px;height:84px}
 }
+
+
+/* Pokemon Commands — four-tab companion catalog */
+#pokemonView .pokemon-commands-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0
+}
+#pokemonView .pokemon-command-card{
+  display:flex;flex-direction:column;gap:12px;min-width:0;
+  background:linear-gradient(145deg,#1b222b,#11161d);
+  border:1px solid #39424c;border-radius:13px;padding:19px;
+  box-shadow:var(--shadow)
+}
+#pokemonView .pokemon-command-meta{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between
+}
+#pokemonView .pokemon-command-role,
+#pokemonView .pokemon-command-cost{
+  font-size:10px;font-weight:800;letter-spacing:.045em;
+  border:1px solid #46505a;border-radius:7px;padding:5px 8px;color:#adbfd2
+}
+#pokemonView .pokemon-command-cost{border-color:#62441f;color:#f3b86a}
+#pokemonView .pokemon-command-name{
+  margin:0;font-size:21px;line-height:1.25;color:#f6f7f9;overflow-wrap:anywhere
+}
+#pokemonView .pokemon-command-description{
+  margin:0;color:#b4c0ce;font-size:13px;line-height:1.55;flex:1
+}
+#pokemonView .pokemon-command-usage{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-top:13px;border-top:1px solid #34404b;min-width:0
+}
+#pokemonView .pokemon-command-usage code{
+  font-size:12px;color:#f6c489;overflow-wrap:anywhere
+}
+#pokemonView .pokemon-command-copy{
+  cursor:pointer;border:1px solid #66502e;border-radius:8px;
+  background:#2a2219;color:#f8c48a;font-weight:700;
+  padding:8px 12px;white-space:nowrap
+}
+#pokemonView .pokemon-command-copy:hover,
+#pokemonView .pokemon-command-copy:focus-visible{
+  background:#41301c;outline:2px solid #f3b86a;outline-offset:2px
+}
+@media(max-width:760px){
+  #pokemonView .pokemon-commands-grid{grid-template-columns:minmax(0,1fr)}
+  #pokemonView .pokemon-command-card{padding:15px}
+}
