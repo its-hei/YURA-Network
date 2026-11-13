@@ -285,36 +285,53 @@
     const assigned = make('div','pokemon-trainer-assigned pokemon-trainer-roster-selector');
     const roster = (item.roster.length ? item.roster : [{slot:1,pokemonId:item.pokemonId,pokemonName:item.pokemonName}])
       .slice().sort((a,b)=>a.slot-b.slot).slice(0,5);
+    const unlocked = Math.max(1,Math.min(5,item.slotsUnlocked||1));
+    const slots = Array.from({length:5},(_,index) => ({
+      slot:index+1,
+      pokemon:roster.find(p=>p.slot===index+1)||null,
+      unlocked:index<unlocked
+    }));
     const featured = make('div','pokemon-trainer-featured');
     const previews = make('div','pokemon-trainer-previews');
     assigned.setAttribute('aria-label','Posiadane Pokémony: '+roster.map(p=>p.pokemonName).join(', '));
-    let selectedIndex=0;
-    const showPokemon = index => {
-      selectedIndex=index;
-      const selected=roster[selectedIndex];
+    let selectedSlot=1;
+    const showPokemon = slot => {
+      selectedSlot=slot;
+      const selected=slots[slot-1]?.pokemon;
+      if(!selected)return;
       const name=make('span','pokemon-trainer-featured-name',selected.pokemonName);
       featured.replaceChildren(artwork(selected),name);
       featured.title=selected.pokemonName+' (#'+String(selected.pokemonId).padStart(4,'0')+')';
       previews.replaceChildren();
-      roster.forEach((pokemon,i) => {
-        if(i===selectedIndex)return;
+      for(const entry of slots) {
+        if(entry.slot===selectedSlot)continue;
+        if(!entry.pokemon){
+          const placeholder=make('span','pokemon-trainer-preview pokemon-trainer-preview-empty '+
+            (entry.unlocked?'pokemon-trainer-preview-free':'pokemon-trainer-preview-locked'));
+          placeholder.title='Slot '+entry.slot+': '+(entry.unlocked?'wolny':'zablokowany');
+          placeholder.setAttribute('aria-label',placeholder.title);
+          placeholder.append(make('span','pokemon-trainer-empty-symbol',entry.unlocked?'+':'·'),
+            make('span','pokemon-trainer-empty-label',entry.unlocked?'WOLNY':'LOCK'));
+          previews.append(placeholder);
+          continue;
+        }
         const button=make('button','pokemon-trainer-preview');
         button.type='button';
-        button.title='Pokaż '+pokemon.pokemonName+' jako głównego Pokémona';
+        button.title='Pokaż '+entry.pokemon.pokemonName+' jako głównego Pokémona';
         button.setAttribute('aria-label',button.title);
-        button.append(artwork(pokemon));
+        button.append(artwork(entry.pokemon));
         button.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
-          showPokemon(i);
+          showPokemon(entry.slot);
         });
         button.addEventListener('keydown',event => {
           if(event.key==='Enter'||event.key===' '){event.stopPropagation();}
         });
         previews.append(button);
-      });
+      }
     };
-    showPokemon(0);
+    showPokemon(roster[0]?.slot||1);
     assigned.append(featured,previews);
     summary.append(user,assigned);
     const details = make('div', 'pokemon-trainer-details');
