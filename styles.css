@@ -5017,3 +5017,63 @@ body > .shell > .view-panel > .hero > div:first-child,
   #pokemonView .pokemon-commands-grid{grid-template-columns:minmax(0,1fr)}
   #pokemonView .pokemon-command-card{padding:15px}
 }
+
+
+/* Compact trainer roster: up to five species visible without expanding cards. */
+#pokemonView .pokemon-trainer-summary{
+  grid-template-rows:auto 92px;
+}
+#pokemonView .pokemon-trainer-roster-compact{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  align-items:start;
+  gap:4px;
+  height:92px;
+  min-height:0;
+  min-width:0;
+  width:100%;
+}
+#pokemonView .pokemon-trainer-mini{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:start;
+  gap:3px;
+  min-width:0;
+  width:100%;
+  overflow:hidden;
+}
+#pokemonView .pokemon-trainer-roster-compact .pokemon-trainer-mini .pokemon-artwork{
+  width:min(100%,57px);
+  height:57px;
+  min-height:0;
+  flex:none;
+  margin:0;
+  padding:0;
+}
+#pokemonView .pokemon-trainer-mini .pokemon-artwork img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+#pokemonView .pokemon-trainer-mini-name{
+  display:block;
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:9px;
+  line-height:1.3;
+  color:#e4e9ee;
+  font-weight:650;
+  text-align:center;
+}
+@media(max-width:500px){
+  #pokemonView .pokemon-trainer-roster-compact{gap:2px}
+  #pokemonView .pokemon-trainer-roster-compact .pokemon-trainer-mini .pokemon-artwork{
+    height:52px;
+  }
+  #pokemonView .pokemon-trainer-mini-name{font-size:8px}
+}
