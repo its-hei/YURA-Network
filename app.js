@@ -103,16 +103,18 @@ function commandMonogram(command){
 // Show the combined channel-basics block (nuke, commands, web, ref, dc,
 // dedge/deska) last, while leaving other topical groups together.
 const commandGroupOrder=[
-  "info","points","overlay","music","alerts","tts","other","general","donations"
+  "info","points","gamble","raffle","pokemon","points-admin","overlay","music","alerts","tts","other","general","donations"
 ];
 function commandVisualGroup(command){
   const name=String(command.command||"").trim().toLowerCase();
   const category=String(command.category||"").trim().toUpperCase();
   // The channel basics and manual commands form one shared block.
   if(["!ref","!dc","!dedge"].includes(name))return "general";
-  if(["PUNKTY Y.U.R.A.","PUNKTY — ADMIN","RAFFLE"].includes(category) ||
-    ["!points","!gamble","!jackpot","!join","!transfer","!pokemon","!pokeroll","!top","!add","!remove"].includes(name))
-    return "points";
+  if(category==="POKÉMON" || ["!pokemon","!pokeroll","!pokesell","!pokeaccept","!pokecancel","!pokedecline"].includes(name))return "pokemon";
+  if(category==="PUNKTY — ADMIN" || ["!add","!remove"].includes(name))return "points-admin";
+  if(category==="RAFFLE" || ["!raffle","!sraffle","!cancelraffle","!autoraffle","!jackpot","!join"].includes(name))return "raffle";
+  if(name==="!gamble")return "gamble";
+  if(category==="PUNKTY Y.U.R.A." || ["!points","!top","!transfer"].includes(name))return "points";
   if(category==="OGÓLNE")return "general";
   if(category==="INFORMACJE")return "info";
   if(category==="MUZYKA")return "music";
@@ -283,7 +285,7 @@ searchInput.addEventListener("input", event => {
   render();
 });
 
-fetch("./commands.json?v=28", { cache: "no-store" })
+fetch("./commands.json?v=29", { cache: "no-store" })
   .then(response => {
     if (!response.ok) {
       throw new Error("Nie udało się pobrać commands.json");
