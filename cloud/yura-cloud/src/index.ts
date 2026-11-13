@@ -1126,15 +1126,22 @@ async function buyPokemonPlace(env:Env,event:TwitchChatEvent){
   if(current.unlocked>=5)return {status:'max',slot:5,price:0};
   const slot=current.unlocked+1,price=POKEMON_SLOT_PRICES[slot];
   await ensureAccount(env,id,login,String(event.chatter_user_name||login));
+  const account=await getAccount(env,login);
+  if(Number(account?.points||0)<price)return {status:'insufficient',slot,price};
+  // First confirm a free species. No payment or slot is written if PokeAPI fails.
+  const chosen=await randomPokemon(env);
+  if(!chosen)return {status:'unavailable',slot,price};
   try{
-    await env.DB.prepare("INSERT INTO pokemon_slot_unlocks(twitch_user_id,slot,login,event_id,price,created_at_utc) VALUES(?1,?2,?3,?4,?5,?6)")
-      .bind(id,slot,login,eventId,price,nowIso()).run();
-    return {status:'bought',slot,price};
+    // D1 triggers debit and assign the chosen Pokémon in one atomic INSERT.
+    await env.DB.prepare("INSERT INTO pokemon_slot_unlocks(twitch_user_id,slot,login,event_id,price,created_at_utc,pokemon_id,pokemon_name) VALUES(?1,?2,?3,?4,?5,?6,?7,?8)")
+      .bind(id,slot,login,eventId,price,nowIso(),chosen.id,chosen.name).run();
+    return {status:'bought',slot,price,pokemon:chosen};
   }catch(error:any){
     const message=String(error?.message||'');
     if(message.includes('insufficient_funds'))return {status:'insufficient',slot,price};
     if(message.includes('UNIQUE')||message.includes('unique'))return {status:'duplicate',slot,price};
     if(message.includes('trade_pending'))return {status:'trade-pending',slot,price};
+    if(message.includes('species_taken')||message.includes('pokemon_required'))return {status:'unavailable',slot,price};
     throw error;
   }
 }
@@ -1630,7 +1637,9 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     } else if(assigned.created) {
       await sendChat(env,`🎲 @${display} Twój pierwszy Pokémon to ${assigned.name} (#${assigned.id})! Jest Twój na stałe i nic nie kosztował. Nowy los: !pokeroll za 5 000 YURA.`);
     } else {
-      await sendChat(env,`🎮 @${display} Twój Pokémon: ${assigned.name} (#${assigned.id}). Nowy los: !pokeroll za 5 000 YURA.`);
+      const places=await getPokemonPlaces(env,String(event.chatter_user_id||''));
+      const owned=places.owned.map(p=>p.name+' (#'+p.id+')').join(', ');
+      await sendChat(env,`🎮 @${display} Twoje Pokémony (${places.owned.length}/${places.unlocked}, max. 5): ${owned}. Sprawdź miejsca: !pokeslots.`);
     }
     return;
   }
@@ -1645,7 +1654,10 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       await sendChat(env,`🎮 @${display} Pokémony ${places.owned.length}/${places.unlocked} (max. 5): ${names}.`+next);return;
     }
     const result=await buyPokemonPlace(env,event);
-    if(result.status==='bought')await sendChat(env,`✅ @${display} kupiono miejsce ${result.slot}/5 za ${result.price.toLocaleString('pl-PL')} YURA. Użyj !pokeroll [nazwa posiadanego Pokémona], aby zapełnić wolne miejsce.`);
+    if(result.status==='bought' && result.pokemon)
+      await sendChat(env,`✅ @${display} kupiono miejsce ${result.slot}/5 za ${result.price.toLocaleString('pl-PL')} YURA i wylosowano ${result.pokemon.name} (#${result.pokemon.id})! Kolekcja powiększona automatycznie.`);
+    else if(result.status==='unavailable')
+      await sendChat(env,`@${display} nie udało się bezpiecznie wylosować Pokémona. Zakup anulowany, punkty nie zostały pobrane.`);
     else if(result.status==='insufficient')await sendChat(env,`@${display} miejsce ${result.slot}/5 kosztuje ${result.price.toLocaleString('pl-PL')} YURA. Sprawdź !points.`);
     else if(result.status==='max')await sendChat(env,`@${display} wszystkie 5 miejsc masz już odblokowane.`);
     else if(result.status==='trade-pending')await sendChat(env,`@${display} zakończ najpierw aktywną ofertę wymiany.`);
