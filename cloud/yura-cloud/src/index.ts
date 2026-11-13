@@ -1654,7 +1654,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     if(key==="pokeslots"){
       const names=places.owned.map(x=>x.name).join(', ');
       const next=places.unlocked<5 ? ' Następne miejsce: '+POKEMON_SLOT_PRICES[places.unlocked+1].toLocaleString('pl-PL')+' YURA (!pokebuy).' : ' Wszystkie miejsca odblokowane.';
-      await sendChat(env,`🎮 @${display} Pokémony ${places.owned.length}/${places.unlocked} (max. 5): ${names}.`+next);return;
+      await sendChat(env,`🎮 @${display} Odblokowane sloty: ${places.unlocked}/5 • Pokémony: ${places.owned.length}/${places.unlocked}. ${names}.`+next);return;
     }
     const result=await buyPokemonPlace(env,event);
     if(result.status==='bought' && result.pokemon)
