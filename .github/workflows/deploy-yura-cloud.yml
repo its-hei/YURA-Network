@@ -84,6 +84,9 @@ jobs:
       - name: Test Pokemon Market atomic trades and expiry (local SQLite)
         run: python3 cloud/yura-cloud/tests/test_pokemon_market.py
 
+      - name: Test Pokemon slots and atomic payments (local SQLite)
+        run: python3 cloud/yura-cloud/tests/test_pokemon_slots.py
+
       - name: Preflight Worker build without deployment
         working-directory: cloud/yura-cloud
         run: npx wrangler deploy --dry-run
