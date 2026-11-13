@@ -10,6 +10,9 @@
   const dexPanel = root.querySelector('#pokemonDexPanel');
   const trainersPanel = root.querySelector('#pokemonTrainersPanel');
   const marketPanel = root.querySelector('#pokemonMarketPanel');
+  const commandsPanel = root.querySelector('#pokemonCommandsPanel');
+  const commandsGrid = root.querySelector('#pokemonCommandsGrid');
+  const commandsResultCount = root.querySelector('#pokemonCommandsResultCount');
   const marketGrid = root.querySelector('#pokemonMarketGrid');
   const marketCount = root.querySelector('#pokemonMarketCount');
   const marketSummary = root.querySelector('#pokemonMarketSummary');
@@ -401,14 +404,66 @@
     }
   }
 
+  const pokemonCommands = [
+    {command:'!pokemon',usage:'!pokemon',role:'FOLLOWER',cost:'DARMOWE',description:'Pierwszy raz losuje darmowego Pokémona. Później pokazuje aktualnie posiadanego.'},
+    {command:'!pokeroll',usage:'!pokeroll',role:'FOLLOWER',cost:'5 000 YURA',description:'Losuje nowego Pokémona i zastępuje dotychczasowego. Wymaga posiadania Pokémona i wystarczającej liczby punktów.'},
+    {command:'!pokesell',usage:'!pokesell @nick 10000',role:'FOLLOWER',cost:'MIN. 10 000 YURA',description:'Wystawia ofertę wymiany Pokémonów z dopłatą od kupującego. Oferta jest ważna 5 minut.'},
+    {command:'!pokeaccept',usage:'!pokeaccept',role:'FOLLOWER',cost:'WYMIANA',description:'Akceptuje otrzymaną ofertę. Pokémony są wymieniane, a kupujący przekazuje ustaloną kwotę sprzedającemu.'},
+    {command:'!pokecancel',usage:'!pokecancel',role:'EVERYONE',cost:'BEZ OPŁAT',description:'Anuluje własną aktywną ofertę wymiany bez przenoszenia Pokémonów ani punktów.'},
+    {command:'!pokedecline',usage:'!pokedecline',role:'EVERYONE',cost:'BEZ OPŁAT',description:'Odrzuca skierowaną do Ciebie ofertę bez przenoszenia Pokémonów ani punktów.'}
+  ];
+  function renderCommands() {
+    if (!commandsPanel || !commandsGrid) return;
+    const term = query();
+    const matched = pokemonCommands.filter(item => !term ||
+      [item.command,item.usage,item.role,item.cost,item.description].some(value => norm(value).includes(term)));
+    commandsGrid.replaceChildren();
+    commandsResultCount.textContent = fmt(matched.length) + ' KOMEND';
+    if (!matched.length) {
+      errorMessage(commandsGrid,'Nie znaleziono pasującej komendy.','Spróbuj innej nazwy lub opisu.');
+      return;
+    }
+    for (const command of matched) {
+      const card = make('article','pokemon-command-card');
+      const meta = make('div','pokemon-command-meta');
+      meta.append(make('span','pokemon-command-role',command.role),make('span','pokemon-command-cost',command.cost));
+      const heading = make('h3','pokemon-command-name',command.command);
+      const description = make('p','pokemon-command-description',command.description);
+      const usage = make('div','pokemon-command-usage');
+      const syntax = make('code','',command.usage);
+      const copy = make('button','pokemon-command-copy','Kopiuj');
+      copy.type = 'button';
+      copy.setAttribute('aria-label','Kopiuj składnię ' + command.usage);
+      copy.addEventListener('click',async () => {
+        try {
+          await navigator.clipboard.writeText(command.usage);
+          copy.textContent = 'Skopiowano';
+        } catch {
+          copy.textContent = 'Zaznacz składnię';
+          const selection = window.getSelection();
+          if (selection) {
+            const range = document.createRange();
+            range.selectNodeContents(syntax);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+      });
+      usage.append(syntax,copy);
+      card.append(meta,heading,description,usage);
+      commandsGrid.append(card);
+    }
+  }
+
   function render() {
+    if (mode === 'commands') { renderCommands(); return; }
     if (!loadedAt) return;
     if (mode === 'dex') renderDex();
     else if (mode === 'trainers') renderTrainers();
-    else renderMarket();
+    else if (mode === 'market') renderMarket();
   }
   function setMode(next) {
-    if (next !== 'dex' && next !== 'trainers' && next !== 'market') return;
+    if (next !== 'dex' && next !== 'trainers' && next !== 'market' && next !== 'commands') return;
     mode = next;
     tabs.forEach(tab => {
       const active = tab.dataset.pokemonMode === mode;
@@ -419,11 +474,13 @@
     dexPanel.hidden = mode !== 'dex';
     trainersPanel.hidden = mode !== 'trainers';
     marketPanel.hidden = mode !== 'market';
+    commandsPanel.hidden = mode !== 'commands';
     dexSummary.hidden = mode !== 'dex';
     trainersSummary.hidden = mode !== 'trainers';
     marketSummary.hidden = mode !== 'market';
     search.placeholder = mode === 'dex' ? 'Szukaj Pokémona lub numeru…' :
-      mode === 'trainers' ? 'Szukaj trenera lub Pokémona…' : 'Szukaj transakcji, trenera lub Pokémona…';
+      mode === 'trainers' ? 'Szukaj trenera lub Pokémona…' :
+      mode === 'market' ? 'Szukaj transakcji, trenera lub Pokémona…' : 'Szukaj komendy Pokémon…';
     search.value = '';
     render();
     if (mode === 'market') void showMarket(true);
@@ -432,7 +489,8 @@
   root.querySelector('.pokemon-tabs').addEventListener('keydown', event => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
-    const next = mode === 'dex' ? 'trainers' : mode === 'trainers' ? 'market' : 'dex';
+    const next = mode === 'dex' ? 'trainers' : mode === 'trainers' ? 'market' :
+      mode === 'market' ? 'commands' : 'dex';
     setMode(next);
     tabs.find(tab => tab.dataset.pokemonMode === next)?.focus();
   });
