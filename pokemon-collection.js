@@ -489,8 +489,9 @@
   root.querySelector('.pokemon-tabs').addEventListener('keydown', event => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
-    const next = mode === 'dex' ? 'trainers' : mode === 'trainers' ? 'market' :
-      mode === 'market' ? 'commands' : 'dex';
+    const modes = ['dex','trainers','market','commands'];
+    const delta = event.key === 'ArrowRight' ? 1 : -1;
+    const next = modes[(modes.indexOf(mode) + delta + modes.length) % modes.length];
     setMode(next);
     tabs.find(tab => tab.dataset.pokemonMode === next)?.focus();
   });
