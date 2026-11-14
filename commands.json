@@ -148,17 +148,73 @@
     "aliases": [],
     "permission": "Follower",
     "usage": "!pokemon",
-    "description": "Tylko dla os\u00F3b obserwuj\u0105cych kana\u0142 (Follow). Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Nast\u0119pne u\u017Cycia wy\u015Bwietlaj\u0105 ju\u017C przypisanego Pok\u00E9mona. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
-    "category": "PUNKTY Y.U.R.A.",
+    "description": "Tylko dla os\u00F3b obserwuj\u0105cych kana\u0142 (Follow). Pierwsze u\u017Cycie losuje Ci Pok\u00E9mona bezp\u0142atnie i przypisuje go na sta\u0142e do konta Twitch. Kolejne u\u017Cycia pokazuj\u0105 wszystkie aktualnie posiadane Pok\u00E9mony, maksymalnie 5. Wszystko odbywa si\u0119 na czacie, bez logowania na stronie.",
+    "category": "POK\u00C9MON",
     "source": "YURA"
   },
   {
     "command": "!pokeroll",
     "aliases": [],
     "permission": "Follower",
-    "usage": "!pokeroll",
-    "description": "Tylko dla obserwuj\u0105cych kana\u0142 (Follow). Losuje nowego, innego Pok\u00E9mona za 5 000 Y.U.R.A. Points. Wymaga wcze\u015Bniejszego u\u017Cycia !pokemon i odpowiedniego salda. Je\u015Bli nie uda si\u0119 wykona\u0107 losowania, punkty nie zostan\u0105 pobrane.",
-    "category": "PUNKTY Y.U.R.A.",
+    "usage": "!pokeroll [nazwa Pok\u00E9mona]",
+    "description": "Losuje Pok\u00E9mona za 5 000 YURA. Przy wi\u0119cej ni\u017C jednym odblokowanym miejscu nazwa posiadanego Pok\u00E9mona jest obowi\u0105zkowa, np. !pokeroll charizard. Przy wolnym miejscu nowy Pok\u00E9mon zostaje dodany, a przy pe\u0142nej kolekcji zast\u0119puje wskazanego.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokeslots",
+    "aliases": [
+      "!pokeslot"
+    ],
+    "permission": "Follower",
+    "usage": "!pokeslots / !pokeslot",
+    "description": "Obie wersje komendy pokazuj\u0105 liczb\u0119 odblokowanych miejsc (maksymalnie 5), aktualn\u0105 kolekcj\u0119 i cen\u0119 nast\u0119pnego miejsca.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokebuy",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!pokebuy",
+    "description": "Kupuje kolejne miejsce na sta\u0142e i automatycznie losuje do niego Pok\u00E9mona bez dodatkowej op\u0142aty. Koszty: 30 000, 120 000, 250 000 i 400 000 YURA (\u0142\u0105cznie 800 000). Nieudany zakup nie pobiera punkt\u00F3w.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokesell",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!pokesell @nick \u003Ckwota\u003E",
+    "description": "Oferuje wymian\u0119 swojego Pok\u00E9mona z Pok\u00E9monem wskazanego trenera oraz dop\u0142at\u0105 od 10 000 YURA Points, p\u0142acon\u0105 przez kupuj\u0105cego. Oferta jest wa\u017Cna 5 minut. Przyk\u0142ad: !pokesell @nick 10000.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokeaccept",
+    "aliases": [],
+    "permission": "Follower",
+    "usage": "!pokeaccept",
+    "description": "Akceptuje skierowan\u0105 do Ciebie ofert\u0119. Obaj trenerzy wymieniaj\u0105 Pok\u00E9mony, a kupuj\u0105cy przekazuje sprzedaj\u0105cemu ustalone YURA Points. Tylko udane transakcje trafiaj\u0105 do Market History.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokecancel",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!pokecancel",
+    "description": "Anuluje w\u0142asn\u0105 aktywn\u0105 ofert\u0119 wymiany Pok\u00E9mon\u00F3w bez przekazywania punkt\u00F3w ani Pok\u00E9mon\u00F3w.",
+    "category": "POK\u00C9MON",
+    "source": "YURA"
+  },
+  {
+    "command": "!pokedecline",
+    "aliases": [],
+    "permission": "Everyone",
+    "usage": "!pokedecline",
+    "description": "Odrzuca otrzyman\u0105 ofert\u0119 wymiany Pok\u00E9mon\u00F3w bez przekazywania punkt\u00F3w ani Pok\u00E9mon\u00F3w.",
+    "category": "POK\u00C9MON",
     "source": "YURA"
   },
   {
