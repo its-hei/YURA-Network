@@ -140,7 +140,7 @@ const DEFAULT_PANEL_TEXT="**Rejestracja**\nWybierz Twitch lub Ordo Noctis. Zatwi
 function panel(c:Config) {
   return {
     embeds:[{title:"Witaj u Boomersów!",description:c.panel_text || DEFAULT_PANEL_TEXT,color:0xe89b52}],
-    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]},{type:1,components:[button("edit","Edytuj nicki"),button("reset","Resetuj rejestrację",4)]}],
+    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]},{type:1,components:[button("reset","Resetuj rejestrację",4)]}],
     allowed_mentions:safeMentions
   };
 }
@@ -148,8 +148,24 @@ function field(id: string,label:string,max:number,initial?:string) {
   return {type:18,label,...(id==="ttv" ? {description:"Podaj dokładny login Twitch – jest niezbędny do poprawnej synchronizacji rang."} : {}),component:{type:4,custom_id:id,style:1,required:false,max_length:max,
     ...(initial ? {value:initial.slice(0,max)} : {})}};
 }
+function communityMenu(mode:"ttv"|"fc", previous?:Profile|null) {
+  const name=mode==="ttv"?"Twitch":"Ordo Noctis";
+  const existing=mode==="ttv"?previous?.twitch_login:previous?.ffxiv_name;
+  const prompt=existing
+    ? "Możesz zmienić lub usunąć zapisany nick. Usunięcie dotyczy tylko tej społeczności."
+    : "Dodaj swój nick, aby zarejestrować się w tej społeczności.";
+  return response({type:4,data:{
+    content:"**"+name+"**\n"+prompt,
+    flags:64,allowed_mentions:safeMentions,
+    components:[{type:1,components:[
+      button("open:"+mode,existing?"Edytuj":"Dodaj",1),
+      button("community-cancel","Anuluj"),
+      {...button("remove:"+mode,"Usuń",4),disabled:!existing}
+    ]}]
+  }});
+}
 function modal(mode: Mode|"edit", previous?:Profile|null) {
-  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:mode==="edit"||previous?"Edytuj rejestrację":"Rejestracja Boomersów",components:[
+  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:mode==="ttv"?"Twitch":mode==="fc"?"Ordo Noctis":"Edytuj rejestrację",components:[
     ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32,previous?.twitch_login)] : []),
     ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32,previous?.ffxiv_name)] : [])
   ]}});
@@ -195,10 +211,11 @@ async function status(env:OnboardingEnv,c:Config,id:string) {
   }
   return finish(env,c,p);
 }
-async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit") {
+async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit",remove=false) {
   const id=String(i.member.user.id);
-  const f=values(i.data.components||[]);
+  const f=remove?{}:values(i.data.components||[]);
   const previous=await profile(env,c.guild,id);
+  if(remove && (!previous || (mode==="ttv"?!previous.twitch_login:!previous.ffxiv_name))) return "Nie ma zapisanego nicku w tej społeczności.";
   const ttv=mode==="fc"?(previous?.twitch_login||""):cleanDisplayName(f.ttv).replace(/^@/,"").trim();
   const ff=mode==="ttv"?(previous?.ffxiv_name||""):cleanDisplayName(f.ff);
   if(!validNames(ttv,ff)) return "Nick może mieć do 32 znaków. Możesz też zostawić pole puste.";
@@ -224,7 +241,7 @@ async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit") {
     .bind(c.guild,id,mergedMode,ttv,ff,initialFc,hadFc?1:0).run();
   const saved=await profile(env,c.guild,id);
   if(!saved) return "Nie udało się zapisać rejestracji.";
-  return (previous?"Rejestracja zaktualizowana.\n":"")+await finish(env,c,saved,oldNick);
+  return (remove?"Usunięto nick "+(mode==="ttv"?"Twitch":"Ordo Noctis")+".\n":previous?"Rejestracja zaktualizowana.\n":"")+await finish(env,c,saved,oldNick);
 }
 // Keep an empty profile as a tombstone: moderation decisions and subscriber
 // sync protection must survive a self-service reset. No other roles are touched.
@@ -265,9 +282,9 @@ async function verifySignature(req:Request,body:string,key:string) {
     return await crypto.subtle.verify({name:"Ed25519"},publicKey,hex(sig),new TextEncoder().encode(ts+body));
   } catch { return false; }
 }
-async function followup(i:any, content:string) {
+async function followup(i:any, content:string, clearComponents=false) {
   const r=await fetch("https://discord.com/api/v10/webhooks/"+i.application_id+"/"+i.token+"/messages/@original",{
-    method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({content,allowed_mentions:safeMentions})
+    method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({content,allowed_mentions:safeMentions,...(clearComponents?{components:[]}: {})})
   });
   if (!r.ok) console.warn("YURA Discord onboarding follow-up:",r.status);
 }
@@ -282,25 +299,35 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!id.startsWith(prefix)) return ephemeral("Nieobsługiwana akcja.");
   const action=id.slice(prefix.length);
   if (!/^((approve|reject):[0-9]{15,22})$/.test(action) && i.channel_id!==c.welcome) return ephemeral("Użyj aktualnego panelu w kanale zasad.");
-  if (i.type===3 && (action==="ttv" || action==="fc" || action==="both" || action==="edit")) {
+  if(i.type===3 && (action==="ttv" || action==="fc")) {
     const previous=await profile(env,c.guild,i.member.user.id);
-    if(action==="edit") return modal("edit",previous);
-    return modal(action,previous);
+    return communityMenu(action,previous);
   }
+  if(i.type===3 && (action==="open:ttv" || action==="open:fc")) {
+    return modal(action==="open:ttv"?"ttv":"fc",await profile(env,c.guild,i.member.user.id));
+  }
+  // Compatibility for older published panels; new panels show neither button.
+  if(i.type===3 && (action==="both" || action==="edit")) {
+    return modal(action,await profile(env,c.guild,i.member.user.id));
+  }
+  if(i.type===3 && action==="community-cancel") return response({type:7,data:{content:"Anulowano.",components:[],allowed_mentions:safeMentions}});
   if(i.type===3 && action==="reset") return response({type:4,data:{
     content:"Czy na pewno zresetować rejestrację? Usuniemy zapisane nicki i powiązanie Twitch oraz odbierzemy rangi Boomer i FC. Inne rangi pozostaną bez zmian.",
     flags:64,allowed_mentions:safeMentions,
     components:[{type:1,components:[button("reset-confirm","Tak, resetuj",4),button("reset-cancel","Anuluj")]}]
   }});
   if(i.type===3 && action==="reset-cancel") return response({type:7,data:{content:"Anulowano reset rejestracji.",components:[],allowed_mentions:safeMentions}});
+  const removeCommunity=i.type===3 && (action==="remove:ttv" || action==="remove:fc");
   let job: (()=>Promise<string>)|undefined;
+  if(removeCommunity) job=()=>register(env,c,i,action==="remove:ttv"?"ttv":"fc",true);
   if (i.type===3 && action==="reset-confirm") job=()=>resetRegistration(env,c,i.member.user.id);
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
   if (i.type===5 && /^form:(ttv|fc|both|edit)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode|"edit");
   if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) return ephemeral("Ranga FC jest obecnie nadawana automatycznie. Zarządzaj rangami w YURA Desktop.");
   if (!job) return ephemeral("Nieobsługiwana akcja.");
   const run=job;
-  ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out);})());
+  ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out,removeCommunity);})());
+  if(removeCommunity) return response({type:6});
   if(i.type===3 && action==="reset-confirm") return response({type:7,data:{content:"Resetowanie rejestracji…",components:[],allowed_mentions:safeMentions}});
   return response({type:5,data:{flags:64}});
 }

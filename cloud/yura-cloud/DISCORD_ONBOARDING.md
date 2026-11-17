@@ -18,3 +18,6 @@ Boomer is a self-service rules-acceptance role: a registered member's next statu
 
 ## Separate community registration and reset
 The public panel now has separate Twitch and Free Company buttons; choosing both sequentially merges the profile. Existing both-community users can still edit both fields. Resetuj rejestrację requires explicit confirmation and clears declared names, verified binding and registration state, removes Boomer and FC only, and restores the default server nickname if the existing nickname matches YURA's generated one. An empty profile is retained to preserve moderation blocks and subscriber synchronization protection. Other roles are not directly modified. Previously revoked FC cannot be recovered through reset.
+
+## Community-specific editing
+The public panel contains Twitch, Ordo Noctis and Resetuj rejestrację. Each community opens a private three-button menu (Dodaj or Edytuj, Anuluj, Usuń). Delete clears only the selected name and its verified identity if relevant, then uses the existing role/nickname reconciliation; the other community remains unchanged. Empty optional fields can also remove a name. Discord's native modal footer buttons are not customizable. Existing custom rules text is preserved. The separate public edit button is removed.
