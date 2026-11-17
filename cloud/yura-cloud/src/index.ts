@@ -3964,7 +3964,8 @@ export default {
     return json({ service:"YURA Cloud", version:"3.3.102", endpoints:["/health","/api/status","/api/accounts","/api/points-reset","/api/leaderboard-revision","/api/leaderboard","/api/levels-revision","/api/levels","/api/discord-member-check","/api/command-settings","/api/discord-member-leave-settings","/api/oauth-sync","/api/community-watch-settings","/api/cloud-runtime-settings","/api/death-state","/api/dashboard","/eventsub"] });
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    if(new Date(_controller.scheduledTime).getUTCMinutes()%10===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
+    const vipSyncAt=new Date(_controller.scheduledTime);
+    if(vipSyncAt.getUTCHours()===3 && vipSyncAt.getUTCMinutes()===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
     ctx.waitUntil((async () => {
       // Deadline alarms handle manual raffle; cron is recovery only.
       await warnYuraRaffleIfDue(env);

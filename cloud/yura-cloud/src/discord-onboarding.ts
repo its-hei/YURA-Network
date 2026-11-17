@@ -424,11 +424,11 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv,loadV
     }
     if(req.method==="PUT") {
       const x:any=await req.json();
-      if(![x.guild,x.welcome,x.staff,x.boomer,x.fc].every(snowflake) || x.welcome===x.staff || x.boomer===x.fc || x.boomer===x.guild || x.fc===x.guild) return response({error:"select distinct valid channels and roles"},400);
+      if(![x.guild,x.welcome,x.boomer,x.fc].every(snowflake) || x.boomer===x.fc || x.boomer===x.guild || x.fc===x.guild) return response({error:"Select a rules channel and distinct Boomer / FC roles."},400);
       const old=await config(env);
       if(old && (old.guild!==x.guild || old.boomer!==x.boomer || old.fc!==x.fc)) return response({error:"Existing onboarding guild/roles cannot be replaced automatically."},409);
-      const [app,roles,welcome,staff]=await Promise.all([discord(env,"oauth2/applications/@me"),discord(env,"guilds/"+x.guild+"/roles"),discord(env,"channels/"+x.welcome),discord(env,"channels/"+x.staff)]);
-      if(welcome.guild_id!==x.guild || staff.guild_id!==x.guild || ![0,5].includes(welcome.type) || staff.type!==0) return response({error:"channels must be text channels of the selected guild"},400);
+      const [app,roles,welcome]=await Promise.all([discord(env,"oauth2/applications/@me"),discord(env,"guilds/"+x.guild+"/roles"),discord(env,"channels/"+x.welcome)]);
+      if(welcome.guild_id!==x.guild || ![0,5].includes(welcome.type)) return response({error:"Rules channel must be a text channel of the selected guild."},400);
       const dangerous=8n|32n|268435456n|536870912n|2n|4n|8192n|1099511627776n;
       for(const id of [x.boomer,x.fc]) {
         const role=roles.find((r:any)=>r.id===id);
@@ -436,7 +436,7 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv,loadV
       }
       const key=String(app.verify_key||"");
       if(!/^[a-f0-9]{64}$/i.test(key)) return response({error:"Discord application verification key unavailable"},502);
-      const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
+      const c:Config={guild:x.guild,welcome:x.welcome,staff:old?.staff||"",boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
       if(typeof x.vip_role==="string") {
         const roleId=x.vip_role.trim();
         if(roleId && (!snowflake(roleId)||!safeVipRole(c,roles.find((r:any)=>r.id===roleId)))) return response({error:"VIP role must be a separate non-privileged Discord role."},400);
