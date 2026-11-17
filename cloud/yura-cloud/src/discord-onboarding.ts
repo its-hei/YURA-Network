@@ -38,16 +38,29 @@ const memberPath = (c: Config, id: string) => "guilds/" + c.guild + "/members/" 
 async function profile(env: OnboardingEnv, guild: string, id: string) {
   return env.DB.prepare("SELECT * FROM discord_onboarding_profiles WHERE guild_id=?1 AND discord_id=?2").bind(guild,id).first<Profile>();
 }
-function validNames(mode: Mode, ttv: string, ff: string) {
-  return (mode === "fc" || /^[a-z0-9_]{1,25}$/.test(ttv)) &&
-    (mode === "ttv" || (ff.length <= 32 && /^\p{L}[\p{L}\p{M}'’-]* \p{L}[\p{L}\p{M}'’-]*$/u.test(ff)));
+// Treat these as self-declared display names, not authenticated Twitch logins.
+function cleanDisplayName(value:unknown):string {
+  return String(value ?? "").trim().replace(/\s+/gu," ");
 }
-function desiredNick(p: Profile): string {
-  const ttv = p.twitch_login || "";
-  const ff = p.fc_state === "approved" ? p.ffxiv_name : "";
-  if (ttv && ff) {
-    const both = ff + " (" + ttv + ")";
-    return both.length <= 32 ? both : ff;
+function validDisplayName(value:string):boolean {
+  // Discord limits nicknames to 32 characters. No platform-specific syntax.
+  return value.length>0 && value.length<=32 && !/[\p{Cc}\p{Cf}]/u.test(value);
+}
+function validNames(mode:Mode,ttv:string,ff:string) {
+  return (mode==="fc" || validDisplayName(ttv)) &&
+    (mode==="ttv" || validDisplayName(ff));
+}
+function nicknameKey(value:string):string {
+  return value.normalize("NFKC").toLowerCase().replace(/[\s_-]+/gu,"");
+}
+function desiredNick(p:Profile):string {
+  const ttv=p.twitch_login || "";
+  const ff=p.fc_state==="approved" ? p.ffxiv_name : "";
+  if(ttv && ff) {
+    const ffKey=nicknameKey(ff);
+    if(ffKey && ffKey===nicknameKey(ttv)) return ff;
+    const both=ff+" ("+ttv+")";
+    return both.length<=32 ? both : ff;
   }
   return ff || ttv;
 }
@@ -66,7 +79,7 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Podany nick Twitch przyjmujemy bez dodatkowej weryfikacji.",color:0xe89b52}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach.",color:0xe89b52}],
     components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja")]}],
     allowed_mentions:safeMentions
   };
@@ -76,8 +89,8 @@ function field(id: string,label:string,max:number) {
 }
 function modal(mode: Mode) {
   return response({type:9,data:{custom_id:prefix+"form:"+mode,title:"Rejestracja Boomersów",components:[
-    ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",25)] : []),
-    ...(mode !== "ttv" ? [field("ff","Imię i nazwisko postaci FFXIV",32)] : [])
+    ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32)] : []),
+    ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32)] : [])
   ]}});
 }
 function values(components: any[]): Record<string,string> {
@@ -128,9 +141,9 @@ async function status(env:OnboardingEnv,c:Config,id:string) {
 async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
   const id = String(i.member.user.id);
   const f = values(i.data.components || []);
-  const ttv = mode === "fc" ? "" : String(f.ttv || "").trim().replace(/^@/,"").toLowerCase();
-  const ff = mode === "ttv" ? "" : String(f.ff || "").trim().replace(/\s+/g," ");
-  if (!validNames(mode,ttv,ff)) return "Sprawdź nick Twitch oraz dwa człony imienia i nazwiska postaci FFXIV. Wróć do panelu i spróbuj ponownie.";
+  const ttv = mode === "fc" ? "" : cleanDisplayName(f.ttv).replace(/^@/,"").trim();
+  const ff = mode === "ttv" ? "" : cleanDisplayName(f.ff);
+  if (!validNames(mode,ttv,ff)) return "Podaj nick dla wybranej społeczności (1–32 znaki, bez niewidocznych znaków sterujących). Format i liczba członów są dowolne.";
   const previous = await profile(env,c.guild,id);
   if (previous) return "Masz już rejestrację. Użyj „Moja rejestracja”. Zmiana zgłoszenia wymaga kontaktu z administracją.\n"+await status(env,c,id);
   const hadFc = (i.member.roles || []).includes(c.fc);
