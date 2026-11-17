@@ -323,7 +323,7 @@ type VipLoader = ()=>Promise<TwitchVip[]>;
 function safeVipRole(c:Config,role:any):boolean {
   if(!role || role.managed || [c.guild,c.boomer,c.fc].includes(String(role.id))) return false;
   // Refuse administrator and moderation/management permissions.
-  const denied=[1,2,3,4,5,13,17,18,23,24,26,27,28,29,30,34,36,37,40,41,42,43,44,45,46,47,48,49,50,51,52].reduce((mask,bit)=>mask|(1n<<BigInt(bit)),0n);
+  const denied=[1,2,3,4,5,7,13,16,17,22,23,24,27,28,29,30,33,34,40,41,43,44,51,52].reduce((mask,bit)=>mask|(1n<<BigInt(bit)),0n);
   return (BigInt(role.permissions||"0") & denied)===0n;
 }
 export async function syncDiscordVips(env:OnboardingEnv,load:VipLoader) {
@@ -331,7 +331,7 @@ export async function syncDiscordVips(env:OnboardingEnv,load:VipLoader) {
   if(!c?.vip_role) return {enabled:false,added:0,removed:0,conflicts:0,errors:0};
   const roleId=c.vip_role;
   const roles=await discord(env,"guilds/"+c.guild+"/roles");
-  if(!safeVipRole(c,roles.find((r:any)=>r.id===roleId))) throw new Error("Configured VIP role is missing or privileged.");
+  if(!Array.isArray(roles)||!safeVipRole(c,roles.find((r:any)=>r.id===roleId))) throw new Error("Configured VIP role is missing or privileged.");
   // Load complete authoritative Twitch list before any Discord changes.
   const vips=await load();
   const byId=new Set(vips.map(v=>v.user_id));
