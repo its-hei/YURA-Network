@@ -140,7 +140,7 @@ function panel() {
   };
 }
 function field(id: string,label:string,max:number,initial?:string) {
-  return {type:18,label,component:{type:4,custom_id:id,style:1,required:true,max_length:max,
+  return {type:18,label,...(id==="ttv" ? {description:"Podaj dokładny login Twitch – jest niezbędny do poprawnej synchronizacji rang."} : {}),component:{type:4,custom_id:id,style:1,required:true,max_length:max,
     ...(initial ? {value:initial.slice(0,max)} : {})}};
 }
 function modal(mode: Mode, previous?:Profile|null) {
