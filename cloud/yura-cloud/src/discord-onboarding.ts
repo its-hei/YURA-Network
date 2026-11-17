@@ -55,7 +55,8 @@ function nicknameKey(value:string):string {
 }
 function desiredNick(p:Profile):string {
   const ttv=p.twitch_login || "";
-  const ff=p.fc_state==="approved" ? p.ffxiv_name : "";
+  // Declared character names are display data, not proof of FC membership.
+  const ff=p.ffxiv_name || "";
   if(ttv && ff) {
     const ffKey=nicknameKey(ff);
     if(ffKey && ffKey===nicknameKey(ttv)) return ff;
@@ -73,24 +74,25 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
     if (!roles.includes(c.boomer)) await discord(env,path + "/roles/" + c.boomer,"PUT");
     await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
   } else if (!roles.includes(c.boomer)) throw new Error("Boomer role was removed; contact administration.");
-  const nick = desiredNick({...p, fc_state: roles.includes(c.fc) ? p.fc_state : "none"});
+  const nick = desiredNick(p);
   if (nick && m.nick !== nick) await discord(env,path,"PATCH",{nick});
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach.",color:0xe89b52}],
-    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja")]}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Pseudonim na serwerze powinien odpowiadać nazwie z Twitcha lub FFXIV.",color:0xe89b52}],
+    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki")]}],
     allowed_mentions:safeMentions
   };
 }
-function field(id: string,label:string,max:number) {
-  return {type:18,label,component:{type:4,custom_id:id,style:1,required:true,max_length:max}};
+function field(id: string,label:string,max:number,initial?:string) {
+  return {type:18,label,component:{type:4,custom_id:id,style:1,required:true,max_length:max,
+    ...(initial ? {value:initial.slice(0,max)} : {})}};
 }
-function modal(mode: Mode) {
-  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:"Rejestracja Boomersów",components:[
-    ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32)] : []),
-    ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32)] : [])
+function modal(mode: Mode, previous?:Profile|null) {
+  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:previous?"Edytuj rejestrację":"Rejestracja Boomersów",components:[
+    ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32,previous?.twitch_login)] : []),
+    ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32,previous?.ffxiv_name)] : [])
   ]}});
 }
 function values(components: any[]): Record<string,string> {
@@ -105,11 +107,19 @@ function values(components: any[]): Record<string,string> {
   return result;
 }
 async function review(env: OnboardingEnv,c:Config,p:Profile) {
-  if (p.fc_state !== "pending" || p.review_message) return;
-  const m = await discord(env,"channels/"+c.staff+"/messages","POST",{
+  if (p.fc_state !== "pending") return;
+  const payload={
     embeds:[{title:"Prośba o dołączenie do FC",description:"Użytkownik: <@"+p.discord_id+">\nPostać: "+p.ffxiv_name+"\nTwitch: "+(p.twitch_login||"—"),color:0xe89b52}],
     components:[{type:1,components:[button("approve:"+p.discord_id,"Zatwierdź FC",3),button("reject:"+p.discord_id,"Odrzuć",4)]}],
-    allowed_mentions:safeMentions,nonce:p.discord_id,enforce_nonce:true
+    allowed_mentions:safeMentions
+  };
+  if(p.review_message) {
+    // An edit updates the pending request rather than creating a second one.
+    await discord(env,"channels/"+c.staff+"/messages/"+p.review_message,"PATCH",payload);
+    return;
+  }
+  const m=await discord(env,"channels/"+c.staff+"/messages","POST",{
+    ...payload,nonce:p.discord_id,enforce_nonce:true
   });
   await env.DB.prepare("UPDATE discord_onboarding_profiles SET review_message=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,m.id).run();
 }
@@ -118,6 +128,7 @@ function statusText(p: Profile) {
   if (p.mode !== "fc") {
     lines.push("Nick Twitch: "+p.twitch_login+".");
   }
+  if (p.mode !== "ttv") lines.push("Nick FFXIV: "+p.ffxiv_name+".");
   if (p.mode !== "ttv") lines.push(p.fc_state === "approved" ? "FC zatwierdzone." : p.fc_state === "rejected" ? "FC odrzucone. Skontaktuj się z administracją." : "FC oczekuje na akceptację administracji.");
   if (desiredNick(p)) lines.push("Pseudonim: "+desiredNick(p));
   return lines.join("\n");
@@ -145,12 +156,24 @@ async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
   const ff = mode === "ttv" ? "" : cleanDisplayName(f.ff);
   if (!validNames(mode,ttv,ff)) return "Podaj nick dla wybranej społeczności (1–32 znaki, bez niewidocznych znaków sterujących). Format i liczba członów są dowolne.";
   const previous = await profile(env,c.guild,id);
-  if (previous) return "Masz już rejestrację. Użyj „Moja rejestracja”. Zmiana zgłoszenia wymaga kontaktu z administracją.\n"+await status(env,c,id);
   const hadFc = (i.member.roles || []).includes(c.fc);
   const fcState = mode === "ttv" ? "none" : hadFc ? "approved" : "pending";
-  await env.DB.prepare("INSERT INTO discord_onboarding_profiles(guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until) VALUES(?1,?2,?3,?4,?5,?6,?7,?8) ON CONFLICT(guild_id,discord_id) DO NOTHING")
-    .bind(c.guild,id,mode,ttv,ff,fcState,null,0).run();
-  return status(env,c,id);
+  // Update only the selected community's fields. Adding the other community
+  // merges the registration instead of deleting the first one.
+  // Existing FC decisions, review message and Boomer-granted marker stay intact.
+  // Changing a declared Twitch identity invalidates a previously verified binding.
+  await env.DB.prepare(`INSERT INTO discord_onboarding_profiles
+    (guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until)
+    VALUES(?1,?2,?3,?4,?5,?6,NULL,0)
+    ON CONFLICT(guild_id,discord_id) DO UPDATE SET
+      mode=CASE WHEN discord_onboarding_profiles.mode=excluded.mode THEN excluded.mode ELSE 'both' END,
+      twitch_login=CASE WHEN excluded.mode='fc' THEN discord_onboarding_profiles.twitch_login ELSE excluded.twitch_login END,
+      ffxiv_name=CASE WHEN excluded.mode='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END,
+      twitch_id=CASE WHEN excluded.mode<>'fc' AND lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
+      fc_state=CASE WHEN discord_onboarding_profiles.fc_state='none' AND excluded.mode<>'ttv' THEN excluded.fc_state ELSE discord_onboarding_profiles.fc_state END,
+      verify_code=NULL,verify_until=0`)
+    .bind(c.guild,id,mode,ttv,ff,fcState).run();
+  return (previous ? "Rejestracja zaktualizowana.\n" : "")+await status(env,c,id);
 }
 async function decide(env:OnboardingEnv,c:Config,i:any,id:string,approve:boolean) {
   const permissions = BigInt(String(i.member.permissions || "0"));
@@ -196,7 +219,11 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!id.startsWith(prefix)) return ephemeral("Nieobsługiwana akcja.");
   const action=id.slice(prefix.length);
   if (!/^((approve|reject):[0-9]{15,22})$/.test(action) && i.channel_id!==c.welcome) return ephemeral("Użyj aktualnego panelu w kanale zasad.");
-  if (i.type===3 && (action==="ttv" || action==="fc" || action==="both")) return modal(action);
+  if (i.type===3 && (action==="ttv" || action==="fc" || action==="both" || action==="edit")) {
+    const previous=await profile(env,c.guild,i.member.user.id);
+    if(action==="edit") return previous ? modal(previous.mode,previous) : ephemeral("Najpierw wybierz Twitch, Free Company lub Twitch + FC.");
+    return modal(action,previous);
+  }
   let job: (()=>Promise<string>)|undefined;
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
   if (i.type===5 && /^form:(ttv|fc|both)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode);
