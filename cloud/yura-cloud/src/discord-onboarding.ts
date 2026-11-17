@@ -148,26 +148,15 @@ function field(id: string,label:string,max:number,initial?:string) {
   return {type:18,label,...(id==="ttv" ? {description:"Podaj dokładny login Twitch – jest niezbędny do poprawnej synchronizacji rang."} : {}),component:{type:4,custom_id:id,style:1,required:false,max_length:max,
     ...(initial ? {value:initial.slice(0,max)} : {})}};
 }
-function communityMenu(mode:"ttv"|"fc", previous?:Profile|null) {
-  const name=mode==="ttv"?"Twitch":"Ordo Noctis";
-  const existing=mode==="ttv"?previous?.twitch_login:previous?.ffxiv_name;
-  const prompt=existing
-    ? "Możesz zmienić lub usunąć zapisany nick. Usunięcie dotyczy tylko tej społeczności."
-    : "Dodaj swój nick, aby zarejestrować się w tej społeczności.";
-  return response({type:4,data:{
-    content:"**"+name+"**\n"+prompt,
-    flags:64,allowed_mentions:safeMentions,
-    components:[{type:1,components:[
-      button("open:"+mode,existing?"Edytuj":"Dodaj",1),
-      button("community-cancel","Anuluj"),
-      {...button("remove:"+mode,"Usuń",4),disabled:!existing}
-    ]}]
-  }});
-}
 function modal(mode: Mode|"edit", previous?:Profile|null) {
   return response({type:9,data:{custom_id:prefix+"form:"+mode,title:mode==="ttv"?"Twitch":mode==="fc"?"Ordo Noctis":"Edytuj rejestrację",components:[
     ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32,previous?.twitch_login)] : []),
-    ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32,previous?.ffxiv_name)] : [])
+    ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32,previous?.ffxiv_name)] : []),
+    ...((mode==="ttv" && previous?.twitch_login || mode==="fc" && previous?.ffxiv_name) ? [{
+      type:18,label:"Usuń zapisany nick",
+      description:"Zaznacz i kliknij Wyślij, aby usunąć nick tylko z tej społeczności.",
+      component:{type:23,custom_id:"remove_nick",default:false}
+    }] : [])
   ]}});
 }
 function values(components: any[]): Record<string,string> {
@@ -175,6 +164,7 @@ function values(components: any[]): Record<string,string> {
   function walk(x:any) {
     if (!x || typeof x !== "object") return;
     if (x.type === 4 && typeof x.custom_id === "string") result[x.custom_id] = String(x.value ?? "");
+    if (x.type===23 && x.custom_id==="remove_nick") result.remove_nick=x.value===true?"true":"false";
     if (x.component) walk(x.component);
     if (Array.isArray(x.components)) x.components.forEach(walk);
   }
@@ -213,7 +203,9 @@ async function status(env:OnboardingEnv,c:Config,id:string) {
 }
 async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit",remove=false) {
   const id=String(i.member.user.id);
-  const f=remove?{}:values(i.data.components||[]);
+  const submitted=values(i.data.components||[]);
+  remove=remove||((mode==="ttv"||mode==="fc")&&submitted.remove_nick==="true");
+  const f=remove?{}:submitted;
   const previous=await profile(env,c.guild,id);
   if(remove && (!previous || (mode==="ttv"?!previous.twitch_login:!previous.ffxiv_name))) return "Nie ma zapisanego nicku w tej społeczności.";
   const ttv=mode==="fc"?(previous?.twitch_login||""):cleanDisplayName(f.ttv).replace(/^@/,"").trim();
@@ -301,7 +293,7 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!/^((approve|reject):[0-9]{15,22})$/.test(action) && i.channel_id!==c.welcome) return ephemeral("Użyj aktualnego panelu w kanale zasad.");
   if(i.type===3 && (action==="ttv" || action==="fc")) {
     const previous=await profile(env,c.guild,i.member.user.id);
-    return communityMenu(action,previous);
+    return modal(action,previous);
   }
   if(i.type===3 && (action==="open:ttv" || action==="open:fc")) {
     return modal(action==="open:ttv"?"ttv":"fc",await profile(env,c.guild,i.member.user.id));

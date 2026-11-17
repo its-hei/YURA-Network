@@ -21,3 +21,6 @@ The public panel now has separate Twitch and Free Company buttons; choosing both
 
 ## Community-specific editing
 The public panel contains Twitch, Ordo Noctis and Resetuj rejestrację. Each community opens a private three-button menu (Dodaj or Edytuj, Anuluj, Usuń). Delete clears only the selected name and its verified identity if relevant, then uses the existing role/nickname reconciliation; the other community remains unchanged. Empty optional fields can also remove a name. Discord's native modal footer buttons are not customizable. Existing custom rules text is preserved. The separate public edit button is removed.
+
+## Direct community forms
+Twitch and Ordo Noctis now open their modal directly. Existing registrations expose an unchecked single checkbox (Discord component type 23) labelled Usuń zapisany nick. Checking it and submitting clears only that community, using the same role and nickname reconciliation as before. The native Anuluj/Wyślij footer is unchanged. Older private menu buttons remain compatible; no new menu messages are generated.
