@@ -3788,7 +3788,10 @@ export default {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null,{status:204,headers:{"access-control-allow-origin":"*","access-control-allow-headers":"authorization,content-type"}});
     if (url.pathname === "/discord/interactions" && req.method === "POST") return discordOnboardingInteraction(req,env,ctx);
-    if (url.pathname === "/api/admin/discord-onboarding") return discordOnboardingAdmin(req,env);
+    if (url.pathname === "/api/admin/discord-onboarding") {
+      if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
+      return discordOnboardingAdmin(req,env);
+    }
     if (url.pathname === "/health") {
       try {
         // Tiny D1 probe: unlike /api/status this does not scan application tables, but it

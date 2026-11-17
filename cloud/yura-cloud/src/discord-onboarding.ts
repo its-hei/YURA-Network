@@ -9,7 +9,7 @@ type Mode = "ttv" | "fc" | "both";
 type Profile = {
   guild_id: string; discord_id: string; mode: Mode; twitch_login: string;
   twitch_id: string | null; ffxiv_name: string; fc_state: string;
-  verify_code: string | null; verify_until: number; review_message: string | null;
+  verify_code: string | null; verify_until: number; review_message: string | null; boomer_granted: number;
 };
 const prefix = "yura:join:";
 const cfgKey = "discord_onboarding_config_v1";
@@ -56,9 +56,12 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
   const path = memberPath(c,p.discord_id);
   const m = await discord(env,path);
   const roles: string[] = Array.isArray(m.roles) ? m.roles : [];
-  if (!roles.includes(c.boomer)) await discord(env,path + "/roles/" + c.boomer,"PUT");
-  if (p.fc_state === "approved" && !roles.includes(c.fc)) await discord(env,path + "/roles/" + c.fc,"PUT");
-  const nick = desiredNick(p);
+  // A member may never restore a role that a moderator removed by pressing status.
+  if (!p.boomer_granted) {
+    if (!roles.includes(c.boomer)) await discord(env,path + "/roles/" + c.boomer,"PUT");
+    await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
+  } else if (!roles.includes(c.boomer)) throw new Error("Boomer role was removed; contact administration.");
+  const nick = desiredNick({...p, fc_state: roles.includes(c.fc) ? p.fc_state : "none"});
   if (nick && m.nick !== nick) await discord(env,path,"PATCH",{nick});
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
@@ -148,8 +151,11 @@ async function decide(env:OnboardingEnv,c:Config,i:any,id:string,approve:boolean
     await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state=?3 WHERE guild_id=?1 AND discord_id=?2 AND fc_state='pending'").bind(c.guild,id,approve?"approved":"rejected").run();
     p = (await profile(env,c.guild,id))!;
   }
-  if (p.fc_state === "approved") {
-    try { await reconcile(env,c,p); } catch { return "FC zatwierdzone w bazie, lecz Discord nie przyjął wszystkich zmian. Sprawdź hierarchię ról i kliknij ponownie."; }
+  if (p.fc_state === "approved" && approve) {
+    try {
+      await discord(env,memberPath(c,p.discord_id)+"/roles/"+c.fc,"PUT");
+      await reconcile(env,c,p);
+    } catch { return "FC zatwierdzone w bazie, lecz Discord nie przyjął wszystkich zmian. Sprawdź hierarchię ról i kliknij ponownie."; }
   }
   return p.fc_state === "approved" ? "FC zatwierdzone: "+p.ffxiv_name : "FC odrzucone: "+p.ffxiv_name;
 }
@@ -193,7 +199,7 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
 // is useless to any other account. No extra Twitch OAuth scopes are required.
 export async function verifyOnboardingChat(env:OnboardingEnv,login:string,twitchId:string,text:string):Promise<string|null> {
   const command=/^!dcverify(?:\s+([a-f0-9]{16}))?$/i.exec(text);
-  if(!command) return null;
+  if(!command) return "Użyj dokładnego kodu z panelu Discord."
   const c=await config(env);
   if(!c || !command[1]) return "Użyj kodu z panelu rejestracji Discord.";
   const code=command[1].toLowerCase();
@@ -212,8 +218,8 @@ export async function verifyOnboardingChat(env:OnboardingEnv,login:string,twitch
 async function saveConfig(env:OnboardingEnv,c:Config) {
   await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(cfgKey,JSON.stringify(c)).run();
 }
+// The Worker router validates the existing administrative key or broadcaster OAuth before calling this.
 export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
-  if(!env.ADMIN_KEY || req.headers.get("Authorization")!=="Bearer "+env.ADMIN_KEY) return response({error:"unauthorized"},401);
   const url=new URL(req.url);
   try {
     if(req.method==="GET") {
@@ -239,6 +245,22 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
       const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{})};
       await saveConfig(env,c);
       return response({ok:true,endpoint:url.origin+"/discord/interactions",message:c.message||""});
+    }
+    if(req.method==="PATCH") {
+      const c=await config(env);
+      const x:any=await req.json();
+      if(!c || !snowflake(x.discord_id) || !["approve_fc","revoke_fc"].includes(x.action))
+        return response({error:"invalid member/action"},400);
+      let p=await profile(env,c.guild,x.discord_id);
+      if(!p || p.mode==="ttv") return response({error:"no FC request"},404);
+      const approved=x.action==="approve_fc";
+      // Explicit broadcaster action only. No self-service regeneration of FC roles.
+      await discord(env,memberPath(c,p.discord_id)+"/roles/"+c.fc,approved?"PUT":"DELETE");
+      await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,approved?"approved":"rejected").run();
+      p=(await profile(env,c.guild,p.discord_id))!;
+      let warning="";
+      try {await reconcile(env,c,p);} catch {warning="Role updated, but nickname or Boomer could not be reconciled.";}
+      return response({ok:true,warning});
     }
     if(req.method==="POST") {
       const c=await config(env);
