@@ -31,7 +31,11 @@ async function discord(env: OnboardingEnv, path: string, method = "GET", body?: 
     method, headers: { Authorization: "Bot " + env.DISCORD_BOT_TOKEN.trim(), "Content-Type": "application/json" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
-  if (!r.ok) throw new Error("Discord API " + r.status + " (" + method + " " + path.split("/")[0] + ").");
+  if (!r.ok) {
+    let code="";
+    try { const detail:any=await r.json(); if(Number.isSafeInteger(detail?.code)) code=" / "+detail.code; } catch {}
+    throw new Error("Discord API " + r.status + code + " (" + method + " " + path.split("/")[0] + ").");
+  }
   return r.status === 204 ? null : r.json();
 }
 const memberPath = (c: Config, id: string) => "guilds/" + c.guild + "/members/" + id;
@@ -65,17 +69,38 @@ function desiredNick(p:Profile):string {
   }
   return ff || ttv;
 }
+// Report independent outcomes; never restore a deliberately removed role.
+function safeDiscordError(error:unknown):string {
+  const msg=error instanceof Error ? error.message : "";
+  return /^Discord API [0-9]{3}( \/ [0-9]+)? \((GET|POST|PUT|PATCH|DELETE) [a-z0-9_-]+\)\.$/.test(msg)
+    ? msg : "Błąd połączenia lub zapisu.";
+}
 async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
   const path = memberPath(c,p.discord_id);
   const m = await discord(env,path);
   const roles: string[] = Array.isArray(m.roles) ? m.roles : [];
-  // A member may never restore a role that a moderator removed by pressing status.
-  if (!p.boomer_granted) {
-    if (!roles.includes(c.boomer)) await discord(env,path + "/roles/" + c.boomer,"PUT");
-    await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
-  } else if (!roles.includes(c.boomer)) throw new Error("Boomer role was removed; contact administration.");
-  const nick = desiredNick(p);
-  if (nick && m.nick !== nick) await discord(env,path,"PATCH",{nick});
+  const warnings:string[]=[];
+  let boomer=roles.includes(c.boomer);
+  try {
+    if (!p.boomer_granted) {
+      if (!boomer) {
+        await discord(env,path + "/roles/" + c.boomer,"PUT");
+        boomer=true;
+      }
+      await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
+    } else if (!boomer) {
+      warnings.push("Ranga Boomer została wcześniej odebrana. Tylko administracja może ją przywrócić.");
+    }
+  } catch(e) { warnings.push("Nie udało się zapisać rangi Boomer: "+safeDiscordError(e)); }
+  const nick=desiredNick(p);
+  let nicknameApplied=Boolean(nick && m.nick===nick);
+  try {
+    if (nick && !nicknameApplied) {
+      await discord(env,path,"PATCH",{nick});
+      nicknameApplied=true;
+    }
+  } catch(e) { warnings.push("Nie udało się ustawić pseudonimu: "+safeDiscordError(e)); }
+  return {boomer,nicknameApplied,warnings};
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
@@ -124,20 +149,30 @@ async function review(env: OnboardingEnv,c:Config,p:Profile) {
   await env.DB.prepare("UPDATE discord_onboarding_profiles SET review_message=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,m.id).run();
 }
 function statusText(p: Profile) {
-  const lines = ["Regulamin zaakceptowany. Ranga Boomer."];
+  const lines = ["Regulamin zaakceptowany."];
   if (p.mode !== "fc") {
     lines.push("Nick Twitch: "+p.twitch_login+".");
   }
   if (p.mode !== "ttv") lines.push("Nick FFXIV: "+p.ffxiv_name+".");
   if (p.mode !== "ttv") lines.push(p.fc_state === "approved" ? "FC zatwierdzone." : p.fc_state === "rejected" ? "FC odrzucone. Skontaktuj się z administracją." : "FC oczekuje na akceptację administracji.");
-  if (desiredNick(p)) lines.push("Pseudonim: "+desiredNick(p));
+  if (desiredNick(p)) lines.push("Docelowy pseudonim: "+desiredNick(p));
   return lines.join("\n");
 }
 async function finish(env:OnboardingEnv,c:Config,p:Profile) {
-  let out = statusText(p);
-  try { await reconcile(env,c,p); } catch { out += "\nNie udało się ustawić wszystkich rang lub nicku. Sprawdź uprawnienia bota i ponów „Moja rejestracja”."; }
-  try { await review(env,c,p); } catch { out += "\nNie udało się wysłać prośby do administracji. Ponów „Moja rejestracja”."; }
-  return out;
+  const lines=[statusText(p)];
+  try {
+    const result=await reconcile(env,c,p);
+    if(result.boomer) lines.push("Ranga Boomer: aktywna.");
+    if(result.nicknameApplied) lines.push("Pseudonim ustawiony.");
+    lines.push(...result.warnings);
+  } catch(e) { lines.push("Nie udało się odczytać członka serwera: "+safeDiscordError(e)); }
+  try {
+    await review(env,c,p);
+    if(p.fc_state==="pending") lines.push("Zgłoszenie FC przekazane administracji.");
+  } catch(e) {
+    lines.push("Nie udało się wysłać lub zaktualizować zgłoszenia FC: "+safeDiscordError(e)+" Sprawdź kanał PRIVATE FC REVIEW i ponów „Moja rejestracja”.");
+  }
+  return lines.join("\n");
 }
 async function status(env:OnboardingEnv,c:Config,id:string) {
   let p = await profile(env,c.guild,id);
@@ -188,7 +223,8 @@ async function decide(env:OnboardingEnv,c:Config,i:any,id:string,approve:boolean
   if (p.fc_state === "approved" && approve) {
     try {
       await discord(env,memberPath(c,p.discord_id)+"/roles/"+c.fc,"PUT");
-      await reconcile(env,c,p);
+      const result=await reconcile(env,c,p);
+      if(result.warnings.length) return "FC zatwierdzone: "+p.ffxiv_name+"\n"+result.warnings.join("\n");
     } catch { return "FC zatwierdzone w bazie, lecz Discord nie przyjął wszystkich zmian. Sprawdź hierarchię ról i kliknij ponownie."; }
   }
   return p.fc_state === "approved" ? "FC zatwierdzone: "+p.ffxiv_name : "FC odrzucone: "+p.ffxiv_name;
@@ -282,7 +318,7 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
       await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,approved?"approved":"rejected").run();
       p=(await profile(env,c.guild,p.discord_id))!;
       let warning="";
-      try {await reconcile(env,c,p);} catch {warning="Role updated, but nickname or Boomer could not be reconciled.";}
+      try {warning=(await reconcile(env,c,p)).warnings.join(" • ");} catch {warning="Role updated, but member lookup failed.";}
       return response({ok:true,warning});
     }
     if(req.method==="POST") {
