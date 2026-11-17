@@ -21,7 +21,6 @@ const response = (data: unknown, status = 200) => new Response(JSON.stringify(da
 });
 const ephemeral = (content: string) => response({ type: 4, data: { content, flags: 64, allowed_mentions: safeMentions } });
 const hex = (v: string) => Uint8Array.from(v.match(/.{2}/g) || [], b => parseInt(b, 16));
-const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,"0")).join("");
 async function config(env: OnboardingEnv): Promise<Config | null> {
   const row = await env.DB.prepare("SELECT value FROM meta WHERE key=?1").bind(cfgKey).first<{value:string}>();
   return row ? JSON.parse(row.value) as Config : null;
@@ -44,7 +43,7 @@ function validNames(mode: Mode, ttv: string, ff: string) {
     (mode === "ttv" || (ff.length <= 32 && /^\p{L}[\p{L}\p{M}'’-]* \p{L}[\p{L}\p{M}'’-]*$/u.test(ff)));
 }
 function desiredNick(p: Profile): string {
-  const ttv = p.twitch_id ? p.twitch_login : "";
+  const ttv = p.twitch_login || "";
   const ff = p.fc_state === "approved" ? p.ffxiv_name : "";
   if (ttv && ff) {
     const both = ff + " (" + ttv + ")";
@@ -67,7 +66,7 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji, a konto Twitch potwierdzisz na czacie streama.",color:0xe89b52}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Podany nick Twitch przyjmujemy bez dodatkowej weryfikacji.",color:0xe89b52}],
     components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja")]}],
     allowed_mentions:safeMentions
   };
@@ -104,9 +103,7 @@ async function review(env: OnboardingEnv,c:Config,p:Profile) {
 function statusText(p: Profile) {
   const lines = ["Regulamin zaakceptowany. Ranga Boomer."];
   if (p.mode !== "fc") {
-    if (p.twitch_id) lines.push("Twitch potwierdzony: "+p.twitch_login+".");
-    else if (p.verify_code && p.verify_until > Date.now()) lines.push("Zaloguj się na Twitchu jako "+p.twitch_login+" i wpisz na czacie naszego kanału: **!dcverify "+p.verify_code+"**. Kod ważny 20 minut.");
-    else lines.push("Kod wygasł. Wybierz „Moja rejestracja”, aby dostać nowy.");
+    lines.push("Nick Twitch: "+p.twitch_login+".");
   }
   if (p.mode !== "ttv") lines.push(p.fc_state === "approved" ? "FC zatwierdzone." : p.fc_state === "rejected" ? "FC odrzucone. Skontaktuj się z administracją." : "FC oczekuje na akceptację administracji.");
   if (desiredNick(p)) lines.push("Pseudonim: "+desiredNick(p));
@@ -121,8 +118,9 @@ async function finish(env:OnboardingEnv,c:Config,p:Profile) {
 async function status(env:OnboardingEnv,c:Config,id:string) {
   let p = await profile(env,c.guild,id);
   if (!p) return "Nie masz jeszcze rejestracji. Wybierz Twitch, FC lub obie społeczności.";
-  if (p.mode !== "fc" && !p.twitch_id && p.verify_until <= Date.now()) {
-    await env.DB.prepare("UPDATE discord_onboarding_profiles SET verify_code=?3,verify_until=?4 WHERE guild_id=?1 AND discord_id=?2 AND twitch_id IS NULL AND verify_until<=?5").bind(c.guild,id,newCode(),Date.now()+1200000,Date.now()).run();
+  // Retain declared login and any previously verified ID; retire old challenges.
+  if (p.verify_code || p.verify_until) {
+    await env.DB.prepare("UPDATE discord_onboarding_profiles SET verify_code=NULL,verify_until=0 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,id).run();
     p = (await profile(env,c.guild,id))!;
   }
   return finish(env,c,p);
@@ -138,7 +136,7 @@ async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
   const hadFc = (i.member.roles || []).includes(c.fc);
   const fcState = mode === "ttv" ? "none" : hadFc ? "approved" : "pending";
   await env.DB.prepare("INSERT INTO discord_onboarding_profiles(guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until) VALUES(?1,?2,?3,?4,?5,?6,?7,?8) ON CONFLICT(guild_id,discord_id) DO NOTHING")
-    .bind(c.guild,id,mode,ttv,ff,fcState,ttv?newCode():null,ttv?Date.now()+1200000:0).run();
+    .bind(c.guild,id,mode,ttv,ff,fcState,null,0).run();
   return status(env,c,id);
 }
 async function decide(env:OnboardingEnv,c:Config,i:any,id:string,approve:boolean) {
@@ -195,25 +193,10 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out);})());
   return response({type:5,data:{flags:64}});
 }
-// Only an authenticated Twitch chat event can confirm a claimed login; the code
-// is useless to any other account. No extra Twitch OAuth scopes are required.
-export async function verifyOnboardingChat(env:OnboardingEnv,login:string,twitchId:string,text:string):Promise<string|null> {
-  const command=/^!dcverify(?:\s+([a-f0-9]{16}))?$/i.exec(text);
-  if(!command) return "Użyj dokładnego kodu z panelu Discord."
-  const c=await config(env);
-  if(!c || !command[1]) return "Użyj kodu z panelu rejestracji Discord.";
-  const code=command[1].toLowerCase();
-  const p=await env.DB.prepare("SELECT * FROM discord_onboarding_profiles WHERE guild_id=?1 AND twitch_login=?2 AND verify_code=?3 AND verify_until>?4 AND twitch_id IS NULL").bind(c.guild,login,code,Date.now()).first<Profile>();
-  if(!p) return "Kod rejestracji nieprawidłowy lub wygasł.";
-  const other=await env.DB.prepare("SELECT discord_id FROM discord_onboarding_profiles WHERE guild_id=?1 AND (twitch_id=?2 OR (twitch_id IS NOT NULL AND twitch_login=?3)) AND discord_id<>?4").bind(c.guild,twitchId,login,p.discord_id).first();
-  if(other) return "To konto jest już powiązane z innym kontem Discord. Skontaktuj się z administracją.";
-  try {
-    await env.DB.prepare("UPDATE discord_onboarding_profiles SET twitch_id=?3,verify_code=NULL,verify_until=0 WHERE guild_id=?1 AND discord_id=?2 AND twitch_id IS NULL AND verify_code=?4 AND verify_until>?5").bind(c.guild,p.discord_id,twitchId,code,Date.now()).run();
-  } catch { return "Nie udało się potwierdzić konta. Skontaktuj się z administracją."; }
-  const saved=await profile(env,c.guild,p.discord_id);
-  if(!saved || saved.twitch_id!==twitchId) return "Kod rejestracji nieprawidłowy lub wygasł.";
-  try {await reconcile(env,c,saved);} catch {return "Twitch potwierdzony. Użyj „Moja rejestracja” na Discordzie, by ponowić ustawienie nicku.";}
-  return "Twitch potwierdzony. Twój profil Discord został zaktualizowany.";
+// Verification is disabled for now. Do not promote a self-declared login to a
+// verified Twitch ID (subscriber sync must not confuse the two).
+export async function verifyOnboardingChat(_env:OnboardingEnv,_login:string,_twitchId:string,_text:string):Promise<string|null> {
+  return "Weryfikacja nicku nie jest obecnie wymagana. Użyj panelu rejestracji na Discordzie.";
 }
 async function saveConfig(env:OnboardingEnv,c:Config) {
   await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(cfgKey,JSON.stringify(c)).run();
