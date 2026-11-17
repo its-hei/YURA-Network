@@ -9,3 +9,6 @@ Members accept the rules on modal submission and receive Boomer. Nicknames are s
 PATCH JSON {discord_id, action: "approve_fc" | "revoke_fc"} lets the authenticated operator manage FC membership. A member cannot recover a manually removed FC role through the registration status button.
 
 Members can edit their declared nicknames whenever needed using Edytuj nicki or the existing community buttons. Community buttons update just the selected fields and add the other community without deleting prior registration or changing existing FC decisions. Pending FC review messages are edited in place. Display names follow declared Twitch/FFXIV names even before FC approval; this never grants FC or subscriber roles. Changing a previously verified Twitch identity clears the verified ID. Self-service cannot restore revoked roles.
+
+## Temporary automatic FC access
+For registrations selecting FC or both, the Worker grants FC automatically after Boomer is active; an old pending registration is processed on its next interaction. No review message is sent. Previously approved or revoked members do not regain a manually removed FC role. The explicit admin approve/revoke API remains available. The existing review-channel configuration is retained for later verification but is not used during automatic registration.

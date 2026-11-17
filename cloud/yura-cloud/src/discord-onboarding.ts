@@ -92,6 +92,34 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
       warnings.push("Ranga Boomer została wcześniej odebrana. Tylko administracja może ją przywrócić.");
     }
   } catch(e) { warnings.push("Nie udało się zapisać rangi Boomer: "+safeDiscordError(e)); }
+  // Temporary open FC registration. Pending profiles (including older requests)
+  // are granted on their next interaction. Never restore rejected/revoked FC.
+  let fc=roles.includes(c.fc);
+  if(p.mode!=="ttv" && p.fc_state==="pending") {
+    if(!boomer) {
+      warnings.push("Ranga FC wymaga aktywnej rangi Boomer.");
+    } else {
+      try {
+        const latest=await profile(env,c.guild,p.discord_id);
+        if(latest?.fc_state==="pending") {
+          if(!fc) {
+            await discord(env,path+"/roles/"+c.fc,"PUT");
+            fc=true;
+          }
+          const write=await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state='approved' WHERE guild_id=?1 AND discord_id=?2 AND fc_state='pending'").bind(c.guild,p.discord_id).run();
+          if(Number(write.meta.changes??0)===0) {
+            const current=await profile(env,c.guild,p.discord_id);
+            if(current?.fc_state==="rejected") {
+              await discord(env,path+"/roles/"+c.fc,"DELETE");
+              fc=false;
+            }
+          }
+        }
+      } catch(e) { warnings.push("Nie udało się nadać rangi FC: "+safeDiscordError(e)); }
+    }
+  } else if(p.mode!=="ttv" && p.fc_state==="approved" && !fc) {
+    warnings.push("Ranga FC została wcześniej odebrana. Tylko administracja może ją przywrócić.");
+  }
   const nick=desiredNick(p);
   let nicknameApplied=Boolean(nick && m.nick===nick);
   try {
@@ -100,12 +128,12 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
       nicknameApplied=true;
     }
   } catch(e) { warnings.push("Nie udało się ustawić pseudonimu: "+safeDiscordError(e)); }
-  return {boomer,nicknameApplied,warnings};
+  return {boomer,fc,nicknameApplied,warnings};
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Dostęp do FC wymaga akceptacji administracji. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Pseudonim na serwerze powinien odpowiadać nazwie z Twitcha lub FFXIV.",color:0xe89b52}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company lub Twitch + FC. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Pseudonim na serwerze powinien odpowiadać nazwie z Twitcha lub FFXIV.",color:0xe89b52}],
     components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki")]}],
     allowed_mentions:safeMentions
   };
@@ -131,30 +159,13 @@ function values(components: any[]): Record<string,string> {
   components.forEach(walk);
   return result;
 }
-async function review(env: OnboardingEnv,c:Config,p:Profile) {
-  if (p.fc_state !== "pending") return;
-  const payload={
-    embeds:[{title:"Prośba o dołączenie do FC",description:"Użytkownik: <@"+p.discord_id+">\nPostać: "+p.ffxiv_name+"\nTwitch: "+(p.twitch_login||"—"),color:0xe89b52}],
-    components:[{type:1,components:[button("approve:"+p.discord_id,"Zatwierdź FC",3),button("reject:"+p.discord_id,"Odrzuć",4)]}],
-    allowed_mentions:safeMentions
-  };
-  if(p.review_message) {
-    // An edit updates the pending request rather than creating a second one.
-    await discord(env,"channels/"+c.staff+"/messages/"+p.review_message,"PATCH",payload);
-    return;
-  }
-  const m=await discord(env,"channels/"+c.staff+"/messages","POST",{
-    ...payload,nonce:p.discord_id,enforce_nonce:true
-  });
-  await env.DB.prepare("UPDATE discord_onboarding_profiles SET review_message=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,m.id).run();
-}
 function statusText(p: Profile) {
   const lines = ["Regulamin zaakceptowany."];
   if (p.mode !== "fc") {
     lines.push("Nick Twitch: "+p.twitch_login+".");
   }
   if (p.mode !== "ttv") lines.push("Nick FFXIV: "+p.ffxiv_name+".");
-  if (p.mode !== "ttv") lines.push(p.fc_state === "approved" ? "FC zatwierdzone." : p.fc_state === "rejected" ? "FC odrzucone. Skontaktuj się z administracją." : "FC oczekuje na akceptację administracji.");
+  if (p.mode !== "ttv" && p.fc_state === "rejected") lines.push("Dostęp FC został odebrany. Skontaktuj się z administracją.");
   if (desiredNick(p)) lines.push("Docelowy pseudonim: "+desiredNick(p));
   return lines.join("\n");
 }
@@ -163,15 +174,10 @@ async function finish(env:OnboardingEnv,c:Config,p:Profile) {
   try {
     const result=await reconcile(env,c,p);
     if(result.boomer) lines.push("Ranga Boomer: aktywna.");
+    if(p.mode!=="ttv" && result.fc) lines.push("Ranga FC: aktywna.");
     if(result.nicknameApplied) lines.push("Pseudonim ustawiony.");
     lines.push(...result.warnings);
   } catch(e) { lines.push("Nie udało się odczytać członka serwera: "+safeDiscordError(e)); }
-  try {
-    await review(env,c,p);
-    if(p.fc_state==="pending") lines.push("Zgłoszenie FC przekazane administracji.");
-  } catch(e) {
-    lines.push("Nie udało się wysłać lub zaktualizować zgłoszenia FC: "+safeDiscordError(e)+" Sprawdź kanał PRIVATE FC REVIEW i ponów „Moja rejestracja”.");
-  }
   return lines.join("\n");
 }
 async function status(env:OnboardingEnv,c:Config,id:string) {
@@ -210,25 +216,6 @@ async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
     .bind(c.guild,id,mode,ttv,ff,fcState).run();
   return (previous ? "Rejestracja zaktualizowana.\n" : "")+await status(env,c,id);
 }
-async function decide(env:OnboardingEnv,c:Config,i:any,id:string,approve:boolean) {
-  const permissions = BigInt(String(i.member.permissions || "0"));
-  if ((permissions & 8n) === 0n || i.channel_id !== c.staff) return "Tylko administrator może zatwierdzić FC w kanale administracji.";
-  let p = await profile(env,c.guild,id);
-  if (!p || p.mode === "ttv") return "Nie znaleziono zgłoszenia FC.";
-  if (p.fc_state === "pending") {
-    // Persist the decision before side effects; repeated approval retries reconciliation.
-    await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state=?3 WHERE guild_id=?1 AND discord_id=?2 AND fc_state='pending'").bind(c.guild,id,approve?"approved":"rejected").run();
-    p = (await profile(env,c.guild,id))!;
-  }
-  if (p.fc_state === "approved" && approve) {
-    try {
-      await discord(env,memberPath(c,p.discord_id)+"/roles/"+c.fc,"PUT");
-      const result=await reconcile(env,c,p);
-      if(result.warnings.length) return "FC zatwierdzone: "+p.ffxiv_name+"\n"+result.warnings.join("\n");
-    } catch { return "FC zatwierdzone w bazie, lecz Discord nie przyjął wszystkich zmian. Sprawdź hierarchię ról i kliknij ponownie."; }
-  }
-  return p.fc_state === "approved" ? "FC zatwierdzone: "+p.ffxiv_name : "FC odrzucone: "+p.ffxiv_name;
-}
 async function verifySignature(req:Request,body:string,key:string) {
   const sig=req.headers.get("X-Signature-Ed25519") || "";
   const ts=req.headers.get("X-Signature-Timestamp") || "";
@@ -263,7 +250,7 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   let job: (()=>Promise<string>)|undefined;
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
   if (i.type===5 && /^form:(ttv|fc|both)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode);
-  if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) job=()=>decide(env,c,i,action.split(":")[1],action.startsWith("approve:"));
+  if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) return ephemeral("Ranga FC jest obecnie nadawana automatycznie. Zarządzaj rangami w YURA Desktop.");
   if (!job) return ephemeral("Nieobsługiwana akcja.");
   const run=job;
   ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out);})());
