@@ -1,4 +1,4 @@
-import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat } from "./discord-onboarding";
+import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat, syncDiscordVips } from "./discord-onboarding";
 
 interface Env {
   DB: D1Database;
@@ -351,6 +351,24 @@ async function twitchApi(env: Env, url: string, init: RequestInit = {}, kind: "b
     }
   }
   return res;
+}
+
+async function loadDiscordTwitchVips(env:Env) {
+  const all:{user_id:string;user_login:string}[]=[];
+  const seen=new Set<string>();
+  let cursor="";
+  do {
+    const url="https://api.twitch.tv/helix/channels/vips?broadcaster_id="+encodeURIComponent(env.TWITCH_BROADCASTER_ID)+"&first=100"+(cursor?"&after="+encodeURIComponent(cursor):"");
+    const res=await twitchApi(env,url,{},"broadcaster");
+    if(!res.ok) throw new Error("Twitch VIP list HTTP "+res.status+"; check channel:manage:vips authorization.");
+    const body:any=await res.json();
+    if(!Array.isArray(body.data)||body.data.some((v:any)=>!v?.user_id||!v?.user_login)) throw new Error("Invalid Twitch VIP response.");
+    all.push(...body.data.map((v:any)=>({user_id:String(v.user_id),user_login:String(v.user_login)})));
+    cursor=String(body.pagination?.cursor||"");
+    if(cursor&&seen.has(cursor)) throw new Error("Repeated VIP pagination cursor.");
+    seen.add(cursor);
+  } while(cursor);
+  return all;
 }
 
 async function sendChat(env: Env, message: string, replyParentMessageId?: string) {
@@ -3860,7 +3878,7 @@ export default {
     if (url.pathname === "/discord/interactions" && req.method === "POST") return discordOnboardingInteraction(req,env,ctx);
     if (url.pathname === "/api/admin/discord-onboarding") {
       if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
-      return discordOnboardingAdmin(req,env);
+      return discordOnboardingAdmin(req,env,()=>loadDiscordTwitchVips(env));
     }
     if (url.pathname === "/health") {
       try {
@@ -3946,6 +3964,7 @@ export default {
     return json({ service:"YURA Cloud", version:"3.3.102", endpoints:["/health","/api/status","/api/accounts","/api/points-reset","/api/leaderboard-revision","/api/leaderboard","/api/levels-revision","/api/levels","/api/discord-member-check","/api/command-settings","/api/discord-member-leave-settings","/api/oauth-sync","/api/community-watch-settings","/api/cloud-runtime-settings","/api/death-state","/api/dashboard","/eventsub"] });
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    if(new Date(_controller.scheduledTime).getUTCMinutes()%10===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
     ctx.waitUntil((async () => {
       // Deadline alarms handle manual raffle; cron is recovery only.
       await warnYuraRaffleIfDue(env);

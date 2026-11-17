@@ -4,7 +4,7 @@ interface OnboardingEnv {
   ADMIN_KEY: string;
   DISCORD_BOT_TOKEN?: string;
 }
-type Config = { guild: string; welcome: string; staff: string; boomer: string; fc: string; key: string; message?: string; panel_text?: string };
+type Config = { guild: string; welcome: string; staff: string; boomer: string; fc: string; key: string; message?: string; panel_text?: string; vip_role?: string };
 type Mode = "ttv" | "fc" | "both";
 type Profile = {
   guild_id: string; discord_id: string; mode: Mode; twitch_login: string;
@@ -318,8 +318,84 @@ export async function verifyOnboardingChat(_env:OnboardingEnv,_login:string,_twi
 async function saveConfig(env:OnboardingEnv,c:Config) {
   await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(cfgKey,JSON.stringify(c)).run();
 }
+type TwitchVip = {user_id:string;user_login:string};
+type VipLoader = ()=>Promise<TwitchVip[]>;
+function safeVipRole(c:Config,role:any):boolean {
+  if(!role || role.managed || [c.guild,c.boomer,c.fc].includes(String(role.id))) return false;
+  // Refuse administrator and moderation/management permissions.
+  const denied=[1,2,3,4,5,13,17,18,23,24,26,27,28,29,30,34,36,37,40,41,42,43,44,45,46,47,48,49,50,51,52].reduce((mask,bit)=>mask|(1n<<BigInt(bit)),0n);
+  return (BigInt(role.permissions||"0") & denied)===0n;
+}
+export async function syncDiscordVips(env:OnboardingEnv,load:VipLoader) {
+  const c=await config(env);
+  if(!c?.vip_role) return {enabled:false,added:0,removed:0,conflicts:0,errors:0};
+  const roleId=c.vip_role;
+  const roles=await discord(env,"guilds/"+c.guild+"/roles");
+  if(!safeVipRole(c,roles.find((r:any)=>r.id===roleId))) throw new Error("Configured VIP role is missing or privileged.");
+  // Load complete authoritative Twitch list before any Discord changes.
+  const vips=await load();
+  const byId=new Set(vips.map(v=>v.user_id));
+  const byLogin=new Map(vips.map(v=>[v.user_login.toLowerCase(),v.user_id]));
+  const result=await env.DB.prepare("SELECT * FROM discord_onboarding_profiles WHERE guild_id=?1").bind(c.guild).all<Profile>();
+  const profiles=result.results||[];
+  const claims=new Map<string,Profile[]>();
+  for(const p of profiles) {
+    if(!p.twitch_login.trim()) continue;
+    const id=p.twitch_id || byLogin.get(p.twitch_login.trim().toLowerCase());
+    if(!id || !byId.has(id)) continue;
+    const list=claims.get(id)||[];list.push(p);claims.set(id,list);
+  }
+  const wanted=new Set<string>();
+  let conflicts=0;
+  for(const [id,list] of claims) {
+    const verified=list.filter(p=>p.twitch_id===id);
+    if(verified.length===1) wanted.add(verified[0].discord_id);
+    else if(verified.length===0 && list.length===1) wanted.add(list[0].discord_id);
+    else conflicts++;
+  }
+  const prefix="discord_vip_owned:"+c.guild+":"+roleId+":";
+  const tracked=await env.DB.prepare("SELECT key FROM meta WHERE key LIKE ?1").bind(prefix+"%").all<{key:string}>();
+  const owned=new Set((tracked.results||[]).map(r=>r.key.slice(prefix.length)));
+  let added=0,removed=0,errors=0;
+  // Only remove VIPs managed by this integration, never unrelated manual roles.
+  // Bounded changes per run protect API budgets and allow gradual convergence.
+  let changes=0;
+  for(const id of owned) {
+    if(wanted.has(id)) continue;
+    if(changes>=20) break;
+    try {
+      const latest=await config(env);
+      if(latest?.vip_role!==roleId) break;
+      changes++;
+      try {await discord(env,memberPath(c,id)+"/roles/"+roleId,"DELETE");}
+      catch(e) {if(!safeDiscordError(e).startsWith("Discord API 404")) throw e;}
+      await env.DB.prepare("DELETE FROM meta WHERE key=?1").bind(prefix+id).run();
+      removed++;
+    } catch(e) {errors++;console.warn("Discord VIP remove:",safeDiscordError(e));}
+  }
+  for(const id of wanted) {
+    if(changes>=20) break;
+    try {
+      const latest=await config(env);
+      if(latest?.vip_role!==roleId) break;
+      const p=await profile(env,c.guild,id);
+      if(!p?.twitch_login || !byId.has(p.twitch_id||byLogin.get(p.twitch_login.trim().toLowerCase())||"")) continue;
+      const m=await discord(env,memberPath(c,id));
+      if(m.user?.bot) continue;
+      if(!(m.roles||[]).includes(roleId)) {
+        changes++;
+        // Store ownership first so a crash between role PUT and recording can't leak a role.
+        await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,'1') ON CONFLICT(key) DO NOTHING").bind(prefix+id).run();
+        await discord(env,memberPath(c,id)+"/roles/"+roleId,"PUT");
+        added++;
+      }
+    } catch(e) {if(!safeDiscordError(e).startsWith("Discord API 404")) errors++;console.warn("Discord VIP add:",safeDiscordError(e));}
+  }
+  return {enabled:true,added,removed,conflicts,errors};
+}
+
 // The Worker router validates the existing administrative key or broadcaster OAuth before calling this.
-export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
+export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv,loadVips?:VipLoader) {
   const url=new URL(req.url);
   try {
     if(req.method==="GET") {
@@ -344,7 +420,7 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
         return response({ok:true,panel_text:imported});
       }
       const rows=await env.DB.prepare("SELECT discord_id,mode,twitch_login,twitch_id,ffxiv_name,fc_state FROM discord_onboarding_profiles WHERE guild_id=?1 ORDER BY discord_id").bind(c.guild).all();
-      return response({ok:true,configured:true,guild:c.guild,welcome:c.welcome,staff:c.staff,boomer:c.boomer,fc:c.fc,message:c.message||"",panel_text:c.panel_text||DEFAULT_PANEL_TEXT,profiles:rows.results||[]});
+      return response({ok:true,configured:true,guild:c.guild,welcome:c.welcome,staff:c.staff,boomer:c.boomer,fc:c.fc,message:c.message||"",panel_text:c.panel_text||DEFAULT_PANEL_TEXT,vip_role:c.vip_role||"",profiles:rows.results||[]});
     }
     if(req.method==="PUT") {
       const x:any=await req.json();
@@ -360,7 +436,12 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
       }
       const key=String(app.verify_key||"");
       if(!/^[a-f0-9]{64}$/i.test(key)) return response({error:"Discord application verification key unavailable"},502);
-      const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{})};
+      const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
+      if(typeof x.vip_role==="string") {
+        const roleId=x.vip_role.trim();
+        if(roleId && (!snowflake(roleId)||!safeVipRole(c,roles.find((r:any)=>r.id===roleId)))) return response({error:"VIP role must be a separate non-privileged Discord role."},400);
+        if(roleId) c.vip_role=roleId; else delete c.vip_role;
+      }
       if(typeof x.panel_text==="string" && x.panel_text.trim()) {
         if(x.panel_text.length>4096) return response({error:"Message cannot exceed 4096 characters."},400);
         c.panel_text=x.panel_text.trim();
@@ -385,6 +466,10 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
       return response({ok:true,warning});
     }
     if(req.method==="POST") {
+      if(url.searchParams.get("sync_vips")==="1") {
+        if(!loadVips) return response({error:"Twitch VIP loader unavailable"},503);
+        return response({ok:true,...await syncDiscordVips(env,loadVips)});
+      }
       const c=await config(env);
       if(!c) return response({error:"configure onboarding first"},400);
       const raw=await req.text();
