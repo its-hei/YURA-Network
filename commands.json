@@ -320,6 +320,15 @@
     "source": "YURA"
   },
   {
+    "command": "!sr on",
+    "aliases": [],
+    "permission": "Moderator \u002B list",
+    "usage": "!sr on",
+    "description": "W\u0142\u0105cza przyjmowanie nowych pr\u00F3\u015Bb o utwory przez komend\u0119 !sr. Nie kasuje dotychczasowej kolejki.",
+    "category": "MUZYKA",
+    "source": "YURA"
+  },
+  {
     "command": "!sr off",
     "aliases": [],
     "permission": "Moderator \u002B list",
