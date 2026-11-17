@@ -4,7 +4,7 @@ The existing YURA bot token is reused. The Discord application owner must set th
 Authenticated admin API: /api/admin/discord-onboarding (existing Bearer ADMIN_KEY or validated broadcaster Twitch OAuth).
 PUT JSON {guild,welcome,staff,boomer,fc} (Discord snowflake IDs); validates appropriate guild resources and fetches the application's public verification key. Do not use privileged roles. Staff channel must be private and only admins can approve FC.
 POST publishes/updates the welcome panel; GET returns config and registered profiles (no verification codes). Use separate channels for rules and FC review. Keep Zira active until tested, then remove its reaction-role rule.
-Members accept the rules on modal submission and receive Boomer. Nicknames are self-declared display names (1–32 characters), without Twitch verification or strict name syntax. FC is approved by an administrator (existing FC role is accepted). For both communities: matching names (ignoring case, spaces, underscores and hyphens) appear once; distinct names use FFXIV (Twitch) if <=32 characters, otherwise FFXIV. Declared names do not confer verified Twitch IDs or subscriber roles. No existing roles are removed by onboarding.
+Members accept the rules on modal submission and receive Boomer. Nicknames are self-declared display names (1–32 characters), without Twitch verification or strict name syntax. FC is approved by an administrator (existing FC role is accepted). For both communities: matching names (ignoring case, spaces, underscores and hyphens) appear once; distinct names use Twitch (FFXIV) if <=32 characters, otherwise Twitch. Declared names do not confer verified Twitch IDs or subscriber roles. No existing roles are removed by onboarding.
 
 PATCH JSON {discord_id, action: "approve_fc" | "revoke_fc"} lets the authenticated operator manage FC membership. A member cannot recover a manually removed FC role through the registration status button.
 
@@ -12,3 +12,6 @@ Members can edit their declared nicknames whenever needed using Edytuj nicki or 
 
 ## Temporary automatic FC access
 For registrations selecting FC or both, the Worker grants FC automatically after Boomer is active; an old pending registration is processed on its next interaction. No review message is sent. Previously approved or revoked members do not regain a manually removed FC role. The explicit admin approve/revoke API remains available. The existing review-channel configuration is retained for later verification but is not used during automatic registration.
+
+## Boomer role retry and nickname priority
+Boomer is a self-service rules-acceptance role: a registered member's next status check or form submission retries granting it when the Discord member does not currently have it, even if the database recorded a successful grant earlier. Removing Boomer alone in Discord is therefore not a persistent moderation block. Explicit FC rejections/revocations remain protected; previously approved FC roles removed manually are not restored automatically. Nicknames use Twitch (FFXIV), or Twitch alone if the combined nickname exceeds Discord's length limit; matching names appear once.

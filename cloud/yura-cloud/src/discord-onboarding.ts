@@ -64,12 +64,13 @@ function desiredNick(p:Profile):string {
   if(ttv && ff) {
     const ffKey=nicknameKey(ff);
     if(ffKey && ffKey===nicknameKey(ttv)) return ff;
-    const both=ff+" ("+ttv+")";
-    return both.length<=32 ? both : ff;
+    const both=ttv+" ("+ff+")";
+    return both.length<=32 ? both : ttv;
   }
   return ff || ttv;
 }
-// Report independent outcomes; never restore a deliberately removed role.
+// Report independent outcomes. Boomer is the self-service rules acceptance role;
+// an explicitly revoked FC membership still requires an administrator.
 function safeDiscordError(error:unknown):string {
   const msg=error instanceof Error ? error.message : "";
   return /^Discord API [0-9]{3}( \/ [0-9]+)? \((GET|POST|PUT|PATCH|DELETE) [a-z0-9_-]+\)\.$/.test(msg)
@@ -82,14 +83,14 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
   const warnings:string[]=[];
   let boomer=roles.includes(c.boomer);
   try {
+    // Discord's actual member roles are authoritative for Boomer. Do not let
+    // an old success marker (e.g. after testing or rejoining) block registration.
+    if (!boomer) {
+      await discord(env,path + "/roles/" + c.boomer,"PUT");
+      boomer=true;
+    }
     if (!p.boomer_granted) {
-      if (!boomer) {
-        await discord(env,path + "/roles/" + c.boomer,"PUT");
-        boomer=true;
-      }
       await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
-    } else if (!boomer) {
-      warnings.push("Ranga Boomer została wcześniej odebrana. Tylko administracja może ją przywrócić.");
     }
   } catch(e) { warnings.push("Nie udało się zapisać rangi Boomer: "+safeDiscordError(e)); }
   // Temporary open FC registration. Pending profiles (including older requests)
@@ -133,7 +134,7 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company lub Twitch + FC. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Pseudonim na serwerze powinien odpowiadać nazwie z Twitcha lub FFXIV.",color:0xe89b52}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company lub Twitch + FC. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Dla obu społeczności pseudonim ma format Twitch (FFXIV). Identyczne nazwy wyświetlamy tylko raz.",color:0xe89b52}],
     components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki")]}],
     allowed_mentions:safeMentions
   };
