@@ -367,7 +367,7 @@
     ],
     "permission": "Everyone",
     "usage": "!commands",
-    "description": "Podaje link do aktualnej publicznej listy komend kana\u0142u na YURA Network. \uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/",
+    "description": "Podaje link do aktualnej publicznej listy komend kana\u0142u na YURA Network. \uD83D\uDCDF Komendy Y.U.R.A.: https://its-hei.github.io/YURA-Network/komendy",
     "category": "OG\u00D3LNE",
     "source": "YURA"
   },
