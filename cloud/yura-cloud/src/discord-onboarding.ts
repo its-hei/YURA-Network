@@ -134,8 +134,8 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
 function panel() {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company lub Twitch + FC. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Dla obu społeczności pseudonim ma format Twitch (FFXIV). Identyczne nazwy wyświetlamy tylko raz.",color:0xe89b52}],
-    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1),button("both","Twitch + FC",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki")]}],
+    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company. Możesz zarejestrować się w obu społecznościach, wybierając każdy przycisk osobno. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Dla obu społeczności pseudonim ma format Twitch (FFXIV). Identyczne nazwy wyświetlamy tylko raz.",color:0xe89b52}],
+    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki"),button("reset","Resetuj rejestrację",4)]}],
     allowed_mentions:safeMentions
   };
 }
@@ -183,7 +183,7 @@ async function finish(env:OnboardingEnv,c:Config,p:Profile) {
 }
 async function status(env:OnboardingEnv,c:Config,id:string) {
   let p = await profile(env,c.guild,id);
-  if (!p) return "Nie masz jeszcze rejestracji. Wybierz Twitch, FC lub obie społeczności.";
+  if (!p || (!p.twitch_login && !p.ffxiv_name)) return "Nie masz jeszcze rejestracji. Wybierz Twitch lub Free Company. Możesz wybrać obie opcje osobno.";
   // Retain declared login and any previously verified ID; retire old challenges.
   if (p.verify_code || p.verify_until) {
     await env.DB.prepare("UPDATE discord_onboarding_profiles SET verify_code=NULL,verify_until=0 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,id).run();
@@ -208,14 +208,44 @@ async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
     (guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until)
     VALUES(?1,?2,?3,?4,?5,?6,NULL,0)
     ON CONFLICT(guild_id,discord_id) DO UPDATE SET
-      mode=CASE WHEN discord_onboarding_profiles.mode=excluded.mode THEN excluded.mode ELSE 'both' END,
+      mode=CASE WHEN discord_onboarding_profiles.twitch_login='' AND discord_onboarding_profiles.ffxiv_name='' THEN excluded.mode WHEN discord_onboarding_profiles.mode=excluded.mode THEN excluded.mode ELSE 'both' END,
       twitch_login=CASE WHEN excluded.mode='fc' THEN discord_onboarding_profiles.twitch_login ELSE excluded.twitch_login END,
       ffxiv_name=CASE WHEN excluded.mode='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END,
       twitch_id=CASE WHEN excluded.mode<>'fc' AND lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
       fc_state=CASE WHEN discord_onboarding_profiles.fc_state='none' AND excluded.mode<>'ttv' THEN excluded.fc_state ELSE discord_onboarding_profiles.fc_state END,
       verify_code=NULL,verify_until=0`)
     .bind(c.guild,id,mode,ttv,ff,fcState).run();
-  return (previous ? "Rejestracja zaktualizowana.\n" : "")+await status(env,c,id);
+  return (previous && (previous.twitch_login || previous.ffxiv_name) ? "Rejestracja zaktualizowana.\n" : "")+await status(env,c,id);
+}
+// Keep an empty profile as a tombstone: moderation decisions and subscriber
+// sync protection must survive a self-service reset. No other roles are touched.
+async function resetRegistration(env:OnboardingEnv,c:Config,id:string) {
+  const p=await profile(env,c.guild,id);
+  if(!p) return "Nie masz rejestracji do zresetowania.";
+  const path=memberPath(c,id);
+  const m=await discord(env,path);
+  const roles:string[]=Array.isArray(m.roles)?m.roles:[];
+  const warnings:string[]=[];
+  const wasActive=Boolean(p.twitch_login||p.ffxiv_name);
+  // Preserve a prior administrative rejection or an approved role removed outside YURA.
+  const blocked=p.fc_state==="rejected" || (wasActive && p.fc_state==="approved" && !roles.includes(c.fc));
+  const oldNick=desiredNick(p);
+  // Store the reset before role removal, so status cannot accidentally restore roles.
+  await env.DB.prepare("UPDATE discord_onboarding_profiles SET mode='ttv',twitch_login='',twitch_id=NULL,ffxiv_name='',fc_state=?3,verify_code=NULL,verify_until=0,review_message=NULL,boomer_granted=0 WHERE guild_id=?1 AND discord_id=?2")
+    .bind(c.guild,id,blocked?"rejected":"none").run();
+  if(oldNick && m.nick===oldNick) {
+    try { await discord(env,path,"PATCH",{nick:null}); }
+    catch(e) {warnings.push("Nie udało się przywrócić domyślnego pseudonimu: "+safeDiscordError(e));}
+  }
+  // Repeated reset attempts can finish removing roles after a temporary API error.
+  for(const [role,label] of [[c.fc,"FC"],[c.boomer,"Boomer"]] as const) {
+    if(!roles.includes(role)) continue;
+    try {await discord(env,path+"/roles/"+role,"DELETE");}
+    catch(e) {warnings.push("Nie udało się odebrać rangi "+label+": "+safeDiscordError(e));}
+  }
+  return ["Rejestracja zresetowana. Możesz wybrać Twitch lub Free Company od nowa.",
+    ...(blocked?["Wcześniejsza blokada FC pozostaje aktywna."]:[]),
+    ...warnings].join("\n");
 }
 async function verifySignature(req:Request,body:string,key:string) {
   const sig=req.headers.get("X-Signature-Ed25519") || "";
@@ -245,16 +275,24 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!/^((approve|reject):[0-9]{15,22})$/.test(action) && i.channel_id!==c.welcome) return ephemeral("Użyj aktualnego panelu w kanale zasad.");
   if (i.type===3 && (action==="ttv" || action==="fc" || action==="both" || action==="edit")) {
     const previous=await profile(env,c.guild,i.member.user.id);
-    if(action==="edit") return previous ? modal(previous.mode,previous) : ephemeral("Najpierw wybierz Twitch, Free Company lub Twitch + FC.");
+    if(action==="edit") return previous && (previous.twitch_login || previous.ffxiv_name) ? modal(previous.mode,previous) : ephemeral("Najpierw wybierz Twitch lub Free Company.");
     return modal(action,previous);
   }
+  if(i.type===3 && action==="reset") return response({type:4,data:{
+    content:"Czy na pewno zresetować rejestrację? Usuniemy zapisane nicki i powiązanie Twitch oraz odbierzemy rangi Boomer i FC. Inne rangi pozostaną bez zmian.",
+    flags:64,allowed_mentions:safeMentions,
+    components:[{type:1,components:[button("reset-confirm","Tak, resetuj",4),button("reset-cancel","Anuluj")]}]
+  }});
+  if(i.type===3 && action==="reset-cancel") return response({type:7,data:{content:"Anulowano reset rejestracji.",components:[],allowed_mentions:safeMentions}});
   let job: (()=>Promise<string>)|undefined;
+  if (i.type===3 && action==="reset-confirm") job=()=>resetRegistration(env,c,i.member.user.id);
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
   if (i.type===5 && /^form:(ttv|fc|both)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode);
   if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) return ephemeral("Ranga FC jest obecnie nadawana automatycznie. Zarządzaj rangami w YURA Desktop.");
   if (!job) return ephemeral("Nieobsługiwana akcja.");
   const run=job;
   ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out);})());
+  if(i.type===3 && action==="reset-confirm") return response({type:7,data:{content:"Resetowanie rejestracji…",components:[],allowed_mentions:safeMentions}});
   return response({type:5,data:{flags:64}});
 }
 // Verification is disabled for now. Do not promote a self-declared login to a

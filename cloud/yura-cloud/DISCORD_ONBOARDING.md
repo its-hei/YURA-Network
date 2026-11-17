@@ -15,3 +15,6 @@ For registrations selecting FC or both, the Worker grants FC automatically after
 
 ## Boomer role retry and nickname priority
 Boomer is a self-service rules-acceptance role: a registered member's next status check or form submission retries granting it when the Discord member does not currently have it, even if the database recorded a successful grant earlier. Removing Boomer alone in Discord is therefore not a persistent moderation block. Explicit FC rejections/revocations remain protected; previously approved FC roles removed manually are not restored automatically. Nicknames use Twitch (FFXIV), or Twitch alone if the combined nickname exceeds Discord's length limit; matching names appear once.
+
+## Separate community registration and reset
+The public panel now has separate Twitch and Free Company buttons; choosing both sequentially merges the profile. Existing both-community users can still edit both fields. Resetuj rejestrację requires explicit confirmation and clears declared names, verified binding and registration state, removes Boomer and FC only, and restores the default server nickname if the existing nickname matches YURA's generated one. An empty profile is retained to preserve moderation blocks and subscriber synchronization protection. Other roles are not directly modified. Previously revoked FC cannot be recovered through reset.
