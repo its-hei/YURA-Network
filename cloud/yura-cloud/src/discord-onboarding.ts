@@ -320,18 +320,33 @@ async function saveConfig(env:OnboardingEnv,c:Config) {
 }
 type TwitchVip = {user_id:string;user_login:string};
 type VipLoader = ()=>Promise<TwitchVip[]>;
-function safeVipRole(c:Config,role:any):boolean {
-  if(!role || role.managed || [c.guild,c.boomer,c.fc].includes(String(role.id))) return false;
-  // Refuse administrator and moderation/management permissions.
-  const denied=[1,2,3,4,5,7,13,16,17,22,23,24,27,28,29,30,33,34,40,41,43,44,51,52].reduce((mask,bit)=>mask|(1n<<BigInt(bit)),0n);
-  return (BigInt(role.permissions||"0") & denied)===0n;
+// READ_MESSAGE_HISTORY (bit 16) is a normal member permission, not a
+// moderation permission. Keep the actual privileged permissions blocked.
+// Named flags also explain precisely why the configured role was rejected.
+const vipDeniedPermissions: ReadonlyArray<readonly [number,string]> = [
+  [1,"Kick Members"],[2,"Ban Members"],[3,"Administrator"],[4,"Manage Channels"],
+  [5,"Manage Server"],[7,"View Audit Log"],[13,"Manage Messages"],[17,"Mention Everyone"],
+  [22,"Mute Members"],[23,"Deafen Members"],[24,"Move Members"],[27,"Manage Nicknames"],
+  [28,"Manage Roles"],[29,"Manage Webhooks"],[30,"Manage Expressions"],[33,"Manage Events"],
+  [34,"Manage Threads"],[40,"Moderate Members"],[41,"View Creator Monetization Analytics"],
+  [43,"Create Expressions"],[44,"Create Events"],[51,"Pin Messages"],[52,"Bypass Slowmode"]
+];
+function vipRoleError(c:Config,role:any):string {
+  if(!role) return "VIP role not found in Discord.";
+  if(role.managed) return "VIP role is managed by a Discord integration.";
+  if([c.guild,c.boomer,c.fc].includes(String(role.id))) return "VIP role must be different from @everyone, Boomer and FC.";
+  let permissions:bigint;
+  try { permissions=BigInt(role.permissions); } catch { return "Could not validate VIP role permissions."; }
+  const blocked=vipDeniedPermissions.filter(([bit])=>(permissions & (1n<<BigInt(bit)))!==0n).map(([,name])=>name);
+  return blocked.length ? "VIP role has blocked permissions: "+blocked.join(", ")+".": "";
 }
 export async function syncDiscordVips(env:OnboardingEnv,load:VipLoader) {
   const c=await config(env);
   if(!c?.vip_role) return {enabled:false,added:0,removed:0,conflicts:0,errors:0};
   const roleId=c.vip_role;
   const roles=await discord(env,"guilds/"+c.guild+"/roles");
-  if(!Array.isArray(roles)||!safeVipRole(c,roles.find((r:any)=>r.id===roleId))) throw new Error("Configured VIP role is missing or privileged.");
+  const roleError=vipRoleError(c,Array.isArray(roles)?roles.find((r:any)=>r.id===roleId):null);
+  if(roleError) throw new Error(roleError);
   // Load complete authoritative Twitch list before any Discord changes.
   const vips=await load();
   const byId=new Set(vips.map(v=>v.user_id));
@@ -439,7 +454,11 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv,loadV
       const c:Config={guild:x.guild,welcome:x.welcome,staff:old?.staff||"",boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
       if(typeof x.vip_role==="string") {
         const roleId=x.vip_role.trim();
-        if(roleId && (!snowflake(roleId)||!safeVipRole(c,roles.find((r:any)=>r.id===roleId)))) return response({error:"VIP role must be a separate non-privileged Discord role."},400);
+        if(roleId) {
+          if(!snowflake(roleId)) return response({error:"Invalid Discord VIP role ID."},400);
+          const roleError=vipRoleError(c,roles.find((r:any)=>r.id===roleId));
+          if(roleError) return response({error:roleError},400);
+        }
         if(roleId) c.vip_role=roleId; else delete c.vip_role;
       }
       if(typeof x.panel_text==="string" && x.panel_text.trim()) {
