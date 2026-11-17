@@ -140,7 +140,7 @@ const DEFAULT_PANEL_TEXT="**Rejestracja**\nWybierz Twitch lub Ordo Noctis. Zatwi
 function panel(c:Config) {
   return {
     embeds:[{title:"Witaj u Boomersów!",description:c.panel_text || DEFAULT_PANEL_TEXT,color:0xe89b52}],
-    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]},{type:1,components:[button("reset","Resetuj rejestrację",4)]}],
+    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]}],
     allowed_mentions:safeMentions
   };
 }
@@ -180,13 +180,17 @@ function statusText(p: Profile) {
   if (desiredNick(p)) lines.push("Docelowy pseudonim: "+desiredNick(p));
   return lines.join("\n");
 }
-async function finish(env:OnboardingEnv,c:Config,p:Profile,previousNick="") {
-  const lines=[statusText(p)];
+async function finish(env:OnboardingEnv,c:Config,p:Profile,previousNick="",quiet=false) {
+  const lines=quiet?[]:[statusText(p)];
   try {
     const result=await reconcile(env,c,p,previousNick);
-    lines.push("Ranga Boomer: "+(result.boomer?"aktywna.":"nieaktywna."));
-    lines.push("Ranga FC (Ordo Noctis): "+(result.fc?"aktywna.":"nieaktywna."));
-    if(result.nicknameApplied) lines.push("Pseudonim ustawiony.");
+    if(!quiet) {
+      lines.push("Ranga Boomer: "+(result.boomer?"aktywna.":"nieaktywna."));
+      lines.push("Ranga FC (Ordo Noctis): "+(result.fc?"aktywna.":"nieaktywna."));
+      if(result.nicknameApplied) lines.push("Pseudonim ustawiony.");
+    } else if(p.ffxiv_name && p.fc_state==="rejected") {
+      lines.push("Dostęp FC został odebrany. Skontaktuj się z administracją.");
+    }
     lines.push(...result.warnings);
   } catch(e) { lines.push("Nie udało się odczytać członka serwera: "+safeDiscordError(e)); }
   return lines.join("\n");
@@ -221,49 +225,26 @@ async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit",remove
     (guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until)
     VALUES(?1,?2,?3,?4,?5,?6,NULL,0)
     ON CONFLICT(guild_id,discord_id) DO UPDATE SET
-      mode=excluded.mode,twitch_login=excluded.twitch_login,ffxiv_name=excluded.ffxiv_name,
-      twitch_id=CASE WHEN lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
+      mode=CASE
+        WHEN (CASE WHEN ?8='fc' THEN discord_onboarding_profiles.twitch_login ELSE excluded.twitch_login END)<>'' AND (CASE WHEN ?8='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END)<>'' THEN 'both'
+        WHEN (CASE WHEN ?8='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END)<>'' THEN 'fc'
+        ELSE 'ttv' END,
+      twitch_login=CASE WHEN ?8='fc' THEN discord_onboarding_profiles.twitch_login ELSE excluded.twitch_login END,
+      ffxiv_name=CASE WHEN ?8='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END,
+      twitch_id=CASE WHEN ?8<>'fc' AND lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
       fc_state=CASE
         WHEN discord_onboarding_profiles.fc_state='rejected' THEN 'rejected'
+        WHEN ?8='ttv' THEN discord_onboarding_profiles.fc_state
         WHEN discord_onboarding_profiles.fc_state='approved' AND excluded.ffxiv_name='' AND ?7=0 THEN 'rejected'
         WHEN excluded.ffxiv_name='' THEN 'none'
         WHEN discord_onboarding_profiles.fc_state IN ('approved','pending') THEN discord_onboarding_profiles.fc_state
         ELSE excluded.fc_state END,
       verify_code=NULL,verify_until=0`)
-    .bind(c.guild,id,mergedMode,ttv,ff,initialFc,hadFc?1:0).run();
+    .bind(c.guild,id,mergedMode,ttv,ff,initialFc,hadFc?1:0,mode).run();
   const saved=await profile(env,c.guild,id);
   if(!saved) return "Nie udało się zapisać rejestracji.";
-  return (remove?"Usunięto nick "+(mode==="ttv"?"Twitch":"Ordo Noctis")+".\n":previous?"Rejestracja zaktualizowana.\n":"")+await finish(env,c,saved,oldNick);
-}
-// Keep an empty profile as a tombstone: moderation decisions and subscriber
-// sync protection must survive a self-service reset. No other roles are touched.
-async function resetRegistration(env:OnboardingEnv,c:Config,id:string) {
-  const p=await profile(env,c.guild,id);
-  if(!p) return "Nie masz rejestracji do zresetowania.";
-  const path=memberPath(c,id);
-  const m=await discord(env,path);
-  const roles:string[]=Array.isArray(m.roles)?m.roles:[];
-  const warnings:string[]=[];
-  const wasActive=Boolean(p.twitch_login||p.ffxiv_name);
-  // Preserve a prior administrative rejection or an approved role removed outside YURA.
-  const blocked=p.fc_state==="rejected" || (wasActive && p.fc_state==="approved" && !roles.includes(c.fc));
-  const oldNick=desiredNick(p);
-  // Store the reset before role removal, so status cannot accidentally restore roles.
-  await env.DB.prepare("UPDATE discord_onboarding_profiles SET mode='ttv',twitch_login='',twitch_id=NULL,ffxiv_name='',fc_state=?3,verify_code=NULL,verify_until=0,review_message=NULL,boomer_granted=0 WHERE guild_id=?1 AND discord_id=?2")
-    .bind(c.guild,id,blocked?"rejected":"none").run();
-  if(oldNick && m.nick===oldNick) {
-    try { await discord(env,path,"PATCH",{nick:null}); }
-    catch(e) {warnings.push("Nie udało się przywrócić domyślnego pseudonimu: "+safeDiscordError(e));}
-  }
-  // Repeated reset attempts can finish removing roles after a temporary API error.
-  for(const [role,label] of [[c.fc,"FC"],[c.boomer,"Boomer"]] as const) {
-    if(!roles.includes(role)) continue;
-    try {await discord(env,path+"/roles/"+role,"DELETE");}
-    catch(e) {warnings.push("Nie udało się odebrać rangi "+label+": "+safeDiscordError(e));}
-  }
-  return ["Rejestracja zresetowana. Możesz wybrać Twitch lub Ordo Noctis od nowa.",
-    ...(blocked?["Wcześniejsza blokada FC pozostaje aktywna."]:[]),
-    ...warnings].join("\n");
+  // Empty result means a successful, silent update. Keep actionable errors only.
+  return finish(env,c,saved,oldNick,true);
 }
 async function verifySignature(req:Request,body:string,key:string) {
   const sig=req.headers.get("X-Signature-Ed25519") || "";
@@ -275,7 +256,18 @@ async function verifySignature(req:Request,body:string,key:string) {
   } catch { return false; }
 }
 async function followup(i:any, content:string, clearComponents=false) {
-  const r=await fetch("https://discord.com/api/v10/webhooks/"+i.application_id+"/"+i.token+"/messages/@original",{
+  const url="https://discord.com/api/v10/webhooks/"+i.application_id+"/"+i.token+"/messages/@original";
+  // A deferred ephemeral response is necessary to acknowledge modal submits.
+  // On success delete that response rather than leaving a confirmation in chat.
+  if(!content) {
+    const removed=await fetch(url,{method:"DELETE"});
+    if(!removed.ok && removed.status!==404) {
+      console.warn("YURA Discord onboarding dismiss:",removed.status);
+      await fetch(url,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({content:"Zapisano.",components:[],allowed_mentions:safeMentions})});
+    }
+    return;
+  }
+  const r=await fetch(url,{
     method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({content,allowed_mentions:safeMentions,...(clearComponents?{components:[]}: {})})
   });
   if (!r.ok) console.warn("YURA Discord onboarding follow-up:",r.status);
@@ -303,16 +295,12 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
     return modal(action,await profile(env,c.guild,i.member.user.id));
   }
   if(i.type===3 && action==="community-cancel") return response({type:7,data:{content:"Anulowano.",components:[],allowed_mentions:safeMentions}});
-  if(i.type===3 && action==="reset") return response({type:4,data:{
-    content:"Czy na pewno zresetować rejestrację? Usuniemy zapisane nicki i powiązanie Twitch oraz odbierzemy rangi Boomer i FC. Inne rangi pozostaną bez zmian.",
-    flags:64,allowed_mentions:safeMentions,
-    components:[{type:1,components:[button("reset-confirm","Tak, resetuj",4),button("reset-cancel","Anuluj")]}]
-  }});
-  if(i.type===3 && action==="reset-cancel") return response({type:7,data:{content:"Anulowano reset rejestracji.",components:[],allowed_mentions:safeMentions}});
+  // Old published reset buttons must not erase both registrations.
+  if(i.type===3 && ["reset","reset-confirm","reset-cancel"].includes(action))
+    return ephemeral("Reset nie jest już dostępny. Usuń nick osobno w Twitch lub Ordo Noctis.");
   const removeCommunity=i.type===3 && (action==="remove:ttv" || action==="remove:fc");
   let job: (()=>Promise<string>)|undefined;
   if(removeCommunity) job=()=>register(env,c,i,action==="remove:ttv"?"ttv":"fc",true);
-  if (i.type===3 && action==="reset-confirm") job=()=>resetRegistration(env,c,i.member.user.id);
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
   if (i.type===5 && /^form:(ttv|fc|both|edit)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode|"edit");
   if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) return ephemeral("Ranga FC jest obecnie nadawana automatycznie. Zarządzaj rangami w YURA Desktop.");
@@ -320,7 +308,6 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   const run=job;
   ctx.waitUntil((async()=>{let out:string;try{out=await run();}catch{out="Wystąpił błąd rejestracji. Spróbuj ponownie lub skontaktuj się z administracją.";} await followup(i,out,removeCommunity);})());
   if(removeCommunity) return response({type:6});
-  if(i.type===3 && action==="reset-confirm") return response({type:7,data:{content:"Resetowanie rejestracji…",components:[],allowed_mentions:safeMentions}});
   return response({type:5,data:{flags:64}});
 }
 // Verification is disabled for now. Do not promote a self-declared login to a

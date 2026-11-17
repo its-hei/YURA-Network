@@ -24,3 +24,6 @@ The public panel contains Twitch, Ordo Noctis and Resetuj rejestrację. Each com
 
 ## Direct community forms
 Twitch and Ordo Noctis now open their modal directly. Existing registrations expose an unchecked single checkbox (Discord component type 23) labelled Usuń zapisany nick. Checking it and submitting clears only that community, using the same role and nickname reconciliation as before. The native Anuluj/Wyślij footer is unchanged. Older private menu buttons remain compatible; no new menu messages are generated.
+
+## Silent community updates
+The public panel now contains only Twitch and Ordo Noctis. Both forms have independent editing/removal; updating one name preserves the other at SQL write time. Old Reset buttons no longer clear profiles. Successful form submissions delete their deferred ephemeral acknowledgement; errors and moderation warnings remain visible. Custom rules text is not changed.
