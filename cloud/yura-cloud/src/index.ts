@@ -1,3 +1,5 @@
+import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat } from "./discord-onboarding";
+
 interface Env {
   DB: D1Database;
   TWITCH_CLIENT_ID: string;
@@ -2090,6 +2092,13 @@ async function handleChatMessage(env: Env, event: TwitchChatEvent) {
   const login = norm(event.chatter_user_login);
   if (!login || event.chatter_user_id === env.TWITCH_BOT_USER_ID) return;
   const text = String(event.message?.text ?? "").trim();
+  if (/^!dcverify(?:\s|$)/i.test(text)) {
+    try {
+      const result = await verifyOnboardingChat(env,login,event.chatter_user_id,text);
+      if (result) await sendChat(env,result,event.message_id);
+    } catch { await sendChat(env,"Nie udało się potwierdzić Discorda. Spróbuj ponownie.",event.message_id); }
+    return;
+  }
   // Commands must not be lost if an unrelated first-message side effect (account,
   // EXP initialization, chat history or timer bookkeeping) fails after stream start.
   // Under normal conditions the original message/points flow is unchanged.
@@ -3778,6 +3787,8 @@ export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null,{status:204,headers:{"access-control-allow-origin":"*","access-control-allow-headers":"authorization,content-type"}});
+    if (url.pathname === "/discord/interactions" && req.method === "POST") return discordOnboardingInteraction(req,env,ctx);
+    if (url.pathname === "/api/admin/discord-onboarding") return discordOnboardingAdmin(req,env);
     if (url.pathname === "/health") {
       try {
         // Tiny D1 probe: unlike /api/status this does not scan application tables, but it
