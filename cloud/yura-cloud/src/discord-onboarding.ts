@@ -329,7 +329,8 @@ const vipDeniedPermissions: ReadonlyArray<readonly [number,string]> = [
   [22,"Mute Members"],[23,"Deafen Members"],[24,"Move Members"],[27,"Manage Nicknames"],
   [28,"Manage Roles"],[29,"Manage Webhooks"],[30,"Manage Expressions"],[33,"Manage Events"],
   [34,"Manage Threads"],[40,"Moderate Members"],[41,"View Creator Monetization Analytics"],
-  [43,"Create Expressions"],[44,"Create Events"],[51,"Pin Messages"],[52,"Bypass Slowmode"]
+  // Creation of own expressions/events is allowed. Managing those of others remains blocked.
+  [51,"Pin Messages"],[52,"Bypass Slowmode"]
 ];
 function vipRoleError(c:Config,role:any):string {
   if(!role) return "VIP role not found in Discord.";
