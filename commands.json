@@ -255,7 +255,7 @@
   {
     "command": "!start",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!start",
     "description": "Uruchamia lub wznawia odtwarzanie muzyki w Pear / YouTube Music, bez usuwania kolejki Song Request. Komenda steruj\u0105ca dost\u0119pna tylko uprawnionym osobom.",
     "category": "MUZYKA",
@@ -264,7 +264,7 @@
   {
     "command": "!pause",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!pause",
     "description": "Pauzuje bie\u017C\u0105cy utw\u00F3r w Pear / YouTube Music, ale nie usuwa kolejki Song Request. Ponowne odtwarzanie: !start. Komenda dla uprawnionych os\u00F3b.",
     "category": "MUZYKA",
@@ -273,7 +273,7 @@
   {
     "command": "!stop",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!stop",
     "description": "Zatrzymuje odtwarzanie muzyki i resetuje bie\u017C\u0105cy utw\u00F3r w Pear. Nie usuwa listy zapisanych piosenek.",
     "category": "MUZYKA",
@@ -282,7 +282,7 @@
   {
     "command": "!restart",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!restart",
     "description": "Uruchamia bie\u017C\u0105cy utw\u00F3r ponownie od pocz\u0105tku bez zmiany kolejki Song Request.",
     "category": "MUZYKA",
@@ -291,7 +291,7 @@
   {
     "command": "!skip",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!skip",
     "description": "Pomija aktualnie odtwarzany utw\u00F3r w Pear i pr\u00F3buje przej\u015B\u0107 do nast\u0119pnego w kolejce. Dost\u0119pno\u015B\u0107 komendy zale\u017Cy od uprawnie\u0144 ustawionych przez streamera.",
     "category": "MUZYKA",
@@ -302,7 +302,7 @@
     "aliases": [
       "!vol up"
     ],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!volume up",
     "description": "Podnosi g\u0142o\u015Bno\u015B\u0107 odtwarzacza Pear o 5 punkt\u00F3w procentowych; nie zmienia g\u0142o\u015Bno\u015Bci ca\u0142ego OBS.",
     "category": "MUZYKA",
@@ -313,7 +313,7 @@
     "aliases": [
       "!vol down"
     ],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!volume down",
     "description": "Obni\u017Ca g\u0142o\u015Bno\u015B\u0107 odtwarzacza Pear o 5 punkt\u00F3w procentowych; nie zmienia g\u0142o\u015Bno\u015Bci ca\u0142ego OBS.",
     "category": "MUZYKA",
@@ -322,7 +322,7 @@
   {
     "command": "!sr on",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!sr on",
     "description": "W\u0142\u0105cza przyjmowanie nowych pr\u00F3\u015Bb o utwory przez komend\u0119 !sr. Nie kasuje dotychczasowej kolejki.",
     "category": "MUZYKA",
@@ -331,7 +331,7 @@
   {
     "command": "!sr off",
     "aliases": [],
-    "permission": "Moderator \u002B list",
+    "permission": "Broadcaster \u002B editor",
     "usage": "!sr off",
     "description": "Blokuje nowe pro\u015Bby o utwory przez !sr. Zapisana kolejka pozostaje dost\u0119pna.",
     "category": "MUZYKA",
