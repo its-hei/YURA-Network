@@ -9,5 +9,13 @@ database_name = "yura-cloud"
 database_id = "a9a1cd82-2b0e-46a1-910a-706a6bd6f4d9"
 migrations_dir = "migrations"
 
+[[durable_objects.bindings]]
+name = "RAFFLE_CLOCK"
+class_name = "RaffleClock"
+
+[[migrations]]
+tag = "raffle-clock-v1"
+new_sqlite_classes = ["RaffleClock"]
+
 [triggers]
 crons = ["* * * * *"]

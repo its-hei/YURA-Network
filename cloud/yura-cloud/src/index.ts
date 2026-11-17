@@ -2,6 +2,7 @@ import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingC
 
 interface Env {
   DB: D1Database;
+  RAFFLE_CLOCK?: DurableObjectNamespace;
   TWITCH_CLIENT_ID: string;
   TWITCH_CLIENT_SECRET: string;
   TWITCH_BROADCASTER_ID: string;
@@ -763,6 +764,58 @@ async function setYuraRaffleState(env: Env, state: YuraRaffleState | null) {
   await setMeta(env,"yura_raffle_state_json", state ? JSON.stringify(state) : "");
 }
 
+// Compare-and-swap prevents a timer/chat/cron race from paying a normal raffle twice
+// or re-opening it when a late join or warning writes an outdated snapshot.
+function isTimedManualRaffle(state:YuraRaffleState|null): state is YuraRaffleState {
+  return !!state?.active && (state.mode==="single" || state.mode==="multi");
+}
+async function replaceManualRaffleState(env:Env, previous:YuraRaffleState, next:YuraRaffleState|null) {
+  const updated=await env.DB.prepare("UPDATE meta SET value=?1 WHERE key='yura_raffle_state_json' AND value=?2")
+    .bind(next?JSON.stringify(next):"",JSON.stringify(previous)).run();
+  return Number(updated.meta.changes??0)===1;
+}
+function nextRaffleAlarm(state:YuraRaffleState):number {
+  const ends=Date.parse(state.endsAtUtc);
+  if(!Number.isFinite(ends)) return Date.now()+1000;
+  if(!state.warningSent && state.warningFinalThird!==false && state.warning20Seconds!==false) {
+    const duration=Math.max(5,Math.min(3600,Math.trunc(Number(state.durationSeconds??60))||60));
+    const warning=ends-Math.max(1,Math.ceil(duration/3))*1000;
+    if(Date.now()<ends) return Math.max(Date.now()+100,warning);
+  }
+  return Math.max(Date.now()+100,ends);
+}
+async function armRaffleClock(env:Env) {
+  if(!env.RAFFLE_CLOCK) return;
+  try {
+    const stub=env.RAFFLE_CLOCK.get(env.RAFFLE_CLOCK.idFromName("main"));
+    const result=await stub.fetch("https://raffle-clock.internal/rearm",{method:"POST"});
+    if(!result.ok) throw new Error("clock HTTP "+result.status);
+  } catch(e) {
+    console.warn("YURA raffle clock arm failed; cron recovery remains enabled",String(e));
+  }
+}
+export class RaffleClock {
+  constructor(private state:DurableObjectState, private env:Env) {}
+  private async rearm() {
+    const current=await getYuraRaffleState(this.env);
+    if(!isTimedManualRaffle(current)) return;
+    await this.state.storage.setAlarm(nextRaffleAlarm(current));
+  }
+  async fetch(request:Request) {
+    if(request.method!=="POST"||new URL(request.url).pathname!=="/rearm") return new Response("not found",{status:404});
+    await this.rearm();
+    return new Response("ok");
+  }
+  async alarm() {
+    const current=await getYuraRaffleState(this.env);
+    if(!isTimedManualRaffle(current)) return;
+    // Do not use wall-clock sleeps in the webhook. Alarm survives Worker eviction.
+    if(Date.parse(current.endsAtUtc)<=Date.now()) await finishYuraRaffleIfDue(this.env);
+    else await warnYuraRaffleIfDue(this.env);
+    await this.rearm();
+  }
+}
+
 function yuraRaffleWinnerCount(mode:"single"|"multi", count:number) {
   if (mode === "single") return count > 0 ? 1 : 0;
   if (count <= 0) return 0;
@@ -848,8 +901,8 @@ async function warnYuraRaffleIfDue(env: Env) {
   const durationSeconds=Math.max(5,Math.min(3600,Math.trunc(Number(state.durationSeconds ?? 60)) || 60));
   const warningSeconds=Math.max(1,Math.ceil(durationSeconds/3));
   if (remainingMs <= 0 || remainingMs > warningSeconds*1000) return false;
-  state.warningSent=true;
-  await setYuraRaffleState(env,state);
+  const warned={...state,warningSent:true};
+  if (!await replaceManualRaffleState(env,state,warned)) return false;
   const remainingSeconds=Math.max(1,Math.ceil(remainingMs/1000));
   await sendChat(env,`🎟️ Raffle nadal otwarty • ostatnie 33% czasu (~${remainingSeconds}s) • wpisz !join • uczestników: ${state.entries.length}.`);
   return true;
@@ -902,7 +955,8 @@ async function finishYuraRaffleIfDue(env: Env, force=false) {
       (wins.results ?? []).map((w:any)=>`${w.rank}. @${w.display_name}: ${Number(w.amount).toLocaleString('pl-PL')}`).join(' • '));
     return true;
   }
-  await setYuraRaffleState(env,null);
+  // Only one timer/chat/cron execution may claim the same manual draw.
+  if (!await replaceManualRaffleState(env,state,null)) return false;
 
   if (!state.entries.length) {
     await sendChat(env,"🎟️ Raffle zakończony • brak uczestników.");
@@ -1371,6 +1425,11 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       await finishJackpot(env,active.jackpotId,!timerElapsed);
       const outcome = await env.DB.prepare("SELECT status FROM jackpot_sessions WHERE id=?1").bind(active.jackpotId).first<{status:string}>();
       if (outcome?.status !== "paid" && outcome?.status !== "refunded") return;
+    } else if (isTimedManualRaffle(active)) {
+      // Claim cancellation before announcing; never erase a subsequent raffle.
+      if (!await replaceManualRaffleState(env,active,null)) return;
+      await sendChat(env,"🎟️ Raffle anulowany.");
+      return;
     } else {
       await sendChat(env,"🎟️ Raffle anulowany.");
     }
@@ -1405,14 +1464,24 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       await sendChat(env,`🎰 @${display} dołączył do JACKPOT • ${Number(count?.n || 0)} graczy • pula ${(Number(count?.n || 0)*Number(session.stake)).toLocaleString('pl-PL')} YURA.`);
       return;
     }
-    if (state.entries.some(x => x.login === login || (event.chatter_user_id && x.userId === event.chatter_user_id))) {
-      await sendChat(env,`🎟️ @${display} już jesteś w raffle.`);
-      return;
+    // Retry optimistic writes against the current draw, never revive an expired/cancelled draw.
+    let snapshot=state;
+    for(let attempt=0;attempt<6;attempt++) {
+      if(!isTimedManualRaffle(snapshot)||snapshot.endsAtUtc!==state.endsAtUtc||snapshot.id!==state.id||Date.parse(snapshot.endsAtUtc)<=Date.now()) return;
+      if(snapshot.entries.some(x=>x.login===login||(event.chatter_user_id&&x.userId===event.chatter_user_id))) {
+        await sendChat(env,`🎟️ @${display} już jesteś w raffle.`);
+        return;
+      }
+      const joined={...snapshot,entries:[...snapshot.entries,{userId:event.chatter_user_id,login,display}]};
+      if(await replaceManualRaffleState(env,snapshot,joined)) {
+        if(joined.joinConfirmation!==false)
+          await sendChat(env,`🎟️ @${display} dołączył do raffle • uczestników: ${joined.entries.length}.`);
+        return;
+      }
+      const fresh=await getYuraRaffleState(env);
+      if(!fresh) return;
+      snapshot=fresh;
     }
-    state.entries.push({ userId:event.chatter_user_id, login, display });
-    await setYuraRaffleState(env,state);
-    if (state.joinConfirmation !== false)
-      await sendChat(env,`🎟️ @${display} dołączył do raffle • uczestników: ${state.entries.length}.`);
     return;
   }
 
@@ -1585,8 +1654,9 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const configuredDuration = Math.max(5,Math.min(3600,Math.trunc(Number(cfg.defaultDurationSeconds ?? 60)) || 60));
     const duration = Math.max(5,Math.min(3600,Math.trunc(Number(parts[2] ?? configuredDuration)) || configuredDuration));
     if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
-    const state:YuraRaffleState = { active:true, mode:key === "sraffle" ? "single" : "multi", prize, endsAtUtc:new Date(Date.now()+duration*1000).toISOString(), durationSeconds:duration, entries:[{ userId:event.chatter_user_id, login, display }], warningSent:false, joinConfirmation:cfg.joinConfirmation !== false, warning20Seconds:cfg.warning20Seconds !== false, warningFinalThird:cfg.warningFinalThird !== false };
+    const state:YuraRaffleState = { active:true, id:crypto.randomUUID(), mode:key === "sraffle" ? "single" : "multi", prize, endsAtUtc:new Date(Date.now()+duration*1000).toISOString(), durationSeconds:duration, entries:[{ userId:event.chatter_user_id, login, display }], warningSent:false, joinConfirmation:cfg.joinConfirmation !== false, warning20Seconds:cfg.warning20Seconds !== false, warningFinalThird:cfg.warningFinalThird !== false };
     await setYuraRaffleState(env,state);
+    await armRaffleClock(env);
     await sendChat(env,key === "sraffle"
       ? `🎟️ Raffle o ${prize.toLocaleString("pl-PL")} YURA • ${duration}s • jeden zwycięzca • wpisz !join.`
       : `🎟️ Multi-raffle o ${prize.toLocaleString("pl-PL")} YURA • ${duration}s • wpisz !join.`);
@@ -3877,6 +3947,9 @@ export default {
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil((async () => {
+      // Deadline alarms handle manual raffle; cron is recovery only.
+      await warnYuraRaffleIfDue(env);
+      await finishYuraRaffleIfDue(env);
       const base = (env.CLOUD_PUBLIC_URL || "").trim();
       if (base) {
         try { await ensureEventSub(env, base); }
