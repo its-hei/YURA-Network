@@ -4,7 +4,7 @@ interface OnboardingEnv {
   ADMIN_KEY: string;
   DISCORD_BOT_TOKEN?: string;
 }
-type Config = { guild: string; welcome: string; staff: string; boomer: string; fc: string; key: string; message?: string };
+type Config = { guild: string; welcome: string; staff: string; boomer: string; fc: string; key: string; message?: string; panel_text?: string };
 type Mode = "ttv" | "fc" | "both";
 type Profile = {
   guild_id: string; discord_id: string; mode: Mode; twitch_login: string;
@@ -50,9 +50,8 @@ function validDisplayName(value:string):boolean {
   // Discord limits nicknames to 32 characters. No platform-specific syntax.
   return value.length>0 && value.length<=32 && !/[\p{Cc}\p{Cf}]/u.test(value);
 }
-function validNames(mode:Mode,ttv:string,ff:string) {
-  return (mode==="fc" || validDisplayName(ttv)) &&
-    (mode==="ttv" || validDisplayName(ff));
+function validNames(ttv:string,ff:string) {
+  return (!ttv || validDisplayName(ttv)) && (!ff || validDisplayName(ff));
 }
 function nicknameKey(value:string):string {
   return value.normalize("NFKC").toLowerCase().replace(/[\s_-]+/gu,"");
@@ -76,7 +75,7 @@ function safeDiscordError(error:unknown):string {
   return /^Discord API [0-9]{3}( \/ [0-9]+)? \((GET|POST|PUT|PATCH|DELETE) [a-z0-9_-]+\)\.$/.test(msg)
     ? msg : "Błąd połączenia lub zapisu.";
 }
-async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
+async function reconcile(env: OnboardingEnv, c: Config, p: Profile, previousNick="") {
   const path = memberPath(c,p.discord_id);
   const m = await discord(env,path);
   const roles: string[] = Array.isArray(m.roles) ? m.roles : [];
@@ -85,18 +84,21 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
   try {
     // Discord's actual member roles are authoritative for Boomer. Do not let
     // an old success marker (e.g. after testing or rejoining) block registration.
-    if (!boomer) {
-      await discord(env,path + "/roles/" + c.boomer,"PUT");
-      boomer=true;
+    const wantsBoomer=Boolean(p.twitch_login || p.ffxiv_name);
+    if (wantsBoomer!==boomer) {
+      await discord(env,path+"/roles/"+c.boomer,wantsBoomer?"PUT":"DELETE");
+      boomer=wantsBoomer;
     }
-    if (!p.boomer_granted) {
-      await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=1 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id).run();
-    }
+    if(Boolean(p.boomer_granted)!==boomer)
+      await env.DB.prepare("UPDATE discord_onboarding_profiles SET boomer_granted=?3 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,p.discord_id,boomer?1:0).run();
   } catch(e) { warnings.push("Nie udało się zapisać rangi Boomer: "+safeDiscordError(e)); }
   // Temporary open FC registration. Pending profiles (including older requests)
   // are granted on their next interaction. Never restore rejected/revoked FC.
   let fc=roles.includes(c.fc);
-  if(p.mode!=="ttv" && p.fc_state==="pending") {
+  if(!p.ffxiv_name && fc) {
+    try {await discord(env,path+"/roles/"+c.fc,"DELETE");fc=false;}
+    catch(e) {warnings.push("Nie udało się odebrać rangi FC: "+safeDiscordError(e));}
+  } else if(p.ffxiv_name && p.fc_state==="pending") {
     if(!boomer) {
       warnings.push("Ranga FC wymaga aktywnej rangi Boomer.");
     } else {
@@ -118,7 +120,7 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
         }
       } catch(e) { warnings.push("Nie udało się nadać rangi FC: "+safeDiscordError(e)); }
     }
-  } else if(p.mode!=="ttv" && p.fc_state==="approved" && !fc) {
+  } else if(p.ffxiv_name && p.fc_state==="approved" && !fc) {
     warnings.push("Ranga FC została wcześniej odebrana. Tylko administracja może ją przywrócić.");
   }
   const nick=desiredNick(p);
@@ -127,24 +129,27 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile) {
     if (nick && !nicknameApplied) {
       await discord(env,path,"PATCH",{nick});
       nicknameApplied=true;
+    } else if(!nick && previousNick && m.nick===previousNick) {
+      await discord(env,path,"PATCH",{nick:null});
     }
   } catch(e) { warnings.push("Nie udało się ustawić pseudonimu: "+safeDiscordError(e)); }
   return {boomer,fc,nicknameApplied,warnings};
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
-function panel() {
+const DEFAULT_PANEL_TEXT="**Rejestracja**\nWybierz Twitch lub Ordo Noctis. Zatwierdzając formularz, akceptujesz regulamin. Możesz dołączyć do obu społeczności. Podaj dokładny login Twitch oraz nick postaci FFXIV, jeśli grasz z nami. Puste pole oznacza brak powiązania z daną społecznością. Ranga Boomer wymaga przynajmniej jednego nicku, a FC – nicku FFXIV. Nicki możesz zmieniać w dowolnej chwili.";
+function panel(c:Config) {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:"Wybierz społeczność i podaj swój nick. Zatwierdzając formularz, akceptujesz regulamin. Ranga Boomer zostanie przyznana automatycznie. Ranga FC zostanie przyznana automatycznie po wybraniu Free Company. Możesz zarejestrować się w obu społecznościach, wybierając każdy przycisk osobno. Nicki przyjmujemy bez dodatkowej weryfikacji. Jeśli na Twitchu i w FFXIV używasz tej samej nazwy, wpisz ją w obu polach. Nicki możesz poprawić w dowolnej chwili. Dla obu społeczności pseudonim ma format Twitch (FFXIV). Identyczne nazwy wyświetlamy tylko raz.",color:0xe89b52}],
-    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Free Company",1)]},{type:1,components:[button("status","Moja rejestracja"),button("edit","Edytuj nicki"),button("reset","Resetuj rejestrację",4)]}],
+    embeds:[{title:"Witaj u Boomersów!",description:c.panel_text || DEFAULT_PANEL_TEXT,color:0xe89b52}],
+    components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]},{type:1,components:[button("edit","Edytuj nicki"),button("reset","Resetuj rejestrację",4)]}],
     allowed_mentions:safeMentions
   };
 }
 function field(id: string,label:string,max:number,initial?:string) {
-  return {type:18,label,...(id==="ttv" ? {description:"Podaj dokładny login Twitch – jest niezbędny do poprawnej synchronizacji rang."} : {}),component:{type:4,custom_id:id,style:1,required:true,max_length:max,
+  return {type:18,label,...(id==="ttv" ? {description:"Podaj dokładny login Twitch – jest niezbędny do poprawnej synchronizacji rang."} : {}),component:{type:4,custom_id:id,style:1,required:false,max_length:max,
     ...(initial ? {value:initial.slice(0,max)} : {})}};
 }
-function modal(mode: Mode, previous?:Profile|null) {
-  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:previous?"Edytuj rejestrację":"Rejestracja Boomersów",components:[
+function modal(mode: Mode|"edit", previous?:Profile|null) {
+  return response({type:9,data:{custom_id:prefix+"form:"+mode,title:mode==="edit"||previous?"Edytuj rejestrację":"Rejestracja Boomersów",components:[
     ...(mode !== "fc" ? [field("ttv","Nick na Twitchu",32,previous?.twitch_login)] : []),
     ...(mode !== "ttv" ? [field("ff","Nick postaci FFXIV",32,previous?.ffxiv_name)] : [])
   ]}});
@@ -162,20 +167,19 @@ function values(components: any[]): Record<string,string> {
 }
 function statusText(p: Profile) {
   const lines = ["Regulamin zaakceptowany."];
-  if (p.mode !== "fc") {
-    lines.push("Nick Twitch: "+p.twitch_login+".");
-  }
-  if (p.mode !== "ttv") lines.push("Nick FFXIV: "+p.ffxiv_name+".");
-  if (p.mode !== "ttv" && p.fc_state === "rejected") lines.push("Dostęp FC został odebrany. Skontaktuj się z administracją.");
+  if(p.twitch_login) lines.push("Nick Twitch: "+p.twitch_login+".");
+  if(p.ffxiv_name) lines.push("Nick FFXIV: "+p.ffxiv_name+".");
+  if(!p.twitch_login&&!p.ffxiv_name) lines.push("Nie zapisano żadnego nicku.");
+  if(p.ffxiv_name && p.fc_state==="rejected") lines.push("Dostęp FC został odebrany. Skontaktuj się z administracją.");
   if (desiredNick(p)) lines.push("Docelowy pseudonim: "+desiredNick(p));
   return lines.join("\n");
 }
-async function finish(env:OnboardingEnv,c:Config,p:Profile) {
+async function finish(env:OnboardingEnv,c:Config,p:Profile,previousNick="") {
   const lines=[statusText(p)];
   try {
-    const result=await reconcile(env,c,p);
-    if(result.boomer) lines.push("Ranga Boomer: aktywna.");
-    if(p.mode!=="ttv" && result.fc) lines.push("Ranga FC: aktywna.");
+    const result=await reconcile(env,c,p,previousNick);
+    lines.push("Ranga Boomer: "+(result.boomer?"aktywna.":"nieaktywna."));
+    lines.push("Ranga FC (Ordo Noctis): "+(result.fc?"aktywna.":"nieaktywna."));
     if(result.nicknameApplied) lines.push("Pseudonim ustawiony.");
     lines.push(...result.warnings);
   } catch(e) { lines.push("Nie udało się odczytać członka serwera: "+safeDiscordError(e)); }
@@ -183,7 +187,7 @@ async function finish(env:OnboardingEnv,c:Config,p:Profile) {
 }
 async function status(env:OnboardingEnv,c:Config,id:string) {
   let p = await profile(env,c.guild,id);
-  if (!p || (!p.twitch_login && !p.ffxiv_name)) return "Nie masz jeszcze rejestracji. Wybierz Twitch lub Free Company. Możesz wybrać obie opcje osobno.";
+  if (!p) return "Nie masz jeszcze rejestracji. Wybierz Twitch lub Ordo Noctis.";
   // Retain declared login and any previously verified ID; retire old challenges.
   if (p.verify_code || p.verify_until) {
     await env.DB.prepare("UPDATE discord_onboarding_profiles SET verify_code=NULL,verify_until=0 WHERE guild_id=?1 AND discord_id=?2").bind(c.guild,id).run();
@@ -191,31 +195,36 @@ async function status(env:OnboardingEnv,c:Config,id:string) {
   }
   return finish(env,c,p);
 }
-async function register(env: OnboardingEnv,c:Config,i:any,mode:Mode) {
-  const id = String(i.member.user.id);
-  const f = values(i.data.components || []);
-  const ttv = mode === "fc" ? "" : cleanDisplayName(f.ttv).replace(/^@/,"").trim();
-  const ff = mode === "ttv" ? "" : cleanDisplayName(f.ff);
-  if (!validNames(mode,ttv,ff)) return "Podaj nick dla wybranej społeczności (1–32 znaki, bez niewidocznych znaków sterujących). Format i liczba członów są dowolne.";
-  const previous = await profile(env,c.guild,id);
-  const hadFc = (i.member.roles || []).includes(c.fc);
-  const fcState = mode === "ttv" ? "none" : hadFc ? "approved" : "pending";
-  // Update only the selected community's fields. Adding the other community
-  // merges the registration instead of deleting the first one.
-  // Existing FC decisions, review message and Boomer-granted marker stay intact.
-  // Changing a declared Twitch identity invalidates a previously verified binding.
+async function register(env:OnboardingEnv,c:Config,i:any,mode:Mode|"edit") {
+  const id=String(i.member.user.id);
+  const f=values(i.data.components||[]);
+  const previous=await profile(env,c.guild,id);
+  const ttv=mode==="fc"?(previous?.twitch_login||""):cleanDisplayName(f.ttv).replace(/^@/,"").trim();
+  const ff=mode==="ttv"?(previous?.ffxiv_name||""):cleanDisplayName(f.ff);
+  if(!validNames(ttv,ff)) return "Nick może mieć do 32 znaków. Możesz też zostawić pole puste.";
+  if(!previous&&!ttv&&!ff) return "Nie zapisano rejestracji – oba nicki są puste.";
+  const roles:string[]=Array.isArray(i.member.roles)?i.member.roles:[];
+  const hadFc=roles.includes(c.fc);
+  const mergedMode:Mode=ttv&&ff?"both":ff?"fc":"ttv";
+  const initialFc=ff?(hadFc?"approved":"pending"):"none";
+  const oldNick=previous?desiredNick(previous):"";
   await env.DB.prepare(`INSERT INTO discord_onboarding_profiles
     (guild_id,discord_id,mode,twitch_login,ffxiv_name,fc_state,verify_code,verify_until)
     VALUES(?1,?2,?3,?4,?5,?6,NULL,0)
     ON CONFLICT(guild_id,discord_id) DO UPDATE SET
-      mode=CASE WHEN discord_onboarding_profiles.twitch_login='' AND discord_onboarding_profiles.ffxiv_name='' THEN excluded.mode WHEN discord_onboarding_profiles.mode=excluded.mode THEN excluded.mode ELSE 'both' END,
-      twitch_login=CASE WHEN excluded.mode='fc' THEN discord_onboarding_profiles.twitch_login ELSE excluded.twitch_login END,
-      ffxiv_name=CASE WHEN excluded.mode='ttv' THEN discord_onboarding_profiles.ffxiv_name ELSE excluded.ffxiv_name END,
-      twitch_id=CASE WHEN excluded.mode<>'fc' AND lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
-      fc_state=CASE WHEN discord_onboarding_profiles.fc_state='none' AND excluded.mode<>'ttv' THEN excluded.fc_state ELSE discord_onboarding_profiles.fc_state END,
+      mode=excluded.mode,twitch_login=excluded.twitch_login,ffxiv_name=excluded.ffxiv_name,
+      twitch_id=CASE WHEN lower(excluded.twitch_login)<>lower(discord_onboarding_profiles.twitch_login) THEN NULL ELSE discord_onboarding_profiles.twitch_id END,
+      fc_state=CASE
+        WHEN discord_onboarding_profiles.fc_state='rejected' THEN 'rejected'
+        WHEN discord_onboarding_profiles.fc_state='approved' AND excluded.ffxiv_name='' AND ?7=0 THEN 'rejected'
+        WHEN excluded.ffxiv_name='' THEN 'none'
+        WHEN discord_onboarding_profiles.fc_state IN ('approved','pending') THEN discord_onboarding_profiles.fc_state
+        ELSE excluded.fc_state END,
       verify_code=NULL,verify_until=0`)
-    .bind(c.guild,id,mode,ttv,ff,fcState).run();
-  return (previous && (previous.twitch_login || previous.ffxiv_name) ? "Rejestracja zaktualizowana.\n" : "")+await status(env,c,id);
+    .bind(c.guild,id,mergedMode,ttv,ff,initialFc,hadFc?1:0).run();
+  const saved=await profile(env,c.guild,id);
+  if(!saved) return "Nie udało się zapisać rejestracji.";
+  return (previous?"Rejestracja zaktualizowana.\n":"")+await finish(env,c,saved,oldNick);
 }
 // Keep an empty profile as a tombstone: moderation decisions and subscriber
 // sync protection must survive a self-service reset. No other roles are touched.
@@ -243,7 +252,7 @@ async function resetRegistration(env:OnboardingEnv,c:Config,id:string) {
     try {await discord(env,path+"/roles/"+role,"DELETE");}
     catch(e) {warnings.push("Nie udało się odebrać rangi "+label+": "+safeDiscordError(e));}
   }
-  return ["Rejestracja zresetowana. Możesz wybrać Twitch lub Free Company od nowa.",
+  return ["Rejestracja zresetowana. Możesz wybrać Twitch lub Ordo Noctis od nowa.",
     ...(blocked?["Wcześniejsza blokada FC pozostaje aktywna."]:[]),
     ...warnings].join("\n");
 }
@@ -275,7 +284,7 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!/^((approve|reject):[0-9]{15,22})$/.test(action) && i.channel_id!==c.welcome) return ephemeral("Użyj aktualnego panelu w kanale zasad.");
   if (i.type===3 && (action==="ttv" || action==="fc" || action==="both" || action==="edit")) {
     const previous=await profile(env,c.guild,i.member.user.id);
-    if(action==="edit") return previous && (previous.twitch_login || previous.ffxiv_name) ? modal(previous.mode,previous) : ephemeral("Najpierw wybierz Twitch lub Free Company.");
+    if(action==="edit") return modal("edit",previous);
     return modal(action,previous);
   }
   if(i.type===3 && action==="reset") return response({type:4,data:{
@@ -287,7 +296,7 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   let job: (()=>Promise<string>)|undefined;
   if (i.type===3 && action==="reset-confirm") job=()=>resetRegistration(env,c,i.member.user.id);
   if (i.type===3 && action==="status") job=()=>status(env,c,i.member.user.id);
-  if (i.type===5 && /^form:(ttv|fc|both)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode);
+  if (i.type===5 && /^form:(ttv|fc|both|edit)$/.test(action)) job=()=>register(env,c,i,action.slice(5) as Mode|"edit");
   if (i.type===3 && /^(approve|reject):[0-9]{15,22}$/.test(action)) return ephemeral("Ranga FC jest obecnie nadawana automatycznie. Zarządzaj rangami w YURA Desktop.");
   if (!job) return ephemeral("Nieobsługiwana akcja.");
   const run=job;
@@ -309,9 +318,27 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
   try {
     if(req.method==="GET") {
       const c=await config(env);
-      if(!c) return response({ok:true,configured:false,profiles:[]});
+      if(!c) return response({ok:true,configured:false,panel_text:DEFAULT_PANEL_TEXT,profiles:[]});
+      if(url.searchParams.get("import_rules")==="1") {
+        const sourceId=(url.searchParams.get("message_id")||"").trim();
+        if(sourceId && (!snowflake(sourceId)||sourceId===c.message)) return response({error:"Select the original rules message, not the YURA panel."},400);
+        let candidates:any[];
+        if(sourceId) candidates=[await discord(env,"channels/"+c.welcome+"/messages/"+sourceId)];
+        else {
+          const messages=await discord(env,"channels/"+c.welcome+"/messages?limit=50");
+          candidates=(Array.isArray(messages)?messages:[]).filter((m:any)=>!m.author?.bot && m.id!==c.message && /regulamin/i.test(String(m.content||"")));
+        }
+        if(candidates.length!==1) return response({error:"Could not uniquely identify the rules. Paste the original message link or ID."},409);
+        const m=candidates[0];
+        const raw=String(m.content||"").trim();
+        if(!raw) return response({error:"The selected message has no text to import."},400);
+        const rules=raw.split(/\r?\n/).filter(line=>!/^\s*(?:\*\*)?regulamin akceptujesz używając reakcji/i.test(line)).join("\n").trim();
+        const imported=rules+"\n\n"+DEFAULT_PANEL_TEXT;
+        if(imported.length>4096) return response({error:"Combined text exceeds 4096 characters. Shorten it in the editor."},400);
+        return response({ok:true,panel_text:imported});
+      }
       const rows=await env.DB.prepare("SELECT discord_id,mode,twitch_login,twitch_id,ffxiv_name,fc_state FROM discord_onboarding_profiles WHERE guild_id=?1 ORDER BY discord_id").bind(c.guild).all();
-      return response({ok:true,configured:true,guild:c.guild,welcome:c.welcome,staff:c.staff,boomer:c.boomer,fc:c.fc,message:c.message||"",profiles:rows.results||[]});
+      return response({ok:true,configured:true,guild:c.guild,welcome:c.welcome,staff:c.staff,boomer:c.boomer,fc:c.fc,message:c.message||"",panel_text:c.panel_text||DEFAULT_PANEL_TEXT,profiles:rows.results||[]});
     }
     if(req.method==="PUT") {
       const x:any=await req.json();
@@ -327,7 +354,11 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
       }
       const key=String(app.verify_key||"");
       if(!/^[a-f0-9]{64}$/i.test(key)) return response({error:"Discord application verification key unavailable"},502);
-      const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{})};
+      const c:Config={guild:x.guild,welcome:x.welcome,staff:x.staff,boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{})};
+      if(typeof x.panel_text==="string" && x.panel_text.trim()) {
+        if(x.panel_text.length>4096) return response({error:"Message cannot exceed 4096 characters."},400);
+        c.panel_text=x.panel_text.trim();
+      }
       await saveConfig(env,c);
       return response({ok:true,endpoint:url.origin+"/discord/interactions",message:c.message||""});
     }
@@ -350,12 +381,19 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv) {
     if(req.method==="POST") {
       const c=await config(env);
       if(!c) return response({error:"configure onboarding first"},400);
+      const raw=await req.text();
+      if(raw.trim()) {
+        let body:any;try{body=JSON.parse(raw);}catch{return response({error:"Invalid JSON"},400);}
+        if(typeof body.panel_text!=="string"||!body.panel_text.trim()||body.panel_text.length>4096)
+          return response({error:"Message must contain 1–4096 characters."},400);
+        c.panel_text=body.panel_text.trim();
+      }
       let msg:any;
       if(c.message) {
         // Do not duplicate a panel if a transient API error occurs.
-        msg=await discord(env,"channels/"+c.welcome+"/messages/"+c.message,"PATCH",panel());
+        msg=await discord(env,"channels/"+c.welcome+"/messages/"+c.message,"PATCH",panel(c));
       } else {
-        msg=await discord(env,"channels/"+c.welcome+"/messages","POST",panel());
+        msg=await discord(env,"channels/"+c.welcome+"/messages","POST",panel(c));
       }
       await saveConfig(env,{...c,message:String(msg.id)});
       return response({ok:true,message:msg.id});
