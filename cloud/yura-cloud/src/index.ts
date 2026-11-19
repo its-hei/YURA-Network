@@ -1617,33 +1617,30 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     const duration=configured;
     const endsAtUtc=new Date(Date.now()+duration*1000).toISOString();
     if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
-    let newSession=0;
+    const state:YuraRaffleState={active:true,mode:"jackpot",prize:stake,endsAtUtc,durationSeconds:duration,
+      entries:[{userId:event.chatter_user_id,login,display}],
+      winnerCount:1,warningSent:true,joinConfirmation:true};
     try {
       const createdAt=nowIso();
-      // Cloudflare D1 batch is a transaction: if debit fails, session creation
-      // and the jackpot_entries insert roll back together. The INSERT trigger
-      // debits the author exactly once and records a transaction audit entry.
-      const batch=await env.DB.batch([
+      // One D1 transaction publishes the funded session AND the active raffle
+      // state. The entry trigger debits and audits exactly once. D1 changes
+      // includes trigger writes; its value must not be used as an entry count.
+      // A missing session yields NULL for the NOT NULL session_id, aborting
+      // the entire batch rather than leaving an empty open session.
+      await env.DB.batch([
         env.DB.prepare(`INSERT INTO jackpot_sessions(stake,ends_at_utc,created_at_utc) VALUES(?1,?2,?3)`)
           .bind(stake,endsAtUtc,createdAt),
         env.DB.prepare(`INSERT INTO jackpot_entries(session_id,login,twitch_user_id,display_name,stake,joined_at_utc)
-          SELECT id,?1,?2,?3,?4,?5 FROM jackpot_sessions WHERE status='open' ORDER BY id DESC LIMIT 1`)
-          .bind(login,event.chatter_user_id,display,stake,createdAt)
+          VALUES((SELECT id FROM jackpot_sessions WHERE status='open' AND stake=?4 AND created_at_utc=?5 AND ends_at_utc=?6),?1,?2,?3,?4,?5)`)
+          .bind(login,event.chatter_user_id,display,stake,createdAt,endsAtUtc),
+        env.DB.prepare(`INSERT INTO meta(key,value)
+          VALUES('yura_raffle_state_json',json_set(?1,'$.jackpotId',(SELECT id FROM jackpot_sessions WHERE status='open' AND stake=?2 AND created_at_utc=?3 AND ends_at_utc=?4)))
+          ON CONFLICT(key) DO UPDATE SET value=excluded.value`)
+          .bind(JSON.stringify(state),stake,createdAt,endsAtUtc)
       ]);
-      if(Number(batch[0]?.meta?.changes||0)!==1 || Number(batch[1]?.meta?.changes||0)!==1)
-        throw new Error("Jackpot start did not create one funded participant");
-      newSession=Number(batch[0]?.meta?.last_row_id||0);
-      if(!Number.isSafeInteger(newSession) || newSession<=0){
-        const sessionRow=await env.DB.prepare(`SELECT id FROM jackpot_sessions WHERE status='open' ORDER BY id DESC LIMIT 1`).first<{id:number}>();
-        newSession=Number(sessionRow?.id||0);
-      }
-      if(!newSession)throw new Error("Jackpot session identifier unavailable");
     } catch(e){
-      // No session or debit persists on D1 batch failure; unlock the shared
-      // family gate so an invalid attempt cannot block another viewer.
-      if(newSession){
-        try {await finishJackpot(env,newSession,true);}catch(refundError){console.error("Jackpot automatic join refund failed",String(refundError));}
-      }
+      // A failed D1 statement rolls back the session, entry, debit, audit
+      // and active state together. Release the gate for a valid retry.
       await env.DB.prepare(`DELETE FROM command_cooldowns WHERE command_key=?1 AND user_id='*'`)
         .bind(RAFFLE_SHARED_START_KEY).run();
       console.warn("Jackpot organizer auto-join failed",String(e));
@@ -1653,10 +1650,6 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
         : `🎰 @${display} nie udało się bezpiecznie uruchomić Jackpota. Spróbuj ponownie — nie otwarto pustej sesji.`);
       return;
     }
-    const state:YuraRaffleState={active:true,mode:"jackpot",prize:stake,endsAtUtc,durationSeconds:duration,
-      entries:[{userId:event.chatter_user_id,login,display}],
-      jackpotId:newSession,winnerCount:1,warningSent:true,joinConfirmation:true};
-    await setYuraRaffleState(env,state);
     await tryEnterCloudCommandCooldown(env,JACKPOT_START_COOLDOWN_KEY,event.chatter_user_id,cfg);
     await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • @${display} dołączył automatycznie (1 gracz, pula ${stake.toLocaleString("pl-PL")} YURA) • dołącz: !join!`);
     return;

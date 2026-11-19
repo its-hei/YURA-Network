@@ -90,6 +90,9 @@ jobs:
       - name: Test auto-drawn slot purchases and rollback (local SQLite)
         run: python3 cloud/yura-cloud/tests/test_pokemon_slot_autodraw.py
 
+      - name: Test Jackpot atomic start, entry and recovery (local SQLite)
+        run: python3 cloud/yura-cloud/tests/test_jackpot_start.py
+
       - name: Preflight Worker build without deployment
         working-directory: cloud/yura-cloud
         run: npx wrangler deploy --dry-run
