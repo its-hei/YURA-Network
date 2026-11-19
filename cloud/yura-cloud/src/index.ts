@@ -862,9 +862,31 @@ async function jackpotEntries(env: Env, sessionId: number) {
   return rows.results ?? [];
 }
 
+// Release only the gate owned by this settled Jackpot. Both writes are atomic:
+// a stale timer or recovery must never clear a newer Raffle / Jackpot.
+async function releaseFinishedJackpot(env:Env,sessionId:number) {
+  await env.DB.batch([
+    env.DB.prepare(`DELETE FROM command_cooldowns WHERE command_key=?2 AND user_id='*'
+      AND EXISTS(SELECT 1 FROM meta WHERE key='yura_raffle_state_json'
+        AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.mode')='jackpot'
+        AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.jackpotId')=?1)
+      AND EXISTS(SELECT 1 FROM jackpot_sessions WHERE id=?1 AND status IN ('paid','refunded'))`)
+      .bind(sessionId,RAFFLE_SHARED_START_KEY),
+    env.DB.prepare(`UPDATE meta SET value='' WHERE key='yura_raffle_state_json'
+      AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.mode')='jackpot'
+      AND json_extract(CASE WHEN json_valid(value) THEN value ELSE '{}' END,'$.jackpotId')=?1
+      AND EXISTS(SELECT 1 FROM jackpot_sessions WHERE id=?1 AND status IN ('paid','refunded'))`)
+      .bind(sessionId)
+  ]);
+}
+
 async function finishJackpot(env: Env, sessionId: number, cancel = false) {
   const row = await env.DB.prepare("SELECT * FROM jackpot_sessions WHERE id=?1").bind(sessionId).first<any>();
-  if (!row || row.status === "paid" || row.status === "refunded") return false;
+  if (!row) return false;
+  if (row.status === "paid" || row.status === "refunded") {
+    await releaseFinishedJackpot(env,sessionId);
+    return false;
+  }
   if (!cancel && row.status === "open" && Date.parse(row.ends_at_utc) > Date.now()) return false;
   const entries = await jackpotEntries(env, sessionId);
   const refund = cancel || entries.length < 2;
@@ -881,6 +903,7 @@ async function finishJackpot(env: Env, sessionId: number, cancel = false) {
     const count = await env.DB.prepare("SELECT COUNT(*) n FROM jackpot_refunds WHERE session_id=?1").bind(sessionId).first<{n:number}>();
     if (Number(count?.n) !== entries.length) return false;
     const done = await env.DB.prepare("UPDATE jackpot_sessions SET status='refunded' WHERE id=?1 AND status='refunding'").bind(sessionId).run();
+    await releaseFinishedJackpot(env,sessionId);
     if ((done.meta?.changes ?? 0) !== 1) return false;
     await sendChat(env, cancel ? `🎰 Jackpot anulowany • wpisowe zwrócone ${entries.length} osobom.`
       : `🎰 Jackpot anulowany • mniej niż 2 uczestników • wpisowe zwrócone.`);
@@ -897,6 +920,7 @@ async function finishJackpot(env: Env, sessionId: number, cancel = false) {
   const paid = await env.DB.prepare("SELECT login,display_name,amount FROM jackpot_payouts WHERE session_id=?1").bind(sessionId).first<any>();
   if (!paid) return false;
   const done = await env.DB.prepare("UPDATE jackpot_sessions SET status='paid' WHERE id=?1 AND status='settling'").bind(sessionId).run();
+  await releaseFinishedJackpot(env,sessionId);
   if ((done.meta?.changes ?? 0) !== 1) return false;
   await sendChat(env,`🎰 JACKPOT • @${paid.display_name} zgarnia ${Number(paid.amount).toLocaleString('pl-PL')} YURA! • ${entries.length} uczestników.`);
   return true;
@@ -931,11 +955,7 @@ async function finishYuraRaffleIfDue(env: Env, force=false) {
   if (!state?.active) return false;
   if (!force && Date.parse(state.endsAtUtc)>Date.now()) return false;
   if (state.mode === "jackpot") {
-    if (state.jackpotId) {
-      await finishJackpot(env,state.jackpotId);
-      const row = await env.DB.prepare("SELECT status FROM jackpot_sessions WHERE id=?1").bind(state.jackpotId).first<{status:string}>();
-      if (row?.status === "paid" || row?.status === "refunded") await setYuraRaffleState(env,null);
-    }
+    if (state.jackpotId) await finishJackpot(env,state.jackpotId);
     return true;
   }
 
@@ -1441,8 +1461,8 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
       // Do not allow cancellation after the deadline to force a refund instead of drawing.
       const timerElapsed = Date.parse(active.endsAtUtc) <= Date.now();
       await finishJackpot(env,active.jackpotId,!timerElapsed);
-      const outcome = await env.DB.prepare("SELECT status FROM jackpot_sessions WHERE id=?1").bind(active.jackpotId).first<{status:string}>();
-      if (outcome?.status !== "paid" && outcome?.status !== "refunded") return;
+      // finishJackpot releases its own matching state and gate, before chat.
+      return;
     } else if (isTimedManualRaffle(active)) {
       // Claim cancellation before announcing; never erase a subsequent raffle.
       if (!await replaceManualRaffleState(env,active,null)) return;
@@ -1656,8 +1676,8 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
   }
   if (key === "raffle" || key === "sraffle" || key === "jackpot") {
     const active = await getYuraRaffleState(env);
-    if (active?.active && Date.parse(active.endsAtUtc) > Date.now()) {
-      await sendChat(env,`@${display} raffle już trwa. Dołącz: !join.`);
+    if (active?.active) {
+      await sendChat(env,`@${display} raffle już trwa lub jest rozliczane. Dołącz: !join.`);
       return;
     }
     const defaultPrize = key === "sraffle" ? 1000 : 5000;

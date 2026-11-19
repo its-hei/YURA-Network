@@ -98,5 +98,44 @@ class JackpotStart(unittest.TestCase):
         self.assertEqual(self.count("jackpot_payouts"), 1)
         self.assertEqual(self.count("transactions"), 3)
 
+    def set_gate(self):
+        self.db.execute("INSERT INTO command_cooldowns VALUES('raffle-family-v1','*',?)", (ENDS,))
+        self.db.execute("INSERT INTO command_cooldowns VALUES('jackpot-start-v2','*',?)", (ENDS,))
+        self.db.commit()
+
+    def release(self, sid):
+        block = SOURCE.split("async function releaseFinishedJackpot", 1)[1].split("async function finishJackpot", 1)[0]
+        statements = re.findall(r"env\.DB\.prepare\(`([^`]+)`\)", block)
+        self.assertEqual(len(statements), 2)
+        with self.db:
+            self.db.execute(statements[0], (sid, "raffle-family-v1"))
+            self.db.execute(statements[1], (sid,))
+
+    def test_paid_or_refunded_releases_only_own_shared_gate(self):
+        for terminal in ("paid", "refunded"):
+            with self.subTest(terminal=terminal):
+                self.start()
+                sid = self.state()["jackpotId"]
+                self.set_gate()
+                self.release(sid)
+                self.assertEqual(self.count("command_cooldowns"), 2)
+                self.assertEqual(self.state()["jackpotId"], sid)
+                with self.db:
+                    self.db.execute("UPDATE jackpot_sessions SET status=? WHERE id=?", (terminal,sid))
+                self.release(sid)
+                self.assertEqual(self.db.execute("SELECT command_key FROM command_cooldowns").fetchall(), [("jackpot-start-v2",)])
+                self.assertEqual(self.db.execute("SELECT value FROM meta WHERE key='yura_raffle_state_json'").fetchone()[0], "")
+                # A late retry from the previous Jackpot must not release a new draw.
+                next_state = json.dumps({"active": True, "mode": "single", "id": "new"})
+                with self.db:
+                    self.db.execute("UPDATE meta SET value=?", (next_state,))
+                    self.db.execute("INSERT INTO command_cooldowns VALUES('raffle-family-v1','*',?)", (ENDS,))
+                self.release(sid)
+                self.assertEqual(self.count("command_cooldowns"), 2)
+                self.assertEqual(self.state()["id"], "new")
+                with self.db:
+                    self.db.execute("DELETE FROM command_cooldowns")
+                    self.db.execute("DELETE FROM meta")
+
 if __name__ == "__main__":
     unittest.main()
