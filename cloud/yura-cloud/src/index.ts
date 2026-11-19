@@ -512,7 +512,7 @@ function defaultCommandSettings(env: Env): CommandSettings {
     raffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!raffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60, joinConfirmation:true, warning20Seconds:true },
     sraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!sraffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60, joinConfirmation:true, warning20Seconds:true },
     autoraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!autoraffle", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1 },
-    jackpot: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!jackpot", permission:"EVERYONE", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60 },
+    jackpot: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!jackpot", permission:"EVERYONE", userCooldown:1, globalCooldown:1, defaultDurationSeconds:60, joinConfirmation:false },
     alertcontrol: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!alert", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:0 },
     cancelraffle: { enabled:true, alwaysOnline:false, streamOn:true, aliases:"!cancelraffle,!rafflecancel", permission:"MOD_BROADCASTER", userCooldown:1, globalCooldown:1 }
   };
@@ -816,8 +816,8 @@ export class RaffleClock {
   constructor(private state:DurableObjectState, private env:Env) {}
   private async rearm() {
     const current=await getYuraRaffleState(this.env);
-    if(!isTimedManualRaffle(current)) return;
-    await this.state.storage.setAlarm(nextRaffleAlarm(current));
+    if(!current?.active || !(current.mode==="single" || current.mode==="multi" || current.mode==="jackpot")) return;
+    await this.state.storage.setAlarm(Math.max(Date.now()+1000,nextRaffleAlarm(current)));
   }
   async fetch(request:Request) {
     if(request.method!=="POST"||new URL(request.url).pathname!=="/rearm") return new Response("not found",{status:404});
@@ -826,7 +826,7 @@ export class RaffleClock {
   }
   async alarm() {
     const current=await getYuraRaffleState(this.env);
-    if(!isTimedManualRaffle(current)) return;
+    if(!current?.active || !(current.mode==="single" || current.mode==="multi" || current.mode==="jackpot")) return;
     // Do not use wall-clock sleeps in the webhook. Alarm survives Worker eviction.
     if(Date.parse(current.endsAtUtc)<=Date.now()) await finishYuraRaffleIfDue(this.env);
     else await warnYuraRaffleIfDue(this.env);
@@ -1498,8 +1498,10 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
           : `🎰 @${display} nie można dołączyć (duplikat lub zamknięte losowanie).`);
         return;
       }
-      const count = await env.DB.prepare("SELECT COUNT(*) n FROM jackpot_entries WHERE session_id=?1").bind(state.jackpotId).first<{n:number}>();
-      await sendChat(env,`🎰 @${display} dołączył do JACKPOT • ${Number(count?.n || 0)} graczy • pula ${(Number(count?.n || 0)*Number(session.stake)).toLocaleString('pl-PL')} YURA.`);
+      if(state.joinConfirmation===true){
+        const count = await env.DB.prepare("SELECT COUNT(*) n FROM jackpot_entries WHERE session_id=?1").bind(state.jackpotId).first<{n:number}>();
+        await sendChat(env,`🎰 @${display} dołączył do JACKPOT • ${Number(count?.n || 0)} graczy • pula ${(Number(count?.n || 0)*Number(session.stake)).toLocaleString('pl-PL')} YURA.`);
+      }
       return;
     }
     // Retry optimistic writes against the current draw, never revive an expired/cancelled draw.
@@ -1639,7 +1641,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     if(!await tryStartRaffleFamily(env,display,duration,cfg))return;
     const state:YuraRaffleState={active:true,mode:"jackpot",prize:stake,endsAtUtc,durationSeconds:duration,
       entries:[{userId:event.chatter_user_id,login,display}],
-      winnerCount:1,warningSent:true,joinConfirmation:true};
+      winnerCount:1,warningSent:true,joinConfirmation:cfg.joinConfirmation===true};
     try {
       const createdAt=nowIso();
       // One D1 transaction publishes the funded session AND the active raffle
@@ -1670,6 +1672,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
         : `🎰 @${display} nie udało się bezpiecznie uruchomić Jackpota. Spróbuj ponownie — nie otwarto pustej sesji.`);
       return;
     }
+    await armRaffleClock(env);
     await tryEnterCloudCommandCooldown(env,JACKPOT_START_COOLDOWN_KEY,event.chatter_user_id,cfg);
     await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • @${display} dołączył automatycznie (1 gracz, pula ${stake.toLocaleString("pl-PL")} YURA) • dołącz: !join!`);
     return;
@@ -3292,7 +3295,7 @@ async function loadChannelRoles(env:Env) {
 async function apiRaffleOverlayState(env:Env):Promise<Response>{
   const state=await getYuraRaffleState(env);
   const ends=Date.parse(String(state?.endsAtUtc||""));
-  const active=!!(state?.active && Number.isFinite(ends) && ends>Date.now());
+  const active=!!(state?.active && Number.isFinite(ends));
   let participants=active?(state?.entries?.length||0):0;
   let lastParticipant=active&&participants?String(state?.entries?.[participants-1]?.display||""):"";
   let stake=0;
@@ -3301,7 +3304,7 @@ async function apiRaffleOverlayState(env:Env):Promise<Response>{
     stake=Number(state.prize||0);
     const count=await env.DB.prepare(`SELECT COUNT(*) AS n FROM jackpot_entries WHERE session_id=?1`)
       .bind(state.jackpotId).first<{n:number}>();
-    const last=await env.DB.prepare(`SELECT display_name FROM jackpot_entries WHERE session_id=?1 ORDER BY joined_at_utc DESC LIMIT 1`)
+    const last=await env.DB.prepare(`SELECT display_name FROM jackpot_entries WHERE session_id=?1 ORDER BY joined_at_utc DESC, rowid DESC LIMIT 1`)
       .bind(state.jackpotId).first<{display_name:string}>();
     participants=Math.max(0,Number(count?.n||0));
     lastParticipant=String(last?.display_name||"");
@@ -3309,7 +3312,7 @@ async function apiRaffleOverlayState(env:Env):Promise<Response>{
   }
   const mode=state?.mode==="single"?"SRAFFLE":state?.mode==="multi"?"RAFFLE":
     state?.mode==="auto"?"AUTORAFFLE":state?.mode==="jackpot"?"JACKPOT":"RAFFLE";
-  return new Response(JSON.stringify({ok:true,active,mode,singleWinner:mode==="JACKPOT"||mode==="SRAFFLE",
+  return new Response(JSON.stringify({ok:true,active,mode,drawId:active?(state?.mode==="jackpot"?String(state.jackpotId??""):String(state?.id??state?.endsAtUtc??"")):"",singleWinner:mode==="JACKPOT"||mode==="SRAFFLE",
     participants,lastParticipant,prize:pool,stake,
     winnerCount:state?.winnerCount||0,endsAtUtc:active?state!.endsAtUtc:null,
     durationSeconds:state?.durationSeconds||60}),
