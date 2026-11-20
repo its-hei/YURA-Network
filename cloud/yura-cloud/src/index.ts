@@ -1674,7 +1674,7 @@ async function handleCommand(env: Env, event: TwitchChatEvent) {
     }
     await armRaffleClock(env);
     await tryEnterCloudCommandCooldown(env,JACKPOT_START_COOLDOWN_KEY,event.chatter_user_id,cfg);
-    await sendChat(env,`🎰 JACKPOT wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • ${duration}s • @${display} dołączył automatycznie (1 gracz, pula ${stake.toLocaleString("pl-PL")} YURA) • dołącz: !join!`);
+    await sendChat(env,`🎰 Jackpot wystartował! • wpisowe ${stake.toLocaleString("pl-PL")} YURA • dołącz: !join`);
     return;
   }
   if (key === "raffle" || key === "sraffle" || key === "jackpot") {
