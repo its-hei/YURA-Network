@@ -21,3 +21,7 @@
 - Desktop: Discord → GENERAL → FFXIV NEWS. Changes are stored in Cloud D1 across Desktop updates, not in local `settings.json`.
 
 The feed titles are preserved as the official publishers wrote them; YURA's grouping and labels are in Polish. Unavailable source data is reported in Cloud diagnostics and never replaced with unverified news. GitHub Actions runs an optional live source smoke check with results visible in CI.
+
+### Fashion image delivery verification (21 Nov 2026)
+
+YURA now verifies the Fashion card with a Discord REST read after **PUBLISH LATEST** and during its one-shot Cloud repair. The result is stored in D1 under `ffxiv_fashion_verified_attachment_diagnostic`; the upload-only status is stored under `ffxiv_fashion_media_status_v1`. GitHub's Cloud deployment workflow prints only those narrow image-delivery status fields (no Discord token or private message bodies). The publisher's Week 460 guide may be used as a verified-current image backup when the Discord CDN blocks downloads from Cloudflare Workers. Newer weeks must match the Tuesday-reset week, and repeated backup hashes across weeks are rejected.
