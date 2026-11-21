@@ -279,6 +279,16 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-time adoption of the manually uploaded current Fashion Report:
+  // the following weeks are taken exclusively from the mirrored Reporter
+  // webhook. No recurring extra polling beyond the normal 10:00 schedule.
+  const importKey="ffxiv_fashion_manual_source_import_20261121";
+  if((today==="2026-11-21"||today==="2026-11-22") &&
+      t.minute%5===0 && await readMeta(env,importKey)!=="1") {
+    const synced=await checkFfxivNews(env);
+    if(synced.ok)await writeMeta(env,importKey,"1");
+    await writeMeta(env,"ffxiv_fashion_manual_import_result",JSON.stringify(synced).slice(0,1400));
+  }
   // One-shot repair of the already-visible Discord cards, requested by the
   // operator on 21 November. It is separate from normal 10:00 polling and
   // never turns into recurring hourly news checks.
