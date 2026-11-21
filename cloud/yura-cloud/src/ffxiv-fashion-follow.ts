@@ -50,9 +50,16 @@ function safeImage(value:unknown):string{
     return u.toString();
   }catch{return "";}
 }
+function messageContents(message:any):any[] {
+  // Discord's native manual Forward action puts the original image and
+  // title in message_snapshots[0].message (not the new message's embeds).
+  const snapshots=Array.isArray(message?.message_snapshots)?message.message_snapshots:[];
+  return [message,...snapshots.map((s:any)=>s?.message).filter(Boolean)];
+}
 function fashionImage(message:any):string {
-  const embeds=Array.isArray(message.embeds)?message.embeds:[];
-  const attachments=Array.isArray(message.attachments)?message.attachments:[];
+  const contents=messageContents(message);
+  const embeds=contents.flatMap((m:any)=>Array.isArray(m.embeds)?m.embeds:[]);
+  const attachments=contents.flatMap((m:any)=>Array.isArray(m.attachments)?m.attachments:[]);
   const images=[
     ...attachments.flatMap((a:any)=>[a.url,a.proxy_url]),
     ...embeds.flatMap((e:any)=>[e.image?.url,e.image?.proxy_url])
@@ -64,10 +71,12 @@ function fashionImage(message:any):string {
   return "";
 }
 function weekNumber(message:any):number|null {
-  const embeds=Array.isArray(message.embeds)?message.embeds:[];
-  const txt=[message.content,...embeds.map((e:any)=>e.title),
+  const contents=messageContents(message);
+  const embeds=contents.flatMap((m:any)=>Array.isArray(m.embeds)?m.embeds:[]);
+  const attachments=contents.flatMap((m:any)=>Array.isArray(m.attachments)?m.attachments:[]);
+  const txt=[...contents.map((m:any)=>m.content),...embeds.map((e:any)=>e.title),
     ...embeds.map((e:any)=>e.description),
-    ...(Array.isArray(message.attachments)?message.attachments.map((a:any)=>a.filename):[])]
+    ...attachments.map((a:any)=>a.filename)]
     .filter(x=>typeof x==="string").join("\n");
   const match=txt.match(/fashion\s*report(?:er)?\s*(?:week\s*)?#?\s*(\d{3,4})/i)
     || txt.match(/\bweek\s*#?\s*(\d{3,4})\b/i);
@@ -105,8 +114,9 @@ export function parseInitialManualFashion(message:any,guildId:string,channelId:s
   // Don't mistake YURA's status posts or Discord system notices for a report.
   if(message?.author?.bot===true && !message.webhook_id)return null;
   if(message?.webhook_id)return parseFollowedFashion(message,guildId,channelId);
-  const attachments=Array.isArray(message.attachments)?message.attachments:[];
-  const embeds=Array.isArray(message.embeds)?message.embeds:[];
+  const contents=messageContents(message);
+  const attachments=contents.flatMap((m:any)=>Array.isArray(m.attachments)?m.attachments:[]);
+  const embeds=contents.flatMap((m:any)=>Array.isArray(m.embeds)?m.embeds:[]);
   const week=weekNumber(message);
   // An untitled image is allowed only during FIRST bootstrap, only if it
   // looks like a full infographic rather than an unrelated emoji/thumbnail.
