@@ -297,6 +297,24 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // Restore the Fashion Report that was consumed by the old source cursor
+  // but never appeared on the persistent public message. This uses the
+  // existing every-minute Cloud cron, not Desktop, and edits IN PLACE.
+  // Retry only on actual image/Discord errors; otherwise stop permanently.
+  const imageRepairKey="ffxiv_fashion_restore_existing_20261121_v4";
+  if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===1){
+    const state=await readMeta(env,imageRepairKey);
+    const attempts=Number(state)||0;
+    if(state!=="done" && attempts<3){
+      await writeMeta(env,imageRepairKey,String(attempts+1));
+      const repair=await checkFfxivNews(env);
+      await writeMeta(env,"ffxiv_fashion_restore_diagnostic",
+        JSON.stringify(repair).slice(0,1400));
+      if(repair.ok && repair.fashion_source?.report_id &&
+         !repair.source_errors?.some(x=>/fashion |HTTP 429/.test(String(x))))
+        await writeMeta(env,imageRepairKey,"done");
+    }
+  }
   // One-time repair of the four header-only Discord posts shown by the
   // operator. They are EDITED in place, never recreated or duplicated.
   // Run on the existing every-minute cron; stop after one successful check
