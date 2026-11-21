@@ -100,6 +100,9 @@ jobs:
       - name: Verify FFXIV event schedules and active status
         run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-events.test.mjs
 
+      - name: Verify Fashion Reporter Discord follow and manual first image
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-fashion-follow.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit
