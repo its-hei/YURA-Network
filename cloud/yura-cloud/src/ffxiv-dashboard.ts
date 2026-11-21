@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=4;
+const RENDER_REVISION=5;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -27,6 +27,32 @@ const NO_PINGS={parse:[]};
 const keyFor=(cfg:BoardConfig,category:Category)=>"ffxiv_board_v3_"+cfg.guildId+"_"+cfg.channelId+"_"+category;
 const canonical=(category:Category)=>"**"+LABEL[category]+"**";
 const safe=(v:unknown,n=160)=>String(v??"").replace(/[\r\n]/g," ").slice(0,n);
+
+// Discord can re-sign its own CDN media references when they are used inside
+// embeds. Cloudflare Workers, however, are sometimes blocked (HTTP 403) from
+// downloading the same attachment. Use an embed URL independently of upload.
+export function publicFashionImageUrl(value:string):string {
+  try {
+    const u=new URL(value);
+    if(u.protocol!=="https:")return "";
+    const hosts=new Set(["cdn.discordapp.com","media.discordapp.net",
+      "images-ext-1.discordapp.net","images-ext-2.discordapp.net",
+      "fashionreportxiv.com"]);
+    if(!hosts.has(u.hostname))return "";
+    if(u.hostname!=="fashionreportxiv.com" &&
+       !u.pathname.startsWith("/attachments/"))return "";
+    if(!/\.(?:png|jpe?g|webp)$/i.test(u.pathname))return "";
+    if(u.hostname!=="fashionreportxiv.com"){
+      // Discord documentation recommends passing unsigned attachment paths
+      // into embed image URLs; Discord refreshes the URL server-side.
+      u.searchParams.delete("ex");
+      u.searchParams.delete("is");
+      u.searchParams.delete("hm");
+    }
+    return u.toString();
+  }catch{return "";}
+}
+
 function validCurrent(v:any):v is Current {
   return !!v && typeof v.id==="string" && typeof v.title==="string" &&
     typeof v.url==="string" && /^https:\/\//.test(v.url);
@@ -93,10 +119,13 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
       return [header,"**"+title+"** • trwa teraz",
         "Koniec: "+date(x.end)+(x.end?" • <t:"+Math.floor(x.end/1000)+":R>":""),
         link("Szczegóły wydarzenia")].join("\n");
-    case "fashion":
+    case "fashion": {
+      const media=x.image?publicFashionImageUrl(x.image):"";
       return [header,"80/100 pkt • do 60 000 MGP",
         "Reset: "+date(x.expires),
+        ...(media?["[🖼️ Zobacz grafikę tygodnia]("+media.replace(/\)/g,"%29")+")"]:[]),
         "[Fashion Report • źródło](https://fashionreportxiv.com/)"].join("\n");
+    }
     case "patch":
       return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
     case "dalamud":
@@ -153,7 +182,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
           ["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"].includes(img.hostname)
         ))||
         (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
-        embed.image={url:img.toString()};
+        embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
   return [embed];
@@ -262,10 +291,13 @@ export async function deliverCard(
         throw new Error("Discord did not return the attached infographic");
       return true;
     }catch(e:any){
-      // A failed CDN download or ATTACH_FILES permission MUST NOT leave
-      // a header-only post. Text and an ordinary clickable link still render.
-      warnings.push("fashion image: "+String(e?.message||e).slice(0,160));
-      payload.embeds=embedsFor(category,x); // remove attachment:// URL
+      // Discord's CDN often rejects direct Cloudflare Worker downloads with
+      // HTTP 403. Keep the full original art referenced by the embed as an
+      // UNSIGNED Discord CDN URL, and provide a clickable image link in the
+      // message body. Do not replace a successfully uploaded attachment with
+      // a JSON PATCH just because its response omitted attachment metadata.
+      warnings.push("fashion attachment: "+String(e?.message||e).slice(0,150));
+      payload.embeds=embedsFor(category,x);
       payload.attachments=[];
       await api(env,path,method,payload);
       return false;
