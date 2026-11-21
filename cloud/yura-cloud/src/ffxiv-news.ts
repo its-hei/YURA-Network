@@ -81,7 +81,7 @@ async function channel(env: NewsEnv, cfg: NewsConfig): Promise<string> {
 }
 async function fetchText(url: string): Promise<string> {
   const r = await fetch(url, {
-    headers: { "accept": "application/rss+xml, application/xml, application/json, text/html",
+    headers: { "accept": "application/atom+xml, application/rss+xml, application/xml, application/json, text/html",
       "user-agent": "YURA-Cloud-FFXIV-News/1.0 (+https://github.com/its-hei/YURA-Network)" }
   });
   if (!r.ok) throw new Error(new URL(url).hostname + ": HTTP " + r.status);
@@ -105,27 +105,31 @@ function tag(raw: string, key: string): string {
   return m ? unescapeXml(m[1]) : "";
 }
 async function lodestone(source: string, url: string): Promise<NewsItem[]> {
-  // The official NA feed is confirmed live by public feed monitors; use it
-  // as a fallback when the EU mirror is unavailable or returns no items.
-  let xml:string;
-  let items:RegExpMatchArray[];
+  // Square Enix's official *.xml sources are Atom (<feed>/<entry>), NOT
+  // RSS 2.0 (<rss>/<item>). Use the NA mirror only if the EU feed fails.
+  let xml = "";
   try {
     xml = await fetchText(url);
-    items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].slice(0,35);
-    if (!items.length) throw new Error("empty RSS");
+    if (!/<entry\b/i.test(xml)) throw new Error("EU Atom feed has no entries");
   } catch {
     xml = await fetchText(url.replace("eu.finalfantasyxiv.com","na.finalfantasyxiv.com"));
-    items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].slice(0,35);
   }
-  if (!items.length) throw new Error("Lodestone RSS: no entries (" + source + ")");
-  return items.map(m => {
-    const title = tag(m[1],"title");
-    const link = tag(m[1],"link").replace(/^http:\/\//,"https://");
-    const published = Date.parse(tag(m[1],"pubDate")) || Date.now();
-    const uid = tag(m[1],"guid") || link;
-    if (!title || !/^https:\/\/(?:eu|na)\.finalfantasyxiv\.com\/lodestone\//i.test(link)) return null;
-    return { source, id: uid.slice(0,400), title:title.slice(0,200), url:link, date:published };
-  }).filter((item):item is NewsItem => Boolean(item));
+  const entries = [...xml.matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/gi)].slice(0,35);
+  if (!entries.length) throw new Error("Lodestone Atom: no entries (" + source + ")");
+  const result: NewsItem[] = [];
+  for (const [, body] of entries) {
+    const title = tag(body,"title");
+    const urls = [...body.matchAll(/<link\b[^>]*\/?>/gi)];
+    const alternate = urls.find(x=>/\brel\s*=\s*["']alternate["']/i.test(x[0])) || urls[0];
+    const href = alternate?.[0].match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1] || "";
+    const link = unescapeXml(href).replace(/^http:\/\//,"https://");
+    const published = Date.parse(tag(body,"published") || tag(body,"updated"));
+    const uid = tag(body,"id") || link;
+    if (!title || !Number.isFinite(published) || !/^https:\/\/(?:eu|na)\.finalfantasyxiv\.com\/lodestone\//i.test(link)) continue;
+    result.push({source,id:uid.slice(0,400),title:title.slice(0,200),url:link,date:published});
+  }
+  if (!result.length) throw new Error("Lodestone Atom entries have no valid titles/URLs/dates");
+  return result;
 }
 async function dalamud(): Promise<NewsItem[]> {
   // The GitHub releases API is not the active release feed (its latest public
@@ -192,7 +196,7 @@ function linesFor(items:NewsItem[]): string {
   const fashion = by("fashion");
   if (fashion.length) {
     output.push("**👗 Fashion Report**");
-    for(const x of fashion) output.push("• Aktualne wyposażenie na 80/100 punktów — "+x.url);
+    for(const x of fashion) output.push("• Gotowa grafika poniżej • 80 punktów = 60 000 MGP • "+x.url);
     output.push("");
   }
   const dal = by("dalamud");
@@ -267,10 +271,20 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
     for (const item of next) if (!distinct.has(item.url)) distinct.set(item.url,item);
     const selected = [...distinct.values()].sort((a,b)=>b.date-a.date).slice(0,30);
     if (selected.length) {
-      const image = selected.find(x=>x.source==="fashion" && x.image)?.image;
+      const fashionItem = selected.find(x=>x.source==="fashion" && x.image);
+      // Dedicated large-image card: infographic is readable on mobile without
+      // burying it among links to Dalamud and Lodestone.
+      const embeds = fashionItem ? [{
+        color:0xe89b52,
+        title:"👗 FASHION REPORT • 80/100 PUNKTÓW",
+        description:"Aktualna grafika tygodnia • odbierz do 60 000 MGP w Gold Saucer.",
+        url:fashionItem.url,
+        image:{url:fashionItem.image},
+        footer:{text:"Źródło: Fashion Report XIV • Kaiyoko Star"}
+      }] : [];
       await discord(env,"channels/"+channelId+"/messages","POST",{
         content:linesFor(selected),allowed_mentions:{parse:[]},
-        ...(image ? {embeds:[{image:{url:image}}]} : {})
+        ...(embeds.length ? {embeds} : {})
       });
       await saveSeen(env,selected);
       await writeMeta(env,"ffxiv_news_last_post_utc",now());
