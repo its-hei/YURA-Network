@@ -1,4 +1,4 @@
-import {discordFfxivRequest} from "./ffxiv-discord-api";
+import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
 // Discord Follow mirrors an announcement channel into the user's private
 // #mods・spam channel. Read-only: we do not write to the source channel.
 // The first scan imports the user's already-posted infographic as the current
