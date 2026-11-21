@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
@@ -265,6 +265,18 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
       fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
     },sources);
     errors.push(...result.errors);
+    let fashionMedia:{attached:boolean;reason:string;messageId?:string}|null=null;
+    if(repairFashion && cfg.fashion){
+      try{
+        fashionMedia=await verifyFashionReportImage(env,{
+          guildId:cfg.guildId,channelId,
+          fashion:cfg.fashion,events:cfg.events,
+          dalamud:cfg.dalamud,lodestone:cfg.lodestone
+        });
+        if(!fashionMedia.attached)
+          errors.push("fashion media: "+fashionMedia.reason);
+      }catch(e:any){errors.push("fashion media verify: "+String(e?.message||e));}
+    }
     if(result.errors.some(x=>x.startsWith("fashion "))) {
       fashionDiagnostic.status="publish-error";
       fashionDiagnostic.error=result.errors.filter(x=>x.startsWith("fashion ")).join(" | ");
@@ -285,7 +297,7 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
     return {ok:true,status:errors.length?"partial":"ready",
       posted:result.updated>0,items:result.updated,
       updated_sections:result.changes,channel_id:channelId,
-      fashion_source:fashionDiagnostic,source_errors:errors};
+      fashion_source:fashionDiagnostic,fashion_media:fashionMedia,source_errors:errors};
   }catch(e:any){
     const error=String(e?.message||e).slice(0,1000);
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
@@ -297,115 +309,23 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
-  // One-shot repair for the Discord media proxy fallback and malformed
-  // Fashion link. Only touches the current four category messages and never
-  // creates a new one for unchanged data. Cloud cron retries at most twice.
-  const imageProxyRepairKey="ffxiv_fashion_image_proxy_repair_20261121_v6";
+  // Consolidated one-time repair for the current Fashion Report. Previous
+  // v3-v6 repair jobs have been removed to avoid duplicate polls and Discord
+  // rate limits. The actual message is checked for a native attachment by
+  // Discord REST; only that verification marks this repair as complete.
+  const mediaRepairKey="ffxiv_fashion_verified_attachment_repair_v7";
   if((today==="2026-11-21" || today==="2026-11-22") &&
-      t.minute%5===3){
-    const state=await readMeta(env,imageProxyRepairKey);
-    const tries=Number(state)||0;
-    if(state!=="done" && tries<2){
-      await writeMeta(env,imageProxyRepairKey,String(tries+1));
-      const check=await checkFfxivNews(env);
-      await writeMeta(env,"ffxiv_fashion_image_proxy_repair_result",
-        JSON.stringify(check).slice(0,1800));
-      if(check.ok && check.fashion_source?.report_id &&
-          !check.source_errors?.some(x=>/fashion attachment|fashion image|HTTP 429/i.test(String(x))))
-        await writeMeta(env,imageProxyRepairKey,"done");
+      t.minute%5===3) {
+    const state=await readMeta(env,mediaRepairKey);
+    const count=Number(state)||0;
+    if(state!=="done" && count<3) {
+      await writeMeta(env,mediaRepairKey,String(count+1));
+      const attempt=await checkFfxivNews(env,true,true);
+      await writeMeta(env,"ffxiv_fashion_verified_attachment_diagnostic",
+        JSON.stringify(attempt).slice(0,1800));
+      if(attempt.ok && attempt.fashion_media?.attached===true)
+        await writeMeta(env,mediaRepairKey,"done");
     }
-  }
-  // One-shot artwork upgrade of the EXISTING Fashion Report message.
-  // Revision 5 reuses the same Discord message, first trying the original
-  // Fashion Reporter graphic, then a verified-current publisher backup.
-  // Does not change the 10:00 recurring news cadence.
-  const artRepairKey="ffxiv_art_inline_repair_20261121_v5";
-  if((today==="2026-11-21" || today==="2026-11-22") &&
-     t.minute%5===3) {
-    const value=await readMeta(env,artRepairKey);
-    const count=Number(value)||0;
-    if(value!=="done" && count<3){
-      await writeMeta(env,artRepairKey,String(count+1));
-      const attempt=await checkFfxivNews(env);
-      await writeMeta(env,"ffxiv_art_inline_diagnostic",JSON.stringify(attempt).slice(0,1800));
-      if(attempt.ok && attempt.fashion_source?.report_id &&
-         !attempt.source_errors?.some(x=>/fashion image|fashion attachment|HTTP 429/.test(String(x))))
-        await writeMeta(env,artRepairKey,"done");
-    }
-  }
-  // Restore the Fashion Report that was consumed by the old source cursor
-  // but never appeared on the persistent public message. This uses the
-  // existing every-minute Cloud cron, not Desktop, and edits IN PLACE.
-  // Retry only on actual image/Discord errors; otherwise stop permanently.
-  const imageRepairKey="ffxiv_fashion_restore_existing_20261121_v4";
-  if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===1){
-    const state=await readMeta(env,imageRepairKey);
-    const attempts=Number(state)||0;
-    if(state!=="done" && attempts<3){
-      await writeMeta(env,imageRepairKey,String(attempts+1));
-      const repair=await checkFfxivNews(env);
-      await writeMeta(env,"ffxiv_fashion_restore_diagnostic",
-        JSON.stringify(repair).slice(0,1400));
-      if(repair.ok && repair.fashion_source?.report_id &&
-         !repair.source_errors?.some(x=>/fashion |HTTP 429/.test(String(x))))
-        await writeMeta(env,imageRepairKey,"done");
-    }
-  }
-  // One-time repair of the four header-only Discord posts shown by the
-  // operator. They are EDITED in place, never recreated or duplicated.
-  // Run on the existing every-minute cron; stop after one successful check
-  // or three limited attempts in case Discord is temporarily rate-limited.
-  const cardRepairKey="ffxiv_news_readable_cards_repair_20261121_v3";
-  if((today==="2026-11-21" || today==="2026-11-22") &&
-     t.minute%5===4) {
-    const value=await readMeta(env,cardRepairKey);
-    const attempts=Number(value)||0;
-    if(value!=="done" && attempts<3){
-      await writeMeta(env,cardRepairKey,String(attempts+1));
-      const repair=await checkFfxivNews(env);
-      await writeMeta(env,"ffxiv_news_readable_cards_repair_result",
-        JSON.stringify(repair).slice(0,1500));
-      if(repair.ok && !repair.source_errors?.some(x=>String(x).includes("HTTP 429")))
-        await writeMeta(env,cardRepairKey,"done");
-    }
-  }
-  // One-time recovery for a real Discord HTTP 429 reported by the operator.
-  // Runs at most 3 brief source reconciliations on 21-22 Nov, away from the
-  // daily 10:00 job. All four cards remain idempotent: no new Discord
-  // message is sent when content has not actually changed.
-  const rateFixKey="ffxiv_news_discord_429_recovery_v1";
-  if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===2) {
-    const countRaw=await readMeta(env,rateFixKey);
-    const count=Number(countRaw)||0;
-    if(countRaw!=="done" && count<3){
-      await writeMeta(env,rateFixKey,String(count+1));
-      const attempt=await checkFfxivNews(env);
-      await writeMeta(env,"ffxiv_news_discord_429_recovery_diagnostic",JSON.stringify(attempt).slice(0,1400));
-      if(attempt.ok && !attempt.source_errors?.some(x=>String(x).includes("HTTP 429")))
-        await writeMeta(env,rateFixKey,"done");
-    }
-  }
-  // One-time adoption of the manually uploaded current Fashion Report:
-  // the following weeks are taken exclusively from the mirrored Reporter
-  // webhook. No recurring extra polling beyond the normal 10:00 schedule.
-  const importKey="ffxiv_fashion_manual_source_import_20261121";
-  if((today==="2026-11-21"||today==="2026-11-22") &&
-      t.minute%5===0 && await readMeta(env,importKey)!=="1") {
-    const synced=await checkFfxivNews(env);
-    if(synced.ok)await writeMeta(env,importKey,"1");
-    await writeMeta(env,"ffxiv_fashion_manual_import_result",JSON.stringify(synced).slice(0,1400));
-  }
-  // One-shot repair of the already-visible Discord cards, requested by the
-  // operator on 21 November. It is separate from normal 10:00 polling and
-  // never turns into recurring hourly news checks.
-  const repairKey="ffxiv_news_card_fix_20261121_v4";
-  if((today==="2026-11-21"||today==="2026-11-22") &&
-      t.minute%5===0 && await readMeta(env,repairKey)!=="1") {
-    const attempt=await checkFfxivNews(env);
-    if(attempt.ok && !attempt.source_errors?.some(x=>
-      String(x).startsWith("event:") || String(x).startsWith("lodestone-topics:")))
-      await writeMeta(env,repairKey,"1");
-    await writeMeta(env,"ffxiv_news_card_fix_diagnostics",JSON.stringify(attempt).slice(0,1500));
   }
   // In-memory D1 deadline check only, hourly, independent of the once-a-day
   // source polling. It archives expired Event/Fashion cards without flooding.
@@ -446,6 +366,7 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
       status:await readMeta(env,"ffxiv_news_last_status"),
       error:await readMeta(env,"ffxiv_news_last_error"),
       fashion_source_diagnostic:await readMeta(env,"ffxiv_fashion_follow_last_diagnostic"),
+      fashion_media_status:await readMeta(env,"ffxiv_fashion_media_status_v1"),
       daily_at:"10:00 Europe/Warsaw",layout:"4 editable posts with history threads"});
   }
   if(req.method==="PUT"){
