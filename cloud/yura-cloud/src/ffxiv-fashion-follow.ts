@@ -1,7 +1,7 @@
 // Discord Follow mirrors an announcement channel into the user's private
 // #mods・spam channel. Read-only: we do not write to the source channel.
-// The first scan establishes a high-water mark (existing manually added
-// report is the baseline); only subsequently forwarded webhooks are used.
+// The first scan imports the user's already-posted infographic as the current
+// report. Subsequent scans accept ONLY newly mirrored Fashion Reporter webhooks.
 export type FollowedFashion = {
   source: "fashion"; id: string; title:string; url:string;
   date:number; image:string;
@@ -49,44 +49,78 @@ function safeImage(value:unknown):string{
     return u.toString();
   }catch{return "";}
 }
-/** Only a genuine followed-channel webhook with a titled weekly infographic. */
-export function parseFollowedFashion(message:any,guildId:string,channelId:string):FollowedFashion|null{
-  if(!validID(String(message?.id||"")) || !validID(String(message?.webhook_id||"")))return null;
+function fashionImage(message:any):string {
   const embeds=Array.isArray(message.embeds)?message.embeds:[];
   const attachments=Array.isArray(message.attachments)?message.attachments:[];
-  const titleParts=[message.content,...embeds.map((e:any)=>e.title),...embeds.map((e:any)=>e.description)]
-    .filter(x=>typeof x==="string").map(String);
-  const caption=titleParts.join("\n").slice(0,3000);
-  const found=caption.match(/\bfashion\s*report\s*(?:week\s*)?#?\s*(\d{3,4})\b/i);
-  if(!found)return null;
-  // Discord Follow can change the webhook display name; the original
-  // forwarded message has a channel reference, while a custom webhook may
-  // use the expected "Fashion Reporter" name. Do not accept regular chat.
-  const isCrosspost=validID(String(message.message_reference?.channel_id||"")) &&
-    String(message.message_reference.channel_id)!==channelId;
-  const knownWebhook=/fashion\s*reporter/i.test(String(message.author?.username||""));
-  if(!isCrosspost&&!knownWebhook)return null;
-  let image="";
-  const imgs=[
+  const images=[
     ...attachments.flatMap((a:any)=>[a.url,a.proxy_url]),
-    ...embeds.flatMap((e:any)=>[e.image?.url,e.image?.proxy_url]),
-    ...embeds.flatMap((e:any)=>[e.thumbnail?.url,e.thumbnail?.proxy_url])
+    ...embeds.flatMap((e:any)=>[e.image?.url,e.image?.proxy_url])
   ];
-  for(const src of imgs){image=safeImage(src);if(image)break;}
+  for(const i of images) {
+    const img=safeImage(i);
+    if(img)return img;
+  }
+  return "";
+}
+function weekNumber(message:any):number|null {
+  const embeds=Array.isArray(message.embeds)?message.embeds:[];
+  const txt=[message.content,...embeds.map((e:any)=>e.title),
+    ...embeds.map((e:any)=>e.description),
+    ...(Array.isArray(message.attachments)?message.attachments.map((a:any)=>a.filename):[])]
+    .filter(x=>typeof x==="string").join("\n");
+  const match=txt.match(/fashion\s*report(?:er)?\s*(?:week\s*)?#?\s*(\d{3,4})/i)
+    || txt.match(/\bweek\s*#?\s*(\d{3,4})\b/i);
+  const number=Number(match?.[1]);
+  return Number.isInteger(number)&&number>=100&&number<=9999?number:null;
+}
+function makeFashion(message:any,guildId:string,channelId:string,allowUntitled=false):FollowedFashion|null{
+  const id=String(message?.id??"");
+  if(!validID(id))return null;
+  const image=fashionImage(message);
   if(!image)return null;
+  const week=weekNumber(message);
+  if(!week&&!allowUntitled)return null;
   const date=Date.parse(String(message.timestamp||""));
-  if(!Number.isFinite(date))return null;
-  const week=Number(found[1]);
-  if(week<100||week>9999)return null;
+  if(!Number.isFinite(date)||date>Date.now()+3600000)return null;
+  // Keep the image's original Discord provenance in the main card link.
   return {
-    source:"fashion",id:"discord-fashion-week-"+week,
-    title:"Fashion Report • Week "+week+" • rozwiązanie na 80/100 punktów",
-    url:"https://discord.com/channels/"+guildId+"/"+channelId+"/"+message.id,
+    source:"fashion",id:week?"discord-fashion-week-"+week:"discord-fashion-manual-"+id,
+    title:week?"Fashion Report • Week "+week:"Fashion Report • aktualny raport",
+    url:"https://discord.com/channels/"+guildId+"/"+channelId+"/"+id,
     date,image
   };
 }
+/** After the initial import, only a real followed-channel webhook is trusted. */
+export function parseFollowedFashion(message:any,guildId:string,channelId:string):FollowedFashion|null{
+  if(!validID(String(message?.webhook_id??"")))return null;
+  const fromAnotherChannel=validID(String(message.message_reference?.channel_id||"")) &&
+    String(message.message_reference.channel_id)!==channelId;
+  const namedReporter=/fashion\s*reporter/i.test(String(message.author?.username||""));
+  if(!fromAnotherChannel&&!namedReporter)return null;
+  return makeFashion(message,guildId,channelId);
+}
+/** The ONE existing, manually posted infographic may be imported at startup. */
+export function parseInitialManualFashion(message:any,guildId:string,channelId:string):FollowedFashion|null{
+  // Don't mistake YURA's status posts or Discord system notices for a report.
+  if(message?.author?.bot===true && !message.webhook_id)return null;
+  if(message?.webhook_id)return parseFollowedFashion(message,guildId,channelId);
+  const attachments=Array.isArray(message.attachments)?message.attachments:[];
+  const embeds=Array.isArray(message.embeds)?message.embeds:[];
+  const week=weekNumber(message);
+  // An untitled image is allowed only during FIRST bootstrap, only if it
+  // looks like a full infographic rather than an unrelated emoji/thumbnail.
+  const largeImage=attachments.some((a:any)=>Number(a.width)>=650 && Number(a.height)>=350)
+    || embeds.some((e:any)=>Number(e.image?.width)>=650 && Number(e.image?.height)>=350);
+  if(!week&&!largeImage)return null;
+  const candidate=makeFashion(message,guildId,channelId,largeImage);
+  if(!candidate)return null;
+  // Imported report must be from the current Fashion Report week. Old manual
+  // uploads are never reactivated after more than seven days.
+  return Date.now()-candidate.date<=7*86400000?candidate:null;
+}
 export type FashionPoll={
-  sourceChannelId:string; sourceStatus:"initialized"|"new"|"unchanged";
+  sourceChannelId:string;
+  sourceStatus:"initialized"|"new"|"unchanged"|"manual-current";
   candidate?:FollowedFashion;cursor?:string;
 };
 export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):Promise<FashionPoll|null>{
@@ -99,12 +133,16 @@ export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):P
     .sort((a:any,b:any)=>safeSnowflake(String(a.id))<safeSnowflake(String(b.id))?-1:1);
   const last=await meta(env,key);
   if(!last){
-    // First manually added report (and any already present posts) are
-    // historical. Record the latest Discord message without reposting it.
+    // Import the latest manual report ONCE, but establish the high-water
+    // mark at the most recent message to avoid treating old posts as new.
+    const candidates=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
+      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
+    const selected=candidates[candidates.length-1];
     const newest=ordered.length?String(ordered[ordered.length-1].id):
       ((BigInt(Date.now())-discordEpoch)<<22n).toString();
-    await putMeta(env,key,newest);
-    return {sourceChannelId:id,sourceStatus:"initialized"};
+    // Caller acknowledges after Discord main post has updated successfully.
+    return {sourceChannelId:id,sourceStatus:selected?"manual-current":"initialized",
+      ...(selected?{candidate:selected}:{}),cursor:newest};
   }
   const newer=ordered.filter((m:any)=>safeSnowflake(String(m.id))>safeSnowflake(last));
   const newest=newer.length?String(newer[newer.length-1].id):last;
