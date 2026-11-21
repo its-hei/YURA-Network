@@ -12,7 +12,8 @@ export type Sources={
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
-type Post={anchor:string;thread:string;current:Current|null;retiredId?:string};
+type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
+const RENDER_REVISION=2;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -142,16 +143,11 @@ function changed(a:Current|null,b:Current|null):boolean{
 }
 async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
   const saved=await loadPost(env,cfg,cat);
-  if(saved){
-    try{
-      const [post,t]=await Promise.all([
-        api(env,"channels/"+cfg.channelId+"/messages/"+saved.anchor),
-        api(env,"channels/"+saved.thread)
-      ]);
-      if(String(post?.content??"").startsWith(canonical(cat)) &&
-        String(t.parent_id)===cfg.channelId && [11,12].includes(Number(t.type)))return saved;
-    }catch{/* Recover from deleted post or thread. */}
-  }
+  // Saved post/thread snowflakes are stable. Do not re-fetch eight objects
+  // on every check: Discord's per-channel GET bucket is shared with other
+  // operations and repeatedly hit HTTP 429. A failed edit/archival still
+  // surfaces an error without creating duplicate posts.
+  if(saved)return saved;
   const found=existing.find(m=>m.author?.bot===true && String(m.content??"").startsWith(canonical(cat)));
   const anchor=found?.id;
   let id=ID.test(String(anchor??""))?String(anchor):"";
@@ -191,6 +187,10 @@ async function threadWrite(env:Env,threadId:string,category:Category,old:Current
 }
 async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Current|null):Promise<boolean>{
   if(!changed(post.current,fresh)) {
+    // After the compact layout was reconciled once, unchanged news requires
+    // zero Discord API calls. In particular, no request is made at 10:00
+    // just to redisplay already-current Fashion, Patch or Dalamud data.
+    if(post.renderRevision===RENDER_REVISION)return false;
     const displayed=await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor);
     const wanted=textFor(cat,post.current);
     const expectedEmbeds=embedsFor(cat,post.current);
@@ -207,8 +207,10 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
         content:wanted,embeds:expectedEmbeds,allowed_mentions:NO_PINGS
       });
+      await savePost(env,cfg,cat,{...post,renderRevision:RENDER_REVISION});
       return true;
     }
+    await savePost(env,cfg,cat,{...post,renderRevision:RENDER_REVISION});
     return false;
   }
   const old=post.current;
@@ -228,7 +230,8 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       await putMeta(env,archivedKey,"1");
     }
   }
-  const next={...post,current:fresh,...(cat==="fashion" && old && !fresh?{retiredId:old.id}:{})};
+  const next={...post,current:fresh,renderRevision:RENDER_REVISION,
+    ...(cat==="fashion" && old && !fresh?{retiredId:old.id}:{})};
   await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
     content:textFor(cat,fresh),embeds:embedsFor(cat,fresh),allowed_mentions:NO_PINGS
   });
@@ -364,7 +367,14 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
     patch:cfg.lodestone?toCurrent("patch",src.patch,at):undefined,
     dalamud:cfg.dalamud?toCurrent("dalamud",src.dalamud,at):undefined
   };
-  const currentList:any=await api(env,"channels/"+cfg.channelId+"/messages?limit=100");
+  // Read the large message list only for first-time setup and one-time
+  // migration. Once four posts exist and migration is done, do not poll it.
+  const cleanupKey="ffxiv_board_v3_cleanup_done_"+cfg.guildId+"_"+cfg.channelId;
+  const cleanupPending=await getMeta(env,cleanupKey)!=="1";
+  const cached=await Promise.all(ORDER.map(cat=>loadPost(env,cfg,cat)));
+  const needsDiscovery=cached.some(post=>post===null) || cleanupPending;
+  const currentList:any=needsDiscovery
+    ? await api(env,"channels/"+cfg.channelId+"/messages?limit=100"):[];
   if(!Array.isArray(currentList))throw new Error("Discord channel cannot be read");
   const posts:Partial<Record<Category,Post>>={};
   const errors:string[]=[];
@@ -410,9 +420,12 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
     if(posts[cat])await oldAnchors(env,cfg,cat,posts[cat]!);
   // Only remove true, empty placeholders from the older layout once all
   // four permanent card messages exist. Preserve any posts with history.
-  if(ORDER.every(cat=>Boolean(posts[cat]))) {
-    try {await cleanupLegacyPlaceholders(env,cfg,currentList,posts);}
-    catch(e:any){errors.push("legacy placeholder cleanup: "+String(e?.message||e));}
+  if(cleanupPending && ORDER.every(cat=>Boolean(posts[cat]))) {
+    try {
+      await cleanupLegacyPlaceholders(env,cfg,currentList,posts);
+      // No more destructive legacy cleanup on subsequent daily checks.
+      await putMeta(env,cleanupKey,"1");
+    } catch(e:any){errors.push("legacy placeholder cleanup: "+String(e?.message||e));}
   }
   return {updated:changes.length,changes,errors};
 }
