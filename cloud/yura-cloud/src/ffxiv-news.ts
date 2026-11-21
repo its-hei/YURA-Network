@@ -200,7 +200,7 @@ function linesFor(items:NewsItem[]): string {
   }
   return output.join("\n").slice(0,1950);
 }
-export async function checkFfxivNews(env: NewsEnv, force = false) {
+export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest = false) {
   const cfg = await loadConfig(env);
   if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false};
   const checkAt = now();
@@ -230,7 +230,14 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
         continue;
       }
       const seen = await seenFor(env,batch.source);
-      for(const item of batch.items) if (!seen.has(item.id) && item.date >= Date.now() - 21*86400000) next.push(item);
+      if (publishLatest) {
+        // A conscious operator action: post today's real data once, even if
+        // this is the first-ever feed check. Normal automatic checks remain
+        // new-items-only and never send the historical backlog.
+        next.push(...(batch.source.startsWith("lodestone") ? batch.items.slice(0,4) : batch.items.slice(0,1)));
+      } else {
+        for(const item of batch.items) if (!seen.has(item.id) && item.date >= Date.now() - 21*86400000) next.push(item);
+      }
     }
     if (cfg.fashion) {
       try {
@@ -239,12 +246,16 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
           // First successful read establishes the current week as baseline.
           await saveSeen(env,[item]);
           await writeMeta(env,"ffxiv_news_baseline_fashion","1");
-        } else if (!(await seenFor(env,"fashion")).has(item.id)) next.push(item);
+          if (publishLatest) next.push(item);
+        } else if (publishLatest || !(await seenFor(env,"fashion")).has(item.id)) next.push(item);
       } catch (e:any) {
         sourceErrors.push("fashion: "+String(e?.message || e));
       }
     }
-    const selected = next.sort((a,b)=>b.date-a.date).slice(0,30);
+    // Both Lodestone feeds can occasionally reference the same announcement.
+    const distinct = new Map<string,NewsItem>();
+    for (const item of next) if (!distinct.has(item.url)) distinct.set(item.url,item);
+    const selected = [...distinct.values()].sort((a,b)=>b.date-a.date).slice(0,30);
     if (selected.length) {
       const image = selected.find(x=>x.source==="fashion" && x.image)?.image;
       await discord(env,"channels/"+channelId+"/messages","POST",{
@@ -331,7 +342,7 @@ export async function ffxivNewsAdmin(req:Request, env:NewsEnv):Promise<Response>
         return newsJson({ok:true,status:"test-sent",channel_id:id});
       } catch(e:any) {return newsJson({ok:false,error:String(e.message || e)},502);}
     }
-    const result = await checkFfxivNews(env,true);
+    const result = await checkFfxivNews(env,true,x.action === "publish-latest");
     return newsJson(result,result.ok?200:502);
   }
   return newsJson({error:"method not allowed"},405);
