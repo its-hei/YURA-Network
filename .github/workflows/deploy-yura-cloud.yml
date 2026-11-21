@@ -97,6 +97,9 @@ jobs:
         continue-on-error: true
         run: python3 cloud/yura-cloud/tests/test_ffxiv_news_sources.py
 
+      - name: Verify FFXIV event schedules and active status
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-events.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit
