@@ -81,34 +81,64 @@ function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
   return toCurrent("event",active,at);
 }
 function textFor(category:Category,x:Current|null):string{
-  const intro=canonical(category);
-  if(!x)return intro+"\n"+
-    (category==="event"?"Obecnie brak potwierdzonego aktywnego eventu.":
-     category==="fashion"?"Raport zakończony — czekamy na nowe rozwiązanie.":
-     category==="patch"?"Brak aktualnego wpisu o patchu.":"Nie udało się ustalić stabilnej wersji.");
-  switch(category){
-    case "event":
-      return intro+"\n**"+safe(x.title,160)+"**\n"+
-        "Koniec <t:"+Math.floor((x.end||0)/1000)+":f> • <t:"+Math.floor((x.end||0)/1000)+":R>\n"+x.url;
-    case "fashion":
-      return intro+"\nRozwiązanie na 80/100 pkt • do 60 000 MGP\n"+
-        "Koniec tygodnia <t:"+Math.floor((x.expires||0)/1000)+":f>\n"+x.url;
-    case "patch":
-      return intro+"\n"+safe(x.title,140)+"\n"+x.url;
-    case "dalamud":
-      return intro+"\n"+safe(x.title,140)+"\n"+x.url;
-  }
+  const header=canonical(category);
+  // The post's colour, readable title and full info live in a Discord embed.
+  // No huge raw URLs or duplicate preview cards below it.
+  if(x)return header;
+  return header+"\n_"+(
+    category==="event"?"Brak potwierdzonego trwającego eventu.":
+    category==="fashion"?"Oczekujemy na następny Fashion Report.":
+    category==="patch"?"Czekamy na oficjalne patch notes.":
+    "Nie udało się ustalić stabilnej wersji.")+"_";
 }
 function embedsFor(category:Category,x:Current|null):unknown[]{
-  if(!x?.image)return [];
-  let url:URL;
-  try{url=new URL(x.image);}catch{return [];}
-  if(url.protocol!=="https:")return [];
-  if(category==="fashion" && url.hostname!=="fashionreportxiv.com")return [];
-  if(category==="event" && !/(?:^|\.)finalfantasyxiv\.com$/.test(url.hostname))return [];
-  if(category!=="event" && category!=="fashion")return [];
-  return [{color:0xe89b52,image:{url:url.toString()},
-    ...(category==="fashion"?{title:"80 / 100 punktów • Fashion Report",url:x.url}:{title:safe(x.title,170),url:x.url})}];
+  if(!x)return [];
+  const colours:Record<Category,number>={
+    event:0xA77EEA,fashion:0xE89B52,patch:0x769BEE,dalamud:0x56BC92
+  };
+  const source:Record<Category,string>={
+    event:"Lodestone • wydarzenia",fashion:"Fashion Report XIV",
+    patch:"Lodestone • patch notes",dalamud:"Dalamud Distribution"
+  };
+  const at=(time?:number)=>time&&Number.isFinite(time)?"<t:"+Math.floor(time/1000)+":f>":"";
+  let title=safe(x.title,180);
+  let description="";
+  switch(category){
+    case "event":
+      if(/FFXVI|Final Fantasy XVI/i.test(title)&&/Crossover Event Returns/i.test(title))
+        title="The Path Infernal • FFXIV × FFXVI";
+      description="**Trwa teraz** • koniec: "+at(x.end)+"\n"+
+        (x.end?"Pozostało <t:"+Math.floor(x.end/1000)+":R>\n":"")+
+        (x.url.includes("/ffxvi/")||/FFXVI|Final Fantasy XVI/i.test(title)
+          ?"Nagrody: Torgal (mount), Metian Attire, Torgal Pup.":"");
+      break;
+    case "fashion":
+      title="Rozwiązanie 80/100 pkt • 60 000 MGP";
+      description="Tygodniowy Fashion Report • reset "+at(x.expires);
+      break;
+    case "patch":
+      description="Oficjalne informacje o aktualizacji FFXIV.";
+      break;
+    case "dalamud":
+      title=safe(x.title.replace(/^Dalamud\s*/i,""),100);
+      description="Aktualnie dostępna stabilna wersja Dalamuda.";
+      break;
+  }
+  const embed:any={
+    color:colours[category],title,url:x.url,
+    description:description.trim(),
+    footer:{text:"Źródło: "+source[category]}
+  };
+  if(x.image){
+    try {
+      const img=new URL(x.image);
+      if(img.protocol==="https:"&&(
+        (category==="fashion"&&img.hostname==="fashionreportxiv.com")||
+        (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
+        embed.image={url:img.toString()};
+    }catch{}
+  }
+  return [embed];
 }
 function changed(a:Current|null,b:Current|null):boolean{
   // Ignore fetched-at timestamps and cache-busting changes. Expiry is a
@@ -168,9 +198,19 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
   if(!changed(post.current,fresh)) {
     const displayed=await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor);
     const wanted=textFor(cat,post.current);
-    if(displayed.content!==wanted){
+    const expectedEmbeds=embedsFor(cat,post.current);
+    const actualEmbeds=Array.isArray(displayed.embeds)?displayed.embeds:[];
+    // Recover missing/unreadable preview images, and convert old long raw
+    // links into the compact one-embed layout exactly once.
+    const hasCurrentEmbed=expectedEmbeds.length===0 || (
+      actualEmbeds.length===1 &&
+      actualEmbeds[0]?.title===(expectedEmbeds[0] as any)?.title &&
+      actualEmbeds[0]?.description===(expectedEmbeds[0] as any)?.description &&
+      (!((expectedEmbeds[0] as any)?.image) || !!actualEmbeds[0]?.image)
+    );
+    if(displayed.content!==wanted || !hasCurrentEmbed || actualEmbeds.length!==expectedEmbeds.length){
       await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
-        content:wanted,embeds:embedsFor(cat,post.current),allowed_mentions:NO_PINGS
+        content:wanted,embeds:expectedEmbeds,allowed_mentions:NO_PINGS
       });
       return true;
     }
