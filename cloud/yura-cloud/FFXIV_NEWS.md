@@ -8,7 +8,8 @@
 - Sources: official Lodestone News and Topics RSS (EU with NA fallback); actual stable Dalamud version from `goatcorp/dalamud-distrib/main/version` (do not substitute outdated GitHub Releases); weekly Fashion Report PNG from `https://fashionreportxiv.com/hint.png`.
 - Fashion Report uses the SHA-256 of the real image to detect new guides, checking daily rather than blindly posting each Friday. Discord image URLs contain a short cache-busting digest. If the image fails validation, no fake Fashion Report is posted.
 - Persistent deduplication: migration `0018_ffxiv_news_seen.sql`; first successful feed read records existing items without posting. Failed sources are retried on the next daily check. No arbitrary placeholder releases are published.
-- Discord messages disable all mentions and use one compact digest; no routine "nothing new" messages.
+- Discord messages disable all mentions; no routine "nothing new" messages. Each category has **one permanent main-channel latest post** that YURA edits when a new item arrives, plus a public history thread with prior messages. Threads are automatically archived after **24 hours of inactivity** and reopened when there is a new item. Prior channel messages are never deleted or silently moved.
+- Additional Discord bot permissions: **Create Public Threads**, **Send Messages in Threads** and **Read Message History** on the selected news channel. If the bot cannot create/write threads, the failure is recorded in the Cloud status; no fallback floods the main channel.
 - Authenticated with the existing Worker Admin Key or Twitch broadcaster OAuth: `/api/admin/ffxiv-news`.
   - `GET` current switches, channel and last check / errors.
   - `PUT` JSON `{enabled,guildId,channelId,fashion,dalamud,lodestone}` (all fields optional).
