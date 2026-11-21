@@ -319,3 +319,25 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
     if(posts[cat])await oldAnchors(env,cfg,cat,posts[cat]!);
   return {updated:changes.length,changes,errors};
 }
+
+// Called only at the top of each UTC hour (two compact D1 reads). It does
+// NOT poll public news feeds or post a status update. A scheduled event or
+// the Fashion Report can expire promptly even when the next news check is
+// tomorrow morning.
+export async function expireFourPosts(env:Env,cfg:BoardConfig,at=Date.now()):
+Promise<{expired:Category[];errors:string[]}> {
+  const expired:Category[]=[];
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))return {expired,errors};
+  for(const cat of ["event","fashion"] as const){
+    try{
+      const post=await loadPost(env,cfg,cat);
+      if(!post?.current)continue;
+      const deadline=cat==="event"?post.current.end:post.current.expires;
+      if(!deadline || deadline>at)continue;
+      await rollover(env,cfg,cat,post,null);
+      expired.push(cat);
+    }catch(e:any){errors.push(cat+": "+String(e?.message||e));}
+  }
+  return {expired,errors};
+}
