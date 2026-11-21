@@ -252,12 +252,25 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
 }
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t = warsawTime(scheduledAt);
-  if (t.hour !== 10 || t.minute !== 0) return;
-  // The Worker already has a per-minute cron. No additional schedules or Desktop polling.
+  // One-time provisioning when the feature is deployed: creates (or finds)
+  // #ffxiv-news and baselines old RSS/releases without waiting until tomorrow.
+  // It is not a recurring 15-minute news poll.
+  if (t.hour !== 10 || t.minute !== 0) {
+    if (t.minute % 15 !== 0) return;
+    if (await readMeta(env,"ffxiv_news_bootstrapped") === "1") return;
+    const initial = await checkFfxivNews(env);
+    if (initial.ok) await writeMeta(env,"ffxiv_news_bootstrapped","1");
+    return;
+  }
+  // The Worker already has a per-minute cron. Only the 10:00 PL tick fetches
+  // sources regularly; no additional schedules or Desktop polling.
   const last = await readMeta(env,"ffxiv_news_last_daily_day");
   if (last === t.day) return;
   const result = await checkFfxivNews(env);
-  if (result.ok) await writeMeta(env,"ffxiv_news_last_daily_day",t.day);
+  if (result.ok) {
+    await writeMeta(env,"ffxiv_news_last_daily_day",t.day);
+    await writeMeta(env,"ffxiv_news_bootstrapped","1");
+  }
 }
 export async function ffxivNewsAdmin(req:Request, env:NewsEnv):Promise<Response> {
   if (req.method === "GET") {
