@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=6;
+const RENDER_REVISION=7;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -236,7 +236,7 @@ const FASHION_IMAGE_HOSTS=new Set([
   "fashionreportxiv.com","cdn.discordapp.com","media.discordapp.net",
   "images-ext-1.discordapp.net","images-ext-2.discordapp.net"
 ]);
-async function downloadFashionImage(url:string, weekStart?:number):
+async function downloadFashionImage(url:string, weekStart?:number, verifiedWeek=false):
 Promise<{blob:Blob;filename:string}> {
   const uri=new URL(url);
   if(uri.protocol!=="https:" || !FASHION_IMAGE_HOSTS.has(uri.hostname))
@@ -255,9 +255,12 @@ Promise<{blob:Blob;filename:string}> {
     // HTTP last-modified date confirms it belongs to this current week.
     // Never show a stale Week 459 solution as Week 460.
     const modified=Date.parse(response.headers.get("last-modified")||"");
-    if(!Number.isFinite(modified) || modified<weekStart ||
-       modified>Date.now()+86400000)
-      throw new Error("Publisher image not confirmed current for this week");
+    if(Number.isFinite(modified)){
+      if(modified<weekStart || modified>Date.now()+86400000)
+        throw new Error("Publisher Last-Modified shows an outdated weekly guide");
+    }else if(!verifiedWeek){
+      throw new Error("Publisher date missing and report week not verified");
+    }
   }
   const length=Number(response.headers.get("content-length")||0);
   if(length>8*1024*1024)throw new Error("Fashion image exceeds 8 MB");
@@ -266,8 +269,32 @@ Promise<{blob:Blob;filename:string}> {
     throw new Error("Fashion image has invalid size");
   return {blob:new Blob([bytes],{type:mime}),filename:"fashion-report."+extension};
 }
-async function fashionAttachment(url:string,expires?:number,proxyUrl?:string):
-Promise<{blob:Blob;filename:string}> {
+// The Fashion Reporter art for week 460 is independently confirmed on
+// fashionreportxiv.com/hint.png for 21 November 2026. New Friday reports
+// must agree with the current Tuesday-reset week before the public image
+// is allowed as a backup. Never assume an old guide is a new one.
+const WEEK_460_RESET=Date.UTC(2026,10,24,8);
+const WEEK_MS=7*86400000;
+function verifiedReportWeek(reportId:string,expires?:number):number|null {
+  if(!expires)return null;
+  const delta=(expires-WEEK_460_RESET)/WEEK_MS;
+  if(!Number.isInteger(delta) || delta<0)return null;
+  const currentWeek=460+delta;
+  const weekMatch=/^discord-fashion-week-(\d{3,4})$/.exec(reportId);
+  if(weekMatch)return Number(weekMatch[1])===currentWeek?currentWeek:null;
+  // One and only one manually introduced initial report: Week 460.
+  if(currentWeek===460 && /^discord-fashion-manual-\d{15,22}$/.test(reportId)
+      && Date.now()<WEEK_460_RESET)return 460;
+  return null;
+}
+async function digestImage(blob:Blob):Promise<string>{
+  const bytes=await blob.arrayBuffer();
+  const digest=await crypto.subtle.digest("SHA-256",bytes);
+  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+type FashionDownload={blob:Blob;filename:string;publisherWeek?:number;publisherHash?:string};
+async function fashionAttachment(env:Env,url:string,expires?:number,proxyUrl?:string,
+  reportId=""):Promise<FashionDownload> {
   try{return await downloadFashionImage(url);}
   catch(originalError:any){
     // The Discord media proxy often has different edge access from the
@@ -285,8 +312,20 @@ Promise<{blob:Blob;filename:string}> {
     // native attachment; this does not affect week detection or source ID.
     if(!expires)throw originalError;
     const beginning=expires-7*86400000;
+    const verifiedWeek=verifiedReportWeek(reportId,expires);
     try {
-      return await downloadFashionImage("https://fashionreportxiv.com/hint.png",beginning);
+      const backup=await downloadFashionImage(
+        "https://fashionreportxiv.com/hint.png",beginning,verifiedWeek!==null);
+      if(verifiedWeek!==null){
+        const hash=await digestImage(backup.blob);
+        const lastRaw=await getMeta(env,"ffxiv_fashion_publisher_backup_last_v1");
+        let last:{week:number;hash:string}|null=null;
+        try{last=JSON.parse(lastRaw||"null");}catch{}
+        if(last && last.week!==verifiedWeek && last.hash===hash)
+          throw new Error("Backup image is unchanged from previous Fashion week");
+        return {...backup,publisherWeek:verifiedWeek,publisherHash:hash};
+      }
+      return backup;
     } catch(fallbackError:any) {
       throw new Error("Discord source unavailable ("+
         String(originalError?.message||originalError).slice(0,60)+
@@ -320,7 +359,7 @@ export async function deliverCard(
       return true;
     }
     try{
-      const image=await fashionAttachment(x.image,x.expires,x.imageProxy);
+      const image=await fashionAttachment(env,x.image,x.expires,x.imageProxy,x.id);
       const multipart=new FormData();
       const rich=payload.embeds[0] as any;
       if(rich?.image)delete rich.image;
@@ -330,6 +369,12 @@ export async function deliverCard(
       const response=await api(env,path,method,multipart);
       if(!Array.isArray(response?.attachments) || !response.attachments.length)
         throw new Error("Discord did not return the attached infographic");
+      if(image.publisherWeek!==undefined && image.publisherHash) {
+        await putMeta(env,"ffxiv_fashion_publisher_backup_last_v1",
+          JSON.stringify({week:image.publisherWeek,hash:image.publisherHash}));
+      }
+      await putMeta(env,"ffxiv_fashion_media_status_v1",
+        "OK • plik "+image.filename+" zapisany w wiadomości Discorda");
       return true;
     }catch(e:any){
       // Discord's CDN often rejects direct Cloudflare Worker downloads with
@@ -337,7 +382,9 @@ export async function deliverCard(
       // UNSIGNED Discord CDN URL, and provide a clickable image link in the
       // message body. Do not replace a successfully uploaded attachment with
       // a JSON PATCH just because its response omitted attachment metadata.
-      warnings.push("fashion attachment: "+String(e?.message||e).slice(0,150));
+      const reason="fashion attachment: "+String(e?.message||e).slice(0,175);
+      warnings.push(reason);
+      await putMeta(env,"ffxiv_fashion_media_status_v1",reason);
       payload.embeds=embedsFor(category,x);
       payload.attachments=[];
       await api(env,path,method,payload);
