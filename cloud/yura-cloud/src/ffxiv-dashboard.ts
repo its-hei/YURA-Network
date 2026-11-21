@@ -8,7 +8,7 @@ export type SourceItem={source:string;id:string;title:string;url:string;date:num
 export type Sources={
   fashion?:SourceItem;patch?:SourceItem;dalamud?:SourceItem;events:LiveEvent[]|null;
 };
-export type BoardConfig={guildId:string;channelId:string;fashion:boolean;dalamud:boolean;lodestone:boolean};
+export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string};
@@ -367,7 +367,7 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   const events=src.events;
   const activeEvent=events===null?undefined:eventCurrent(events,at);
   const expected:Record<Category,Current|null|undefined>={
-    event:activeEvent,
+    event:cfg.events?activeEvent:null,
     fashion:undefined,
     patch:cfg.lodestone?toCurrent("patch",src.patch,at):undefined,
     dalamud:cfg.dalamud?toCurrent("dalamud",src.dalamud,at):undefined
