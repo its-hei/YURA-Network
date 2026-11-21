@@ -5,7 +5,7 @@ import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
 // report. Subsequent scans accept ONLY newly mirrored Fashion Reporter webhooks.
 export type FollowedFashion = {
   source: "fashion"; id: string; title:string; url:string;
-  date:number; image:string;
+  date:number; image:string; imageProxy?:string;
 };
 export interface FashionSourceEnv {DB:D1Database; DISCORD_BOT_TOKEN?:string}
 const validID=(v:string)=>/^[0-9]{15,22}$/.test(v);
@@ -71,6 +71,20 @@ function fashionImage(message:any):string {
   }
   return "";
 }
+function fashionImageProxy(message:any):string {
+  const contents=messageContents(message);
+  const attachments=contents.flatMap((m:any)=>Array.isArray(m.attachments)?m.attachments:[]);
+  const embeds=contents.flatMap((m:any)=>Array.isArray(m.embeds)?m.embeds:[]);
+  for(const candidate of [
+    ...attachments.map((a:any)=>a.proxy_url),
+    ...embeds.map((e:any)=>e.image?.proxy_url)
+  ]) {
+    const url=safeImage(candidate);
+    if(url)return url;
+  }
+  return "";
+}
+
 function weekNumber(message:any):number|null {
   const contents=messageContents(message);
   const embeds=contents.flatMap((m:any)=>Array.isArray(m.embeds)?m.embeds:[]);
@@ -98,7 +112,8 @@ function makeFashion(message:any,guildId:string,channelId:string,allowUntitled=f
     source:"fashion",id:week?"discord-fashion-week-"+week:"discord-fashion-manual-"+id,
     title:week?"Fashion Report • Week "+week:"Fashion Report • aktualny raport",
     url:"https://discord.com/channels/"+guildId+"/"+channelId+"/"+id,
-    date,image
+    date,image,
+    ...(fashionImageProxy(message)?{imageProxy:fashionImageProxy(message)}:{})
   };
 }
 /** After the initial import, only a real followed-channel webhook is trusted. */
@@ -149,7 +164,8 @@ function storedCurrent(value:string,guildId:string,channelId:string):FollowedFas
        typeof x.title!=="string" || !Number.isFinite(x.date) ||
        typeof x.url!=="string" ||
        !x.url.startsWith("https://discord.com/channels/"+guildId+"/"+channelId+"/") ||
-       !safeImage(x.image))return null;
+       !safeImage(x.image) ||
+       (x.imageProxy && !safeImage(x.imageProxy)))return null;
     return x as FollowedFashion;
   }catch{return null;}
 }
