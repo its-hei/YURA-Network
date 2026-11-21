@@ -4,6 +4,13 @@ import {renderFfxivCardText,deliverCard,updateFourPosts} from "../src/ffxiv-dash
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
+const backupDb=()=>{
+  const store=new Map();
+  return {DB:{prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:store.get(args[0])||""}),
+    run:async()=>{store.set(args[0],args[1]);return {meta:{changes:1}}}
+  })})},store};
+};
 const cases=[
   ["event",{id:"thepath",title:"The Path Infernal",url:source,end:Date.UTC(2026,11,9,14,59)},["The Path Infernal","Koniec:","Szczegóły wydarzenia"]],
   ["fashion",{id:"discord-fashion-week-460",title:"Week 460",url:"https://discord.com/channels/111/222/333",image:report,expires:Date.UTC(2026,10,24,8)},["80/100","60 000 MGP","Fashion Report • źródło"]],
@@ -74,13 +81,45 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
   };
   try{
     const warnings=[];
-    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},
+    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test",DB:backupDb().DB},
       "channels/777777777777777777/messages/888888888888888888",
       "PATCH","fashion",cases[1][1],warnings);
     assert.equal(ok,true);
     assert.equal(warnings.length,0);
     assert.equal(uploaded,true);
     assert.equal(calls,3);
+  }finally{globalThis.fetch=original;}
+});
+test("Week 460 publisher backup succeeds without Last-Modified when source week is proven",async()=>{
+  const original=globalThis.fetch;
+  const {DB,store}=backupDb();
+  let delivered=0;
+  globalThis.fetch=async (url,opts)=>{
+    const target=String(url);
+    if(target.startsWith("https://cdn.discordapp.com/"))
+      return new Response("Forbidden",{status:403});
+    if(target==="https://fashionreportxiv.com/hint.png")
+      return new Response(new Uint8Array(36000),{status:200,
+        headers:{"content-type":"image/png"}});
+    if(target.startsWith("https://discord.com/api/v10/")) {
+      delivered++;
+      assert.ok(opts.body instanceof FormData);
+      return new Response(JSON.stringify({attachments:[{id:"777777777777777777",filename:"fashion-report.png"}]}),
+        {status:200,headers:{"content-type":"application/json"}});
+    }
+    throw Error("Unknown URL "+target);
+  };
+  try{
+    const warnings=[];
+    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test",DB},
+      "channels/777777777777777777/messages/888888888888888888",
+      "PATCH","fashion",cases[1][1],warnings);
+    assert.equal(ok,true);
+    assert.deepEqual(warnings,[]);
+    assert.equal(delivered,1);
+    assert.ok(String(store.get("ffxiv_fashion_media_status_v1")).startsWith("OK"));
+    const record=JSON.parse(store.get("ffxiv_fashion_publisher_backup_last_v1"));
+    assert.equal(record.week,460);
   }finally{globalThis.fetch=original;}
 });
 test("Discord media proxy can rescue an image when primary CDN returns 403",async()=>{
@@ -155,7 +194,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?5:6};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?6:7};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -199,6 +238,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,6);
+    assert.equal(repaired.renderRevision,7);
   }finally{globalThis.fetch=originalFetch;}
 });
