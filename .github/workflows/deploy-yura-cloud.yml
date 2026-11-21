@@ -97,6 +97,10 @@ jobs:
         continue-on-error: true
         run: python3 cloud/yura-cloud/tests/test_ffxiv_news_sources.py
 
+      - name: Type-check YURA Cloud TypeScript
+        working-directory: cloud/yura-cloud
+        run: npx tsc --noEmit
+
       - name: Preflight Worker build without deployment
         working-directory: cloud/yura-cloud
         run: npx wrangler deploy --dry-run
