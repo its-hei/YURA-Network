@@ -12,6 +12,7 @@ const discordEpoch=1420070400000n;
 const safeSnowflake=(id:string):bigint=>validID(id)?BigInt(id):0n;
 const normalized=(text:string)=>text.normalize("NFKC").toLowerCase().replace(/[^a-z0-9]+/g,"");
 const sourceKey=(guild:string,channel:string)=>"ffxiv_fashion_follow_cursor_v1_"+guild+"_"+channel;
+const importKey=(guild:string,channel:string)=>"ffxiv_fashion_first_manual_import_v2_"+guild+"_"+channel;
 const imageHosts=new Set(["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"]);
 async function discord(env:FashionSourceEnv,path:string):Promise<any>{
   const bot=env.DISCORD_BOT_TOKEN?.trim();
@@ -121,7 +122,7 @@ export function parseInitialManualFashion(message:any,guildId:string,channelId:s
 export type FashionPoll={
   sourceChannelId:string;
   sourceStatus:"initialized"|"new"|"unchanged"|"manual-current";
-  candidate?:FollowedFashion;cursor?:string;
+  candidate?:FollowedFashion;cursor?:string;firstImport?:boolean;
 };
 export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):Promise<FashionPoll|null>{
   const id=await locateFollowedFashionChannel(env,guildId);
@@ -142,17 +143,32 @@ export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):P
       ((BigInt(Date.now())-discordEpoch)<<22n).toString();
     // Caller acknowledges after Discord main post has updated successfully.
     return {sourceChannelId:id,sourceStatus:selected?"manual-current":"initialized",
-      ...(selected?{candidate:selected}:{}),cursor:newest};
+      ...(selected?{candidate:selected}:{}),cursor:newest,firstImport:true};
   }
   const newer=ordered.filter((m:any)=>safeSnowflake(String(m.id))>safeSnowflake(last));
   const newest=newer.length?String(newer[newer.length-1].id):last;
   const candidates=newer.map((m:any)=>parseFollowedFashion(m,guildId,id))
     .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
   const selected=candidates[candidates.length-1];
+  // During rollout an earlier version of the poller may already have
+  // recorded the cursor without importing the user's first manual image.
+  // This one-time recovery imports it, without treating later manual chat
+  // messages as automatic publications.
+  const needsImport=await meta(env,importKey(guildId,id))!=="1";
+  if(needsImport && !selected) {
+    const existing=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
+      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
+    const initial=existing[existing.length-1];
+    return {sourceChannelId:id,sourceStatus:initial?"manual-current":"initialized",
+      ...(initial?{candidate:initial}:{}),cursor:newest,firstImport:true};
+  }
   return {sourceChannelId:id,sourceStatus:selected?"new":"unchanged",
-    ...(selected?{candidate:selected}:{}),cursor:newest};
+    ...(selected?{candidate:selected}:{}),cursor:newest,
+    ...(needsImport?{firstImport:true}:{})};
 }
 export async function acknowledgeFashionPoll(env:FashionSourceEnv,guildId:string,poll:FashionPoll){
   if(poll.cursor && validID(poll.cursor))
     await putMeta(env,sourceKey(guildId,poll.sourceChannelId),poll.cursor);
+  if(poll.firstImport)
+    await putMeta(env,importKey(guildId,poll.sourceChannelId),"1");
 }
