@@ -301,6 +301,55 @@ async function oldAnchors(env:Env,cfg:BoardConfig,cat:Category,post:Post):Promis
     // anchor/thread unchanged instead of risking lost history.
   }
 }
+
+// Remove ONLY the obsolete, EMPTY bot placeholders from the old three-card
+// layout. This is not bulk message deletion: real news, human discussions
+// and threads with any content are preserved. Discord has no move API.
+async function cleanupLegacyPlaceholders(env:Env,cfg:BoardConfig,visible:any[],posts:Partial<Record<Category,Post>>):Promise<number> {
+  const currentAnchors=new Set(Object.values(posts).filter(Boolean).map(p=>p!.anchor));
+  const legacyTitles=[
+    "**👗 FASHION REPORT • AKTUALNE**",
+    "**🟢 DALAMUD • STABLE**",
+    "**⚔️ FINAL FANTASY XIV • AKTUALNOŚCI**"
+  ];
+  const candidates=visible.filter(m=>{
+    const content=String(m?.content??"");
+    return m?.author?.bot===true && !currentAnchors.has(String(m.id)) &&
+      legacyTitles.some(prefix=>content.startsWith(prefix)) &&
+      content.includes("Nowe wiadomości pojawią się w tym poście.") &&
+      content.includes("Historia jest zapisywana w wątku.") &&
+      !/https?:\/\//i.test(content) && content.length<600 &&
+      !(m.attachments||[]).length && !(m.embeds||[]).length;
+  });
+  if(!candidates.length)return 0;
+  const self=await api(env,"users/@me");
+  let removed=0;
+  for(const m of candidates.slice(0,6)) {
+    if(m.author?.id!==self.id || !ID.test(String(m.id)))continue;
+    // Thread IDs equal their starter message snowflake when created from a
+    // regular message. If any replies exist, leave the entire old post intact.
+    let thread:any=null;
+    try {
+      thread=await api(env,"channels/"+m.id);
+    }catch(e:any){
+      if(!String(e?.message??"").includes("HTTP 404"))continue;
+    }
+    if(thread && [11,12].includes(Number(thread.type))) {
+      try {
+        const history:any=await api(env,"channels/"+m.id+"/messages?limit=100");
+        // Even bot-only real history must never be discarded.
+        if(!Array.isArray(history) ||
+           history.some((x:any)=>x.type!==21 && x.id!==m.id))continue;
+      }catch{continue;}
+    }
+    try {
+      await api(env,"channels/"+cfg.channelId+"/messages/"+m.id,"DELETE");
+      removed++;
+    }catch{/* Unavailable deletion permission: leave it alone. */}
+  }
+  return removed;
+}
+
 export async function updateFourPosts(env:Env,cfg:BoardConfig,src:Sources,opts?:{preview?:boolean}):
 Promise<{updated:number;changes:string[];errors:string[]}>{
   if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))throw new Error("Discord news channel not configured");
@@ -357,6 +406,12 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   // messages exist, leaving anything unrecognized untouched.
   for(const cat of ["fashion","patch","dalamud"] as const)
     if(posts[cat])await oldAnchors(env,cfg,cat,posts[cat]!);
+  // Only remove true, empty placeholders from the older layout once all
+  // four permanent card messages exist. Preserve any posts with history.
+  if(ORDER.every(cat=>Boolean(posts[cat]))) {
+    try {await cleanupLegacyPlaceholders(env,cfg,currentList,posts);}
+    catch(e:any){errors.push("legacy placeholder cleanup: "+String(e?.message||e));}
+  }
   return {updated:changes.length,changes,errors};
 }
 
