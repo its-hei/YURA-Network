@@ -24,7 +24,7 @@ for name, url, kind in SOURCES:
                 s = body.decode("utf-8", "ignore")
                 assert "<feed" in s and "<entry" in s, "Atom feed has no entries"
                 assert "http://www.w3.org/2005/Atom" in s, "Expected official Atom namespace"
-                assert re.search(r'<entry\\b[\\s\\S]*?<title>', s), "Atom entries have no titles"
+                assert re.search(r'<entry\b[\s\S]*?<title>', s), "Atom entries have no titles"
                 detail = f"{len(re.findall('<entry', s))} Atom entries"
             elif kind == "version":
                 v = json.loads(body)["AssemblyVersion"]
