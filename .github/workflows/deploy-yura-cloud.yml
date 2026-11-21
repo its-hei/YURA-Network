@@ -106,6 +106,9 @@ jobs:
       - name: Verify Discord retry-after and rate-limit pacing
         run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-discord-api.test.mjs
 
+      - name: Verify readable FFXIV cards and native Fashion image attachments
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-dashboard.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit
