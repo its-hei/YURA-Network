@@ -1,242 +1,319 @@
-// One compact, persistent Discord dashboard, including the current in-game
-// event. Older announcements are written to ONE history thread, not the main
-// channel. Stored in D1: Desktop and Worker upgrades never reset its state.
+// Four persistent, editable Discord messages: EVENT, FASHION, PATCH, DALAMUD.
+// Every announcement's previous version goes into that message's history
+// thread before the main message is edited. No daily no-news posts.
 import type {LiveEvent} from "./ffxiv-events";
 
-interface DashboardEnv { DB:D1Database; DISCORD_BOT_TOKEN?:string }
-export type DashboardItem = { source:string; id:string; title:string; url:string; date:number; image?:string };
-export type DashboardConfig = {
-  guildId:string; channelId:string; fashion:boolean; dalamud:boolean; lodestone:boolean
+interface Env {DB:D1Database; DISCORD_BOT_TOKEN?:string}
+export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string};
+export type Sources={
+  fashion?:SourceItem;patch?:SourceItem;dalamud?:SourceItem;events:LiveEvent[]|null;
 };
-type CurrentEvent = { title:string;url:string;start:number;end:number };
-type Snapshot = {
-  fashion?:DashboardItem; dalamud?:DashboardItem; lodestone?:DashboardItem; event?:CurrentEvent
+export type BoardConfig={guildId:string;channelId:string;fashion:boolean;dalamud:boolean;lodestone:boolean};
+type Category="event"|"fashion"|"patch"|"dalamud";
+type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
+type Post={anchor:string;thread:string;current:Current|null};
+const ORDER:Category[]=["event","fashion","patch","dalamud"];
+const LABEL:Record<Category,string>={
+  event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
+  patch:"⚔️ AKTUALNY PATCH",dalamud:"🟢 DALAMUD • STABLE"
 };
-const ID_OK = (s:string)=>/^\d{15,22}$/.test(s);
-const MAIN_TITLE = "📰 FFXIV • AKTUALNE";
-const MAIN_MARKER = "**"+MAIN_TITLE+"**";
-const LAYOUT_VERSION = "2-compact-four-categories";
-
-async function getMeta(env:DashboardEnv,key:string):Promise<string> {
+const LEGACY:Partial<Record<Category,string>>={
+  fashion:"fashion",patch:"lodestone",dalamud:"dalamud"
+};
+const ID=/^\d{15,22}$/;
+const NO_PINGS={parse:[]};
+const keyFor=(cfg:BoardConfig,category:Category)=>"ffxiv_board_v3_"+cfg.guildId+"_"+cfg.channelId+"_"+category;
+const canonical=(category:Category)=>"**"+LABEL[category]+"**";
+const safe=(v:unknown,n=160)=>String(v??"").replace(/[\r\n]/g," ").slice(0,n);
+function validCurrent(v:any):v is Current {
+  return !!v && typeof v.id==="string" && typeof v.title==="string" &&
+    typeof v.url==="string" && /^https:\/\//.test(v.url);
+}
+async function getMeta(env:Env,key:string):Promise<string>{
   const r=await env.DB.prepare("SELECT value FROM meta WHERE key=?1").bind(key).first<{value:string}>();
-  return String(r?.value ?? "");
+  return String(r?.value??"");
 }
-async function setMeta(env:DashboardEnv,key:string,value:string):Promise<void> {
-  await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
-    .bind(key,value).run();
+async function putMeta(env:Env,key:string,value:string):Promise<void>{
+  await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key,value).run();
 }
-async function discord(env:DashboardEnv,path:string,method="GET",data?:unknown):Promise<any>{
-  if(!env.DISCORD_BOT_TOKEN?.trim()) throw new Error("DISCORD_BOT_TOKEN not configured");
-  const response=await fetch("https://discord.com/api/v10/"+path,{
-    method,
-    headers:{authorization:"Bot "+env.DISCORD_BOT_TOKEN.trim(),"content-type":"application/json",
-      "user-agent":"YURA-Cloud/FFXIV-Dashboard-1.0"},
-    ...(data===undefined?{}:{body:JSON.stringify(data)})
+async function api(env:Env,path:string,method="GET",body?:unknown):Promise<any>{
+  if(!env.DISCORD_BOT_TOKEN?.trim())throw new Error("Cloud Discord bot token missing");
+  const res=await fetch("https://discord.com/api/v10/"+path,{
+    method,headers:{"authorization":"Bot "+env.DISCORD_BOT_TOKEN.trim(),"content-type":"application/json",
+      "user-agent":"YURA-FFXIV/4-Posts"},
+    ...(body===undefined?{}:{body:JSON.stringify(body)})
   });
-  if(!response.ok) throw new Error("Discord "+method+" "+path.split("/")[0]+": HTTP "+response.status);
-  return response.status===204?null:response.json();
+  if(!res.ok)throw new Error("Discord "+method+" "+path.split("/")[0]+" HTTP "+res.status);
+  return res.status===204?null:res.json();
 }
-function itemSafe(x:any):x is DashboardItem {
-  return !!x && typeof x==="object" && typeof x.id==="string" &&
-    typeof x.title==="string" && typeof x.url==="string" &&
-    /^https:\/\//.test(x.url);
-}
-async function loadState(env:DashboardEnv,key:string):Promise<Snapshot> {
+async function loadPost(env:Env,cfg:BoardConfig,category:Category):Promise<Post|null>{
   try {
-    const v=JSON.parse(await getMeta(env,key)||"{}");
-    const out:Snapshot={};
-    for (const category of ["fashion","dalamud","lodestone"] as const)
-      if(itemSafe(v?.[category])) out[category]=v[category];
-    const e=v?.event;
-    if(e && typeof e.title==="string" && typeof e.url==="string" &&
-       /^https:\/\/(?:eu|na)\.finalfantasyxiv\.com\/lodestone\//.test(e.url) &&
-       Number.isFinite(e.start) && Number.isFinite(e.end))
-      out.event=e;
-    return out;
-  }catch{return {};}
+    const obj=JSON.parse(await getMeta(env,keyFor(cfg,category))||"null");
+    if(obj && ID.test(obj.anchor) && ID.test(obj.thread) &&
+      (obj.current===null || validCurrent(obj.current))) return obj as Post;
+  }catch{}
+  return null;
 }
-function short(s:string,n=110):string {
-  return String(s||"").replace(/[\r\n]+/g," ").trim().slice(0,n);
+async function savePost(env:Env,cfg:BoardConfig,category:Category,value:Post):Promise<void>{
+  await putMeta(env,keyFor(cfg,category),JSON.stringify(value));
 }
-function formatEvent(event:CurrentEvent | undefined):string {
-  if(!event) return "Brak potwierdzonego aktywnego wydarzenia.";
-  const epoch=Math.floor(event.end/1000);
-  return "**"+short(event.title,115)+"** — koniec <t:"+epoch+":f> (<t:"+epoch+":R>)\n"+event.url;
+function nextTuesdayResetUTC(time:number):number {
+  const d=new Date(time), next=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),8));
+  const days=(2-next.getUTCDay()+7)%7;
+  next.setUTCDate(next.getUTCDate()+days);
+  if(next.getTime()<=time)next.setUTCDate(next.getUTCDate()+7);
+  return next.getTime();
 }
-function formatCurrent(snapshot:Snapshot,cfg:DashboardConfig):string{
-  const fashion=cfg.fashion ? snapshot.fashion : undefined;
-  const dalamud=cfg.dalamud ? snapshot.dalamud : undefined;
-  const lodestone=cfg.lodestone ? snapshot.lodestone : undefined;
-  const rows=[
-    MAIN_MARKER,
-    "",
-    "**👗 FASHION REPORT**",
-    fashion ? "Rozwiązanie 80/100 pkt • 60 000 MGP\n"+fashion.url : "Brak aktualnej grafiki",
-    "",
-    "**🟢 DALAMUD**",
-    dalamud ? short(dalamud.title,100)+"\n"+dalamud.url : "Brak danych o stabilnej wersji",
-    "",
-    "**⚔️ FFXIV / PATCH NOTES**",
-    lodestone ? short(lodestone.title,110)+"\n"+lodestone.url : "Brak nowych ogłoszeń",
-    "",
-    "**🎉 AKTUALNY EVENT**",
-    formatEvent(snapshot.event),
-    "",
-    "📁 Historia zmian znajduje się we wątku poniżej."
-  ];
-  return rows.join("\n").slice(0,1950);
-}
-function dashboardEmbeds(snapshot:Snapshot,cfg:DashboardConfig):unknown[] {
-  const f=cfg.fashion ? snapshot.fashion :undefined;
-  if(!f?.image) return [];
-  const image=new URL(f.image);
-  if(image.protocol!=="https:" || image.hostname!=="fashionreportxiv.com") return [];
-  return [{
-    color:0xe89b52,title:"👗 Fashion Report — grafika tygodnia",
-    url:"https://fashionreportxiv.com/",
-    image:{url:image.toString()},
-    footer:{text:"YURA Cloud • materiały: Fashion Report XIV"}
-  }];
-}
-function friendlyEventTitle(x:LiveEvent):string {
-  if(/final fantasy (?:xiv|14).{0,25}(?:x|×).{0,25}final fantasy (?:xvi|16)/i.test(x.title))
-    return "The Path Infernal (FFXIV × FFXVI)";
-  return short(x.title,120);
-}
-function updatedSnapshot(
-  old:Snapshot,
-  cfg:DashboardConfig,
-  observed:Partial<Record<"fashion"|"dalamud"|"lodestone",DashboardItem>>,
-  currentEvents:LiveEvent[]|null,
-  at:number
-):Snapshot {
-  const next:Snapshot={...old};
-  for(const key of ["fashion","dalamud","lodestone"] as const)
-    if(observed[key] && (!next[key] || next[key]?.id!==observed[key]?.id ||
-      next[key]?.url!==observed[key]?.url)) next[key]=observed[key];
-  // Stable IDs, not the time of the source check, drive dashboard updates.
-  // The stable Dalamud and Fashion Report records are read daily, but their
-  // fetched-at timestamps must not cause a Discord edit every morning.
-  if(currentEvents!==null) {
-    const active=currentEvents.find(x=>x.start<=at && at<x.end);
-    if(active) next.event={title:friendlyEventTitle(active),url:active.url,start:active.start,end:active.end};
-    else delete next.event;
-  } else if(next.event && next.event.end<=at) delete next.event;
-  // The event is automatically removed when the official end time passes;
-  // we never display an event as active beyond its verified end.
-  if(next.event && next.event.end<=at) delete next.event;
-  return next;
-}
-function equal(a:Snapshot,b:Snapshot):boolean {
-  return JSON.stringify(a)===JSON.stringify(b);
-}
-async function master(env:DashboardEnv,cfg:DashboardConfig,base:string):Promise<string>{
-  const key=base+"_anchor";
-  const saved=await getMeta(env,key);
-  if(ID_OK(saved)) {
-    try {
-      const msg=await discord(env,"channels/"+cfg.channelId+"/messages/"+saved);
-      if(String(msg?.content??"").startsWith(MAIN_MARKER) && msg?.author?.bot) return saved;
-    }catch {/* Recover from a deleted message. */}
+function toCurrent(category:Category,item:SourceItem|LiveEvent|undefined,at:number):Current|null{
+  if(!item)return null;
+  if(category==="event"){
+    const e=item as LiveEvent;
+    if(!Number.isFinite(e.start)||!Number.isFinite(e.end)||e.end<=at||e.start>at)return null;
+    return {id:e.url+"-"+e.start+"-"+e.end,title:e.title,url:e.url,end:e.end,...(e.image?{image:e.image}:{})};
   }
-  const messages:any=await discord(env,"channels/"+cfg.channelId+"/messages?limit=100");
-  const found=Array.isArray(messages)
-    ? messages.find((m:any)=>m.author?.bot && String(m.content??"").startsWith(MAIN_MARKER))
-    : null;
-  if(found && ID_OK(String(found.id))){
-    await setMeta(env,key,String(found.id));
-    return String(found.id);
-  }
-  const created=await discord(env,"channels/"+cfg.channelId+"/messages","POST",{
-    content:MAIN_MARKER+"\nŁadowanie aktualnych informacji…",allowed_mentions:{parse:[]}
-  });
-  const id=String(created?.id??"");
-  if(!ID_OK(id)) throw new Error("Discord did not return dashboard message id");
-  await setMeta(env,key,id);
-  return id;
+  const x=item as SourceItem;
+  return {id:x.id,title:x.title,url:x.url,
+    ...(category==="fashion"?{expires:nextTuesdayResetUTC(at)}:{}),
+    ...(x.image?{image:x.image}:{})};
 }
-async function historyThread(env:DashboardEnv,cfg:DashboardConfig,base:string,anchor:string):Promise<string>{
-  const key=base+"_thread";
-  const saved=await getMeta(env,key);
-  if(ID_OK(saved)) {
-    try {
-      const t=await discord(env,"channels/"+saved);
-      if(String(t.parent_id)===cfg.channelId && [11,12].includes(Number(t.type))) {
-        if(t.thread_metadata?.archived) {
-          if(t.thread_metadata?.locked) throw new Error("FFXIV history thread locked");
-          await discord(env,"channels/"+saved,"PATCH",{archived:false});
-        }
-        return saved;
-      }
-    }catch {/* Reconcile existing linked thread. */}
+function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
+  const active=events?.filter(e=>e.start<=at&&at<e.end).sort((a,b)=>b.start-a.start)[0];
+  return toCurrent("event",active,at);
+}
+function textFor(category:Category,x:Current|null):string{
+  const intro=canonical(category);
+  if(!x)return intro+"\n"+
+    (category==="event"?"Obecnie brak potwierdzonego aktywnego eventu.":
+     category==="fashion"?"Raport zakończony — czekamy na nowe rozwiązanie.":
+     category==="patch"?"Brak aktualnego wpisu o patchu.":"Nie udało się ustalić stabilnej wersji.");
+  switch(category){
+    case "event":
+      return intro+"\n**"+safe(x.title,160)+"**\n"+
+        "Koniec <t:"+Math.floor((x.end||0)/1000)+":f> • <t:"+Math.floor((x.end||0)/1000)+":R>\n"+x.url;
+    case "fashion":
+      return intro+"\nRozwiązanie na 80/100 pkt • do 60 000 MGP\n"+
+        "Koniec tygodnia <t:"+Math.floor((x.expires||0)/1000)+":f>\n"+x.url;
+    case "patch":
+      return intro+"\n"+safe(x.title,140)+"\n"+x.url;
+    case "dalamud":
+      return intro+"\n"+safe(x.title,140)+"\n"+x.url;
   }
-  let id="";
-  try {
-    const existing=await discord(env,"channels/"+anchor);
-    if(existing?.parent_id===cfg.channelId && [11,12].includes(Number(existing.type)))
-      id=String(existing.id);
-  }catch {}
-  if(!ID_OK(id)) {
-    const t=await discord(env,"channels/"+cfg.channelId+"/messages/"+anchor+"/threads","POST",{
-      name:"📁 FFXIV — historia zmian",auto_archive_duration:1440
+}
+function embedsFor(category:Category,x:Current|null):unknown[]{
+  if(!x?.image)return [];
+  let url:URL;
+  try{url=new URL(x.image);}catch{return [];}
+  if(url.protocol!=="https:")return [];
+  if(category==="fashion" && url.hostname!=="fashionreportxiv.com")return [];
+  if(category==="event" && !/(?:^|\.)finalfantasyxiv\.com$/.test(url.hostname))return [];
+  if(category!=="event" && category!=="fashion")return [];
+  return [{color:0xe89b52,image:{url:url.toString()},
+    ...(category==="fashion"?{title:"80 / 100 punktów • Fashion Report",url:x.url}:{title:safe(x.title,170),url:x.url})}];
+}
+function changed(a:Current|null,b:Current|null):boolean{
+  // Ignore fetched-at timestamps and cache-busting changes. Expiry is a
+  // property of the weekly instance, not a reason to republish daily.
+  return a?.id!==b?.id || a?.url!==b?.url;
+}
+async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
+  const saved=await loadPost(env,cfg,cat);
+  if(saved){
+    try{
+      const [post,t]=await Promise.all([
+        api(env,"channels/"+cfg.channelId+"/messages/"+saved.anchor),
+        api(env,"channels/"+saved.thread)
+      ]);
+      if(String(post?.content??"").startsWith(canonical(cat)) &&
+        String(t.parent_id)===cfg.channelId && [11,12].includes(Number(t.type)))return saved;
+    }catch{/* Recover from deleted post or thread. */}
+  }
+  const found=existing.find(m=>m.author?.bot===true && String(m.content??"").startsWith(canonical(cat)));
+  const anchor=found?.id;
+  let id=ID.test(String(anchor??""))?String(anchor):"";
+  if(!id){
+    const created=await api(env,"channels/"+cfg.channelId+"/messages","POST",{
+      content:canonical(cat)+"\nŁadowanie aktualnych danych…",allowed_mentions:NO_PINGS
     });
-    id=String(t?.id??"");
+    id=String(created?.id??"");
+    if(!ID.test(id))throw new Error("Discord did not return "+cat+" message id");
   }
-  if(!ID_OK(id)) throw new Error("Discord did not return FFXIV history thread ID");
-  await setMeta(env,key,id);
-  return id;
+  let thread="";
+  try{
+    const t=await api(env,"channels/"+id);
+    if([11,12].includes(Number(t.type)) && t.parent_id===cfg.channelId) thread=String(t.id);
+  }catch{}
+  if(!ID.test(thread)){
+    const created=await api(env,"channels/"+cfg.channelId+"/messages/"+id+"/threads","POST",{
+      name:"📁 "+LABEL[cat]+" — historia",auto_archive_duration:1440
+    });
+    thread=String(created?.id??"");
+  }
+  if(!ID.test(thread))throw new Error("Discord did not return "+cat+" history thread");
+  const state:Post={anchor:id,thread,current:saved?.current||null};
+  await savePost(env,cfg,cat,state);
+  return state;
 }
-function historyText(items:DashboardItem[],events:LiveEvent[]|null):string {
-  const parts=["**📁 FFXIV — zapis zmian**"];
-  for(const item of items.slice(0,6)) {
-    const type=item.source==="fashion"?"👗 Fashion Report":
-      item.source==="dalamud"?"🟢 Dalamud":"⚔️ FFXIV";
-    parts.push(type+" — "+short(item.title,95)+"\n"+item.url);
+async function threadWrite(env:Env,threadId:string,category:Category,old:Current):Promise<void>{
+  const t=await api(env,"channels/"+threadId);
+  if(t.thread_metadata?.archived){
+    if(t.thread_metadata?.locked)throw new Error("Archive thread locked: "+category);
+    await api(env,"channels/"+threadId,"PATCH",{archived:false});
   }
-  if(events?.length){
-    for(const e of events.slice(0,2))
-      parts.push("🎉 Event — "+friendlyEventTitle(e)+"\n"+e.url);
-  }
-  return parts.join("\n\n").slice(0,1900);
+  await api(env,"channels/"+threadId+"/messages","POST",{
+    content:"📁 **Archiwum: "+LABEL[category]+"**\n"+textFor(category,old),
+    allowed_mentions:NO_PINGS,embeds:embedsFor(category,old)
+  });
 }
-export async function updateNewsDashboard(
-  env:DashboardEnv,cfg:DashboardConfig,items:DashboardItem[],
-  observed:Partial<Record<"fashion"|"dalamud"|"lodestone",DashboardItem>>,
-  events:LiveEvent[]|null,
-  opts?:{preview?:boolean}
-):Promise<{changed:boolean;archived:number;mainMessageId:string}> {
-  if(!ID_OK(cfg.channelId)) throw new Error("FFXIV dashboard channel not configured");
-  const base="ffxiv_news_dashboard_v2_"+cfg.guildId+"_"+cfg.channelId;
-  const old=await loadState(env,base+"_state");
-  const next=updatedSnapshot(old,cfg,observed,events,Date.now());
-  const oldSig=await getMeta(env,base+"_layout");
-  const changed=!equal(old,next) || oldSig!==LAYOUT_VERSION || opts?.preview===true;
-  if(!changed && items.length===0)
-    return {changed:false,archived:0,mainMessageId:await getMeta(env,base+"_anchor")};
+async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Current|null):Promise<boolean>{
+  if(!changed(post.current,fresh)) {
+    const displayed=await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor);
+    const wanted=textFor(cat,post.current);
+    if(displayed.content!==wanted){
+      await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
+        content:wanted,embeds:embedsFor(cat,post.current),allowed_mentions:NO_PINGS
+      });
+      return true;
+    }
+    return false;
+  }
+  const old=post.current;
+  if(old){
+    // The old item is copied BEFORE the main post is edited. This is how
+    // Discord can offer history, since it has no "move message" API.
+    const archivedKey=keyFor(cfg,cat)+"_archived_"+encodeURIComponent(old.id).slice(0,300);
+    if(await getMeta(env,archivedKey)!=="1"){
+      await threadWrite(env,post.thread,cat,old);
+      await putMeta(env,archivedKey,"1");
+    }
+  }
+  const next={...post,current:fresh};
+  await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
+    content:textFor(cat,fresh),embeds:embedsFor(cat,fresh),allowed_mentions:NO_PINGS
+  });
+  await savePost(env,cfg,cat,next);
+  return true;
+}
+async function oldAnchors(env:Env,cfg:BoardConfig,cat:Category,post:Post):Promise<void>{
+  // A cautious migration from the previous 3-message layout. Only bot-owned
+  // old-category anchor messages are candidates. Never touch other messages
+  // or a thread with user discussion.
+  const legacyCat=LEGACY[cat];
+  if(!legacyCat)return;
+  const key="ffxiv_news_archive_v1_"+cfg.guildId+"_"+cfg.channelId+"_"+legacyCat;
+  const finished="ffxiv_board_v3_legacy_finished_"+cfg.channelId+"_"+legacyCat;
+  if(await getMeta(env,finished)==="1")return;
+  let old:{anchor:string;thread:string}|null=null;
+  try{old=JSON.parse(await getMeta(env,key)||"null");}catch{}
+  if(!old || !ID.test(String(old.anchor))||old.anchor===post.anchor){
+    await putMeta(env,finished,"1");return;
+  }
+  try{
+    const m=await api(env,"channels/"+cfg.channelId+"/messages/"+old.anchor);
+    const prefixes:Record<string,string>={
+      fashion:"**👗 FASHION REPORT • AKTUALNE**",
+      dalamud:"**🟢 DALAMUD • STABLE**",
+      lodestone:"**⚔️ FINAL FANTASY XIV • AKTUALNOŚCI**"
+    };
+    if(!m.author?.bot || !String(m.content??"").startsWith(prefixes[legacyCat]))return;
+    const own=await api(env,"users/@me");
+    if(m.author.id!==own.id)return;
 
-  const anchor=await master(env,cfg,base);
-  const eventChanged=JSON.stringify(old.event||null)!==JSON.stringify(next.event||null);
-  if(items.length || eventChanged) {
-    // One shared archive thread, with historical category labels. A new
-    // event or verified event expiry is saved only once when state changes.
-    const thread=await historyThread(env,cfg,base,anchor);
-    const eventNote=eventChanged
-      ? (next.event ? "🎉 Nowy event: "+short(next.event.title)+" • koniec <t:"+Math.floor(next.event.end/1000)+":f>\n"+next.event.url
-        : (old.event ? "🏁 Zakończony event: "+short(old.event.title) : ""))
-      : "";
-    const message=items.length ? historyText(items,events) : "**📁 FFXIV — historia zmian**";
-    await discord(env,"channels/"+thread+"/messages","POST",{
-      content:(message+(eventNote?"\n\n"+eventNote:"")).slice(0,1950),
-      allowed_mentions:{parse:[]}
-    });
+    // Copy history backwards until there are no more records. Cap at 500 to
+    // prevent accidental mass migration; leave the old thread intact if a
+    // community member has replied or anything is incomplete.
+    const collected:any[]=[];
+    let before="";
+    for(let page=0;page<6;page++){
+      const messages:any=await api(env,"channels/"+old.thread+"/messages?limit=100"+(before?"&before="+before:""));
+      if(!Array.isArray(messages))throw new Error("History messages unavailable");
+      collected.push(...messages);
+      if(messages.some((x:any)=>x.author?.id!==own.id))return;
+      if(messages.length<100)break;
+      before=String(messages[messages.length-1].id);
+      if(page===5)return;
+    }
+    for(const item of collected.reverse()){
+      const sentKey="ffxiv_board_v3_migrated_"+cat+"_"+String(item.id);
+      if(await getMeta(env,sentKey)==="1")continue;
+      const attachments=(item.attachments||[]).map((a:any)=>String(a.url||"")).filter((x:string)=>/^https:\/\//.test(x));
+      const embeds=(item.embeds||[]).map((a:any)=>String(a.image?.url||"")).filter((x:string)=>/^https:\/\//.test(x));
+      const lines=["📁 Poprzednia historia ("+LABEL[cat]+")",
+        String(item.content||"").slice(0,1200),...attachments,...embeds];
+      const t=await api(env,"channels/"+post.thread);
+      if(t.thread_metadata?.archived)await api(env,"channels/"+post.thread,"PATCH",{archived:false});
+      await api(env,"channels/"+post.thread+"/messages","POST",{content:lines.join("\n").slice(0,1900),allowed_mentions:NO_PINGS});
+      await putMeta(env,sentKey,"1");
+    }
+    // Preserve an old main post if it contained actual news. Placeholder
+    // messages contain no history and are safe to replace.
+    const body=String(m.content??"");
+    if(!body.includes("Nowe wiadomości pojawią się w tym poście.")){
+      const t=await api(env,"channels/"+post.thread);
+      if(t.thread_metadata?.archived)await api(env,"channels/"+post.thread,"PATCH",{archived:false});
+      await api(env,"channels/"+post.thread+"/messages","POST",{
+        content:"📁 Poprzednia informacja\n"+body.slice(0,1800),allowed_mentions:NO_PINGS
+      });
+    }
+    await api(env,"channels/"+cfg.channelId+"/messages/"+old.anchor,"DELETE");
+    await putMeta(env,finished,"1");
+  }catch{
+    // On any permission, rate-limit or archival error, preserve the old
+    // anchor/thread unchanged instead of risking lost history.
   }
-  if(changed){
-    await discord(env,"channels/"+cfg.channelId+"/messages/"+anchor,"PATCH",{
-      content:formatCurrent(next,cfg),allowed_mentions:{parse:[]},
-      embeds:dashboardEmbeds(next,cfg)
-    });
-    await setMeta(env,base+"_state",JSON.stringify(next));
-    await setMeta(env,base+"_layout",LAYOUT_VERSION);
+}
+export async function updateFourPosts(env:Env,cfg:BoardConfig,src:Sources,opts?:{preview?:boolean}):
+Promise<{updated:number;changes:string[];errors:string[]}>{
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))throw new Error("Discord news channel not configured");
+  const at=Date.now();
+  const events=src.events;
+  const activeEvent=events===null?undefined:eventCurrent(events,at);
+  const expected:Record<Category,Current|null|undefined>={
+    event:activeEvent,
+    fashion:undefined,
+    patch:cfg.lodestone?toCurrent("patch",src.patch,at):undefined,
+    dalamud:cfg.dalamud?toCurrent("dalamud",src.dalamud,at):undefined
+  };
+  const currentList:any=await api(env,"channels/"+cfg.channelId+"/messages?limit=100");
+  if(!Array.isArray(currentList))throw new Error("Discord channel cannot be read");
+  const posts:Partial<Record<Category,Post>>={};
+  const errors:string[]=[];
+  // Send top-to-bottom in this exact sequence only on the initial migration.
+  for(const cat of ORDER){
+    try{posts[cat]=await ensurePost(env,cfg,cat,currentList);}
+    catch(e:any){errors.push(cat+" setup: "+String(e?.message||e));}
   }
-  return {changed,archived:items.length,mainMessageId:anchor};
+  if(cfg.fashion){
+    const post=posts.fashion;
+    const live=src.fashion;
+    if(post){
+      const existing=post.current;
+      if(live){
+        if(existing?.id===live.id){
+          expected.fashion=existing?.expires && existing.expires<=at?null:existing;
+        }else{
+          const current=toCurrent("fashion",live,at);
+          // An old image cached by the source after Tuesday remains expired
+          // until a NEW hash is seen, never reactivated automatically.
+          expected.fashion=current;
+        }
+      }else if(existing?.expires && existing.expires<=at) expected.fashion=null;
+    }
+  }
+  if(posts.event?.current?.end && posts.event.current.end<=at && events===null) expected.event=null;
+  const changes:string[]=[];
+  for(const cat of ORDER){
+    const post=posts[cat];
+    if(!post)continue;
+    const fresh=expected[cat];
+    if(fresh===undefined)continue; // Failed source: do not clear current news.
+    try{
+      const edited=await rollover(env,cfg,cat,post,fresh);
+      if(edited)changes.push(cat);
+    }catch(e:any){errors.push(cat+" update: "+String(e?.message||e));}
+  }
+  // Only migrate legacy bot-owned category anchors after all four canonical
+  // messages exist, leaving anything unrecognized untouched.
+  for(const cat of ["fashion","patch","dalamud"] as const)
+    if(posts[cat])await oldAnchors(env,cfg,cat,posts[cat]!);
+  return {updated:changes.length,changes,errors};
 }
