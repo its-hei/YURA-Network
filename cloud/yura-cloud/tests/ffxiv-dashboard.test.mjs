@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {renderFfxivCardText,deliverCard,updateFourPosts} from "../src/ffxiv-dashboard.ts";
+import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -19,7 +19,7 @@ const cases=[
 ];
 
 test("Four active cards contain readable descriptions and clickable sources without embeds",()=>{
-  for(const [category,item,parts] of cases){
+  for(const [category,item,parts] of cases.filter(([cat])=>cat!=="fashion")){
     const content=renderFfxivCardText(category,item);
     for(const part of parts)assert.ok(content.includes(part),category+": missing "+part);
     assert.match(content,/\]\(https:\/\//,category+" must contain a clickable link");
@@ -34,16 +34,20 @@ test("Expired cards show an explanatory text even with embeds disabled",()=>{
   }
 });
 
-test("Fashion reset alone is a Polish-timezone masked link and no extra copy",()=>{
+test("Fashion reset is a clickable embed title, never raw Markdown in content",()=>{
   const reportData=cases[1][1];
-  const message=renderFfxivCardText("fashion",reportData);
-  assert.equal(message,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
-  assert.equal(message.split("\n").length,1);
-  assert.ok(!/80\/100|MGP|Grafika tygodnia poniżej/i.test(message));
-  // Follows daylight savings automatically in the summer.
-  const summer=renderFfxivCardText("fashion",{...reportData,
+  assert.equal(renderFfxivCardText("fashion",reportData),"");
+  const [embed]=renderFfxivCardEmbeds("fashion",reportData);
+  assert.equal(embed.title,"👗 Reset: 24 listopada 2026 09:00");
+  assert.equal(embed.url,"https://fashionreportxiv.com/");
+  assert.equal(embed.description,undefined);
+  assert.equal(embed.footer,undefined);
+  assert.equal(embed.color,undefined);
+  assert.ok(!/80\/100|MGP|Grafika tygodnia poniżej/i.test(JSON.stringify(embed)));
+  // Poland daylight saving time must also be correct in the summer.
+  const [summer]=renderFfxivCardEmbeds("fashion",{...reportData,
     expires:Date.UTC(2027,5,1,7)});
-  assert.equal(summer,"[👗 Reset: 1 czerwca 2027 09:00](https://fashionreportxiv.com/)");
+  assert.equal(summer.title,"👗 Reset: 1 czerwca 2027 09:00");
 });
 test("Fashion Report is uploaded as native Discord image attachment",async()=>{
   const original=globalThis.fetch;
@@ -57,9 +61,12 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
       return new Response(new Uint8Array(30000),{status:200,headers:{"content-type":"image/png","content-length":"30000"}});
     assert.ok(opts.body instanceof FormData,"Discord must receive multipart form data");
     const data=JSON.parse(String(opts.body.get("payload_json")));
-    assert.equal(data.content,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
+    assert.equal(data.content,"","no raw Markdown in bot message body");
     assert.equal(data.attachments[0].filename,"fashion-report.png");
-    assert.deepEqual(data.embeds,[],"no redundant embed when infographic is a native attachment");
+    assert.equal(data.embeds.length,1);
+    assert.equal(data.embeds[0].title,"👗 Reset: 24 listopada 2026 09:00");
+    assert.equal(data.embeds[0].url,"https://fashionreportxiv.com/");
+    assert.equal(data.embeds[0].image.url,"attachment://fashion-report.png");
     assert.ok(opts.body.get("files[0]") instanceof Blob);
     assert.equal(opts.headers["content-type"],undefined,"boundary must be added by fetch");
     return new Response(JSON.stringify({id:"123456789012345678",attachments:[{id:"999999999999999999",filename:"fashion-report.png"}]}),{status:200,headers:{"content-type":"application/json"}});
@@ -72,6 +79,35 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
     assert.equal(warnings.length,0);
     assert.equal(calls.length,2);
   }finally{globalThis.fetch=original;}
+});
+test("Existing Fashion attachment is preserved inside the clickable embed without re-upload",async()=>{
+  const old=globalThis.fetch;
+  let patches=0;
+  globalThis.fetch=async(url,opts)=>{
+    patches++;
+    assert.equal(opts.method,"PATCH");
+    assert.ok(typeof opts.body==="string","no multipart re-upload");
+    const payload=JSON.parse(opts.body);
+    assert.equal(payload.content,"");
+    assert.equal(payload.embeds.length,1);
+    assert.equal(payload.embeds[0].title,"👗 Reset: 24 listopada 2026 09:00");
+    assert.equal(payload.embeds[0].url,"https://fashionreportxiv.com/");
+    assert.equal(payload.embeds[0].image.url,"attachment://fashion-report.png");
+    assert.equal(payload.attachments.length,1);
+    assert.equal(payload.attachments[0].id,"999999999999999999");
+    return new Response(JSON.stringify({id:"222222222222222222"}),{status:200,
+      headers:{"content-type":"application/json"}});
+  };
+  try{
+    const warnings=[];
+    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},
+      "channels/111111111111111111/messages/222222222222222222",
+      "PATCH","fashion",cases[1][1],warnings,
+      {attachments:[{id:"999999999999999999",filename:"fashion-report.png"}]});
+    assert.equal(ok,true);
+    assert.equal(patches,1);
+    assert.deepEqual(warnings,[]);
+  }finally{globalThis.fetch=old;}
 });
 test("Cloudflare CDN 403 falls back to this week's publisher art and posts an inline attachment",async()=>{
   const original=globalThis.fetch;
@@ -92,7 +128,9 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
     assert.ok(opts.body instanceof FormData);
     uploaded=true;
     const payload=JSON.parse(opts.body.get("payload_json"));
-    assert.match(payload.content,/👗 Reset: 24 listopada 2026 09:00/);
+    assert.equal(payload.content,"");
+    assert.equal(payload.embeds[0].title,"👗 Reset: 24 listopada 2026 09:00");
+    assert.equal(payload.embeds[0].image.url,"attachment://fashion-report.png");
     assert.equal(payload.attachments[0].filename,"fashion-report.png");
     return new Response(JSON.stringify({attachments:[{id:"777777777777777777",filename:"fashion-report.png"}]}),
       {status:200,headers:{"content-type":"application/json"}});
@@ -203,13 +241,13 @@ test("Discord media proxy can rescue an image when primary CDN returns 403",asyn
     assert.deepEqual([primary,proxy,post],[1,1,1]);
   }finally{globalThis.fetch=original;}
 });
-test("Original Fashion CDN link is re-signable by Discord and never exposes private source channel",()=>{
+test("Fashion public title never reveals the private moderators' source message",()=>{
   const text=renderFfxivCardText("fashion",cases[1][1]);
-  assert.equal(text,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
-  assert.ok(!text.includes("cdn.discordapp.com/attachments/"),
-    "Do not show raw Discord CDN image as a broken text link");
-  assert.ok(!text.includes("discord.com/channels/111/222/333"),
-    "no private moderators source-message links");
+  const [embed]=renderFfxivCardEmbeds("fashion",cases[1][1]);
+  assert.equal(text,"");
+  assert.equal(embed.url,"https://fashionreportxiv.com/");
+  assert.ok(!JSON.stringify(embed).includes("discord.com/channels/111/222/333"),
+    "no private source-message links");
 });
 test("If source image is unavailable, Fashion message still displays all information",async()=>{
   const original=globalThis.fetch;
@@ -225,8 +263,9 @@ test("If source image is unavailable, Fashion message still displays all informa
     const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},"channels/333333333333333333/messages/444444444444444444",
       "PATCH","fashion",cases[1][1],warnings);
     assert.equal(ok,false);
-    assert.match(payload.content,/👗 Reset: 24 listopada 2026 09:00/);
-    assert.ok(!payload.content.includes("Fashion Report • źródło"));
+    assert.equal(payload.content,"");
+    assert.equal(payload.embeds[0].title,"👗 Reset: 24 listopada 2026 09:00");
+    assert.equal(payload.embeds[0].url,"https://fashionreportxiv.com/");
     assert.equal(warnings.length,1);
   }finally{globalThis.fetch=original;}
 });
@@ -269,8 +308,9 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     if(opts.method==="PATCH" && path.endsWith("/messages/"+refs.fashion.anchor)){
       assert.ok(opts.body instanceof FormData);
       const body=JSON.parse(opts.body.get("payload_json"));
-      assert.match(body.content,/👗 Reset:/);
-      assert.ok(!body.content.startsWith("**👗 FASHION REPORT**\n_"));
+      assert.equal(body.content,"");
+      assert.match(body.embeds[0].title,/👗 Reset:/);
+      assert.equal(body.embeds[0].image.url,"attachment://fashion-report.png");
       return new Response(JSON.stringify({id:refs.fashion.anchor,
         attachments:[{id:"977777777777777777",filename:"fashion-report.png"}]}),
         {status:200,headers:{"content-type":"application/json"}});
@@ -288,6 +328,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,9);
+    assert.equal(repaired.renderRevision,10);
   }finally{globalThis.fetch=originalFetch;}
 });

@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=9;
+const RENDER_REVISION=10;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -131,10 +131,9 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
         "Koniec: "+date(x.end)+(x.end?" • <t:"+Math.floor(x.end/1000)+":R>":""),
         link("Szczegóły wydarzenia")].join("\n");
     case "fashion":
-      // The single clickable reset line sits directly above the native
-      // Discord infographic attachment. Avoid redundant MGP text, image
-      // instructions and a second source link.
-      return "["+fashionResetLabel(x.expires)+"](https://fashionreportxiv.com/)";
+      // Plain bot content can display a masked link as raw Markdown;
+      // the real clickable link is the Fashion embed's title+URL.
+      return "";
     case "patch":
       return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
     case "dalamud":
@@ -165,8 +164,8 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
           ?"Nagrody: Torgal (mount), Metian Attire, Torgal Pup.":"");
       break;
     case "fashion":
-      title="Rozwiązanie 80/100 pkt • 60 000 MGP";
-      description="Tygodniowy Fashion Report • reset "+at(x.expires);
+      title=fashionResetLabel(x.expires);
+      description="";
       break;
     case "patch":
       description="Oficjalne informacje o aktualizacji FFXIV.";
@@ -177,10 +176,10 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       break;
   }
   const embed:any={
-    color:colours[category],title,
+    ...(category==="fashion"?{}:{color:colours[category]}),title,
     url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
-    description:description.trim(),
-    footer:{text:"Źródło: "+source[category]}
+    ...(description.trim()?{description:description.trim()}:{}),
+    ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
   };
   if(x.image){
     try {
@@ -194,10 +193,10 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
         embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
-  // Native Fashion image plus one clickable reset line are sufficient.
-  // Suppress its duplicate rich embed while retaining embed fallback logic.
-  return category==="fashion"?[]:[embed];
+  // Linked reset title and attached infographic render as a single card.
+  return [embed];
 }
+export const renderFfxivCardEmbeds=embedsFor;
 function changed(a:Current|null,b:Current|null):boolean{
   // Ignore fetched-at timestamps and cache-busting changes. Expiry is a
   // property of the weekly instance, not a reason to republish daily.
@@ -212,7 +211,11 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
   if(saved)return saved;
   const found=existing.find(m=>m.author?.bot===true && (
     String(m.content??"").startsWith(canonical(cat)) ||
-    (cat==="fashion" && /^\[👗 Reset: /.test(String(m.content??"")))
+    (cat==="fashion" && (
+      /^\[👗 Reset: /.test(String(m.content??"")) ||
+      (Array.isArray(m.embeds) && m.embeds.some((e:any)=>
+        /^👗 Reset: /.test(String(e?.title??""))))
+    ))
   ));
   const anchor=found?.id;
   let id=ID.test(String(anchor??""))?String(anchor):"";
@@ -382,9 +385,8 @@ export async function deliverCard(
     if(method==="PATCH" && oldAttachment?.id){
       payload.attachments=[{id:String(oldAttachment.id),filename:String(oldAttachment.filename)}];
       const rich=payload.embeds[0] as any;
-      // Native attachment should display independently of Embed Links.
-      // Referencing it via attachment:// would hide the standalone file.
-      if(rich?.image)delete rich.image;
+      // Reuse the native attachment inside the linked embed: one image only.
+      if(rich)rich.image={url:"attachment://"+String(oldAttachment.filename)};
       await api(env,path,method,payload);
       return true;
     }
@@ -392,7 +394,7 @@ export async function deliverCard(
       const image=await fashionAttachment(env,x.image,x.expires,x.imageProxy,x.id);
       const multipart=new FormData();
       const rich=payload.embeds[0] as any;
-      if(rich?.image)delete rich.image;
+      if(rich)rich.image={url:"attachment://"+image.filename};
       payload.attachments=[{id:0,filename:image.filename,description:"Fashion Report • rozwiązanie tygodnia"}];
       multipart.append("payload_json",JSON.stringify(payload));
       multipart.append("files[0]",image.blob,image.filename);

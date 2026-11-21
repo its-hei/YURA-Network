@@ -312,7 +312,7 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   // One-time compact Fashion text refresh. Edit the existing anchored
   // message in place without sending another Discord post; preserve its
   // current native infographic and its historical thread.
-  const compactResetKey="ffxiv_fashion_compact_reset_v9_20261121";
+  const compactResetKey="ffxiv_fashion_linked_embed_v10_20261121";
   if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===1){
     const value=await readMeta(env,compactResetKey);
     const count=Number(value)||0;
