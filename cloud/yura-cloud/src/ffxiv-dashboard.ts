@@ -144,7 +144,7 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
 const textFor=renderFfxivCardText;
 
 function embedsFor(category:Category,x:Current|null):unknown[]{
-  if(!x || category==="fashion")return []; // Native image + clickable reset line, no duplicate preview card.
+  if(!x)return [];
   const colours:Record<Category,number>={
     event:0xA77EEA,fashion:0xE89B52,patch:0x769BEE,dalamud:0x56BC92
   };
@@ -194,7 +194,9 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
         embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
-  return [embed];
+  // Native Fashion image plus one clickable reset line are sufficient.
+  // Suppress its duplicate rich embed while retaining embed fallback logic.
+  return category==="fashion"?[]:[embed];
 }
 function changed(a:Current|null,b:Current|null):boolean{
   // Ignore fetched-at timestamps and cache-busting changes. Expiry is a
