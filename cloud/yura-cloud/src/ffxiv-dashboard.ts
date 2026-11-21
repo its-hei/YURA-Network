@@ -235,7 +235,8 @@ const FASHION_IMAGE_HOSTS=new Set([
   "fashionreportxiv.com","cdn.discordapp.com","media.discordapp.net",
   "images-ext-1.discordapp.net","images-ext-2.discordapp.net"
 ]);
-async function fashionAttachment(url:string):Promise<{blob:Blob;filename:string}> {
+async function downloadFashionImage(url:string, weekStart?:number):
+Promise<{blob:Blob;filename:string}> {
   const uri=new URL(url);
   if(uri.protocol!=="https:" || !FASHION_IMAGE_HOSTS.has(uri.hostname))
     throw new Error("Image host is not an approved Fashion source");
@@ -244,10 +245,19 @@ async function fashionAttachment(url:string):Promise<{blob:Blob;filename:string}
     redirect:"error",
     signal:AbortSignal.timeout(8000)
   });
-  if(!response.ok)throw new Error("Fashion image HTTP "+response.status);
+  if(!response.ok)throw new Error("Fashion image "+uri.hostname+" HTTP "+response.status);
   const mime=(response.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
   const extension=mime==="image/png"?"png":mime==="image/jpeg"?"jpg":mime==="image/webp"?"webp":"";
-  if(!extension)throw new Error("Fashion source did not return an image");
+  if(!extension)throw new Error("Fashion source did not return a supported image");
+  if(weekStart!==undefined) {
+    // Fallback uses this same publisher's public guide, but ONLY when its
+    // HTTP last-modified date confirms it belongs to this current week.
+    // Never show a stale Week 459 solution as Week 460.
+    const modified=Date.parse(response.headers.get("last-modified")||"");
+    if(!Number.isFinite(modified) || modified<weekStart ||
+       modified>Date.now()+86400000)
+      throw new Error("Publisher image not confirmed current for this week");
+  }
   const length=Number(response.headers.get("content-length")||0);
   if(length>8*1024*1024)throw new Error("Fashion image exceeds 8 MB");
   const bytes=await response.arrayBuffer();
@@ -255,6 +265,30 @@ async function fashionAttachment(url:string):Promise<{blob:Blob;filename:string}
     throw new Error("Fashion image has invalid size");
   return {blob:new Blob([bytes],{type:mime}),filename:"fashion-report."+extension};
 }
+async function fashionAttachment(url:string,expires?:number):
+Promise<{blob:Blob;filename:string}> {
+  try{return await downloadFashionImage(url);}
+  catch(originalError:any){
+    const src=publicFashionImageUrl(url);
+    if(!src || !new URL(src).hostname.endsWith("discordapp.com") &&
+       !new URL(src).hostname.endsWith("discordapp.net"))throw originalError;
+    // Cloudflare Workers cannot always read Discord's attachment CDN even
+    // when Discord itself displays it. If the same publisher's public
+    // weekly PNG is provably current, use that image as a last-resort
+    // native attachment; this does not affect week detection or source ID.
+    if(!expires)throw originalError;
+    const beginning=expires-7*86400000;
+    try {
+      return await downloadFashionImage("https://fashionreportxiv.com/hint.png",beginning);
+    } catch(fallbackError:any) {
+      throw new Error("Discord source unavailable ("+
+        String(originalError?.message||originalError).slice(0,60)+
+        "); current-week image backup unavailable ("+
+        String(fallbackError?.message||fallbackError).slice(0,80)+")");
+    }
+  }
+}
+
 type DiscordCardPayload={content:string;embeds:unknown[];allowed_mentions:{parse:never[]};attachments?:unknown[]};
 export async function deliverCard(
   env:Env,path:string,method:"PATCH"|"POST",category:Category,x:Current|null,
@@ -279,7 +313,7 @@ export async function deliverCard(
       return true;
     }
     try{
-      const image=await fashionAttachment(x.image);
+      const image=await fashionAttachment(x.image,x.expires);
       const multipart=new FormData();
       const rich=payload.embeds[0] as any;
       if(rich?.image)delete rich.image;
