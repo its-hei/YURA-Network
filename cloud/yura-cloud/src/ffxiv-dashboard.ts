@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=8;
+const RENDER_REVISION=9;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -27,6 +27,16 @@ const NO_PINGS={parse:[]};
 const keyFor=(cfg:BoardConfig,category:Category)=>"ffxiv_board_v3_"+cfg.guildId+"_"+cfg.channelId+"_"+category;
 const canonical=(category:Category)=>"**"+LABEL[category]+"**";
 const safe=(v:unknown,n=160)=>String(v??"").replace(/[\r\n]/g," ").slice(0,n);
+function fashionResetLabel(expires?:number):string {
+  if(!expires || !Number.isFinite(expires))return "👗 Reset: termin nieznany";
+  // Use Poland's wall clock time (winter/summer DST) rather than UTC or
+  // Discord's viewer-dependent timestamp formatting.
+  const pl=new Intl.DateTimeFormat("pl-PL",{
+    timeZone:"Europe/Warsaw",day:"numeric",month:"long",year:"numeric",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  });
+  return "👗 Reset: "+pl.format(new Date(expires));
+}
 
 // Discord can re-sign its own CDN media references when they are used inside
 // embeds. Cloudflare Workers, however, are sometimes blocked (HTTP 403) from
@@ -120,13 +130,11 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
       return [header,"**"+title+"** • trwa teraz",
         "Koniec: "+date(x.end)+(x.end?" • <t:"+Math.floor(x.end/1000)+":R>":""),
         link("Szczegóły wydarzenia")].join("\n");
-    case "fashion": {
-      const media=x.image?publicFashionImageUrl(x.image):"";
-      return [header,"80/100 pkt • do 60 000 MGP",
-        "Reset: "+date(x.expires),
-        ...(media?["🖼️ Grafika tygodnia poniżej"]:[]),
-        "[Fashion Report • źródło](https://fashionreportxiv.com/)"].join("\n");
-    }
+    case "fashion":
+      // The single clickable reset line sits directly above the native
+      // Discord infographic attachment. Avoid redundant MGP text, image
+      // instructions and a second source link.
+      return "["+fashionResetLabel(x.expires)+"](https://fashionreportxiv.com/)";
     case "patch":
       return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
     case "dalamud":
@@ -136,7 +144,7 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
 const textFor=renderFfxivCardText;
 
 function embedsFor(category:Category,x:Current|null):unknown[]{
-  if(!x)return [];
+  if(!x || category==="fashion")return []; // Native image + clickable reset line, no duplicate preview card.
   const colours:Record<Category,number>={
     event:0xA77EEA,fashion:0xE89B52,patch:0x769BEE,dalamud:0x56BC92
   };
@@ -200,7 +208,10 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
   // operations and repeatedly hit HTTP 429. A failed edit/archival still
   // surfaces an error without creating duplicate posts.
   if(saved)return saved;
-  const found=existing.find(m=>m.author?.bot===true && String(m.content??"").startsWith(canonical(cat)));
+  const found=existing.find(m=>m.author?.bot===true && (
+    String(m.content??"").startsWith(canonical(cat)) ||
+    (cat==="fashion" && /^\[👗 Reset: /.test(String(m.content??"")))
+  ));
   const anchor=found?.id;
   let id=ID.test(String(anchor??""))?String(anchor):"";
   if(!id){

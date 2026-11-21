@@ -13,7 +13,7 @@ const backupDb=()=>{
 };
 const cases=[
   ["event",{id:"thepath",title:"The Path Infernal",url:source,end:Date.UTC(2026,11,9,14,59)},["The Path Infernal","Koniec:","Szczegóły wydarzenia"]],
-  ["fashion",{id:"discord-fashion-week-460",title:"Week 460",url:"https://discord.com/channels/111/222/333",image:report,expires:Date.UTC(2026,10,24,8)},["80/100","60 000 MGP","Fashion Report • źródło"]],
+  ["fashion",{id:"discord-fashion-week-460",title:"Week 460",url:"https://discord.com/channels/111/222/333",image:report,expires:Date.UTC(2026,10,24,8)},["👗 Reset: 24 listopada 2026 09:00","https://fashionreportxiv.com/"]],
   ["patch",{id:"7.58",title:"Patch 7.58 Notes",url:source},["Patch 7.58 Notes","Przeczytaj patch notes"]],
   ["dalamud",{id:"stable",title:"Dalamud Stable 15.0.4.1",url:"https://github.com/goatcorp/dalamud-distrib"},["Dalamud Stable 15.0.4.1","Wersja stabilna"]]
 ];
@@ -33,6 +33,18 @@ test("Expired cards show an explanatory text even with embeds disabled",()=>{
     assert.ok(content.length>32);
   }
 });
+
+test("Fashion reset alone is a Polish-timezone masked link and no extra copy",()=>{
+  const reportData=cases[1][1];
+  const message=renderFfxivCardText("fashion",reportData);
+  assert.equal(message,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
+  assert.equal(message.split("\n").length,1);
+  assert.ok(!/80\/100|MGP|Grafika tygodnia poniżej/i.test(message));
+  // Follows daylight savings automatically in the summer.
+  const summer=renderFfxivCardText("fashion",{...reportData,
+    expires:Date.UTC(2027,5,1,7)});
+  assert.equal(summer,"[👗 Reset: 1 czerwca 2027 09:00](https://fashionreportxiv.com/)");
+});
 test("Fashion Report is uploaded as native Discord image attachment",async()=>{
   const original=globalThis.fetch;
   const calls=[];
@@ -45,9 +57,9 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
       return new Response(new Uint8Array(30000),{status:200,headers:{"content-type":"image/png","content-length":"30000"}});
     assert.ok(opts.body instanceof FormData,"Discord must receive multipart form data");
     const data=JSON.parse(String(opts.body.get("payload_json")));
-    assert.ok(data.content.includes("60 000 MGP"));
+    assert.equal(data.content,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
     assert.equal(data.attachments[0].filename,"fashion-report.png");
-    assert.equal(data.embeds[0].image,undefined,"native image must not be hidden inside an embed");
+    assert.deepEqual(data.embeds,[],"no redundant embed when infographic is a native attachment");
     assert.ok(opts.body.get("files[0]") instanceof Blob);
     assert.equal(opts.headers["content-type"],undefined,"boundary must be added by fetch");
     return new Response(JSON.stringify({id:"123456789012345678",attachments:[{id:"999999999999999999",filename:"fashion-report.png"}]}),{status:200,headers:{"content-type":"application/json"}});
@@ -80,7 +92,7 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
     assert.ok(opts.body instanceof FormData);
     uploaded=true;
     const payload=JSON.parse(opts.body.get("payload_json"));
-    assert.match(payload.content,/Grafika tygodnia poniżej/);
+    assert.match(payload.content,/👗 Reset: 24 listopada 2026 09:00/);
     assert.equal(payload.attachments[0].filename,"fashion-report.png");
     return new Response(JSON.stringify({attachments:[{id:"777777777777777777",filename:"fashion-report.png"}]}),
       {status:200,headers:{"content-type":"application/json"}});
@@ -193,7 +205,7 @@ test("Discord media proxy can rescue an image when primary CDN returns 403",asyn
 });
 test("Original Fashion CDN link is re-signable by Discord and never exposes private source channel",()=>{
   const text=renderFfxivCardText("fashion",cases[1][1]);
-  assert.match(text,/Grafika tygodnia poniżej/);
+  assert.equal(text,"[👗 Reset: 24 listopada 2026 09:00](https://fashionreportxiv.com/)");
   assert.ok(!text.includes("cdn.discordapp.com/attachments/"),
     "Do not show raw Discord CDN image as a broken text link");
   assert.ok(!text.includes("discord.com/channels/111/222/333"),
@@ -213,8 +225,8 @@ test("If source image is unavailable, Fashion message still displays all informa
     const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},"channels/333333333333333333/messages/444444444444444444",
       "PATCH","fashion",cases[1][1],warnings);
     assert.equal(ok,false);
-    assert.match(payload.content,/60 000 MGP/);
-    assert.match(payload.content,/Fashion Report • źródło/);
+    assert.match(payload.content,/👗 Reset: 24 listopada 2026 09:00/);
+    assert.ok(!payload.content.includes("Fashion Report • źródło"));
     assert.equal(warnings.length,1);
   }finally{globalThis.fetch=original;}
 });
@@ -232,7 +244,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?7:8};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?8:9};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -257,7 +269,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     if(opts.method==="PATCH" && path.endsWith("/messages/"+refs.fashion.anchor)){
       assert.ok(opts.body instanceof FormData);
       const body=JSON.parse(opts.body.get("payload_json"));
-      assert.match(body.content,/60 000 MGP/);
+      assert.match(body.content,/👗 Reset:/);
       assert.ok(!body.content.startsWith("**👗 FASHION REPORT**\n_"));
       return new Response(JSON.stringify({id:refs.fashion.anchor,
         attachments:[{id:"977777777777777777",filename:"fashion-report.png"}]}),
@@ -276,6 +288,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,8);
+    assert.equal(repaired.renderRevision,9);
   }finally{globalThis.fetch=originalFetch;}
 });
