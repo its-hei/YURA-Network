@@ -262,6 +262,18 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-shot repair of the already-visible Discord cards, requested by the
+  // operator on 21 November. It is separate from normal 10:00 polling and
+  // never turns into recurring hourly news checks.
+  const repairKey="ffxiv_news_card_fix_20261121_v4";
+  if((today==="2026-11-21"||today==="2026-11-22") &&
+      t.minute%5===0 && await readMeta(env,repairKey)!=="1") {
+    const attempt=await checkFfxivNews(env);
+    if(attempt.ok && !attempt.source_errors?.some(x=>
+      String(x).startsWith("event:") || String(x).startsWith("lodestone-topics:")))
+      await writeMeta(env,repairKey,"1");
+    await writeMeta(env,"ffxiv_news_card_fix_diagnostics",JSON.stringify(attempt).slice(0,1500));
+  }
   // In-memory D1 deadline check only, hourly, independent of the once-a-day
   // source polling. It archives expired Event/Fashion cards without flooding.
   if(scheduledAt.getUTCMinutes()===0 && t.hour!==10) {
