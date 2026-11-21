@@ -190,9 +190,9 @@ async function saveSeen(env: NewsEnv, items: NewsItem[]) {
     if (statements.length) await env.DB.batch(statements);
   }
 }
-function linesFor(items:NewsItem[]): string {
+function linesFor(items:NewsItem[], manualPreview = false): string {
   const by = (source:string) => items.filter(x => x.source===source);
-  const output = ["**📰 FFXIV NEWS • YURA**", "Nowe informacje z ostatniego sprawdzenia:", ""];
+  const output = ["**📰 FFXIV NEWS • YURA**", manualPreview ? "🧪 Jednorazowy test: najnowsze dostępne informacje z trzech kategorii." : "Nowe informacje z ostatniego sprawdzenia:", ""];
   const fashion = by("fashion");
   if (fashion.length) {
     output.push("**👗 Fashion Report**");
@@ -214,7 +214,7 @@ function linesFor(items:NewsItem[]): string {
   }
   return output.join("\n").slice(0,1950);
 }
-export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest = false) {
+export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest = false, onePerCategory = false) {
   const cfg = await loadConfig(env);
   if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false};
   const checkAt = now();
@@ -269,7 +269,17 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
     // Both Lodestone feeds can occasionally reference the same announcement.
     const distinct = new Map<string,NewsItem>();
     for (const item of next) if (!distinct.has(item.url)) distinct.set(item.url,item);
-    const selected = [...distinct.values()].sort((a,b)=>b.date-a.date).slice(0,30);
+    let selected = [...distinct.values()].sort((a,b)=>b.date-a.date).slice(0,30);
+    // A one-time operator-requested demonstration contains one real item
+    // from each category, not a back-catalogue or a full historical digest.
+    if (onePerCategory) {
+      const oneLodestone = selected.find(x => x.source.startsWith("lodestone"));
+      selected = [
+        ...selected.filter(x => x.source === "fashion").slice(0,1),
+        ...selected.filter(x => x.source === "dalamud").slice(0,1),
+        ...(oneLodestone ? [oneLodestone] : [])
+      ];
+    }
     if (selected.length) {
       const fashionItem = selected.find(x=>x.source==="fashion" && x.image);
       // Dedicated large-image card: infographic is readable on mobile without
@@ -283,7 +293,7 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
         footer:{text:"Źródło: Fashion Report XIV • Kaiyoko Star"}
       }] : [];
       await discord(env,"channels/"+channelId+"/messages","POST",{
-        content:linesFor(selected),allowed_mentions:{parse:[]},
+        content:linesFor(selected,publishLatest),allowed_mentions:{parse:[]},
         ...(embeds.length ? {embeds} : {})
       });
       await saveSeen(env,selected);
@@ -302,7 +312,34 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
     return {ok:false,status:"error",error,channel_id:channelId};
   }
 }
+// Specific one-time preview authorized by the operator on 21 November 2026.
+// Guarded by an atomic D1 claim; it never becomes part of the daily news cycle.
+// It only targets a *saved* Discord channel, never auto-creates or guesses one.
+const NEWS_TRIAL_KEY = "ffxiv_news_trial_20261121_v1";
+async function requestedOneTimePreview(env: NewsEnv, scheduledAt: Date) {
+  const t = warsawTime(scheduledAt);
+  if (t.day !== "2026-11-21" && t.day !== "2026-11-22") return;
+  if (scheduledAt.getUTCMinutes() % 5 !== 0) return;
+  const existing = await readMeta(env,NEWS_TRIAL_KEY);
+  if (existing) return;
+  const cfg = await loadConfig(env);
+  if (!cfg.enabled || !cfg.channelId || !idOK(cfg.channelId)) {
+    await writeMeta(env,"ffxiv_news_trial_diagnostics","Not sent: news disabled or Discord channel not saved");
+    return;
+  }
+  // Exactly one successful atomic claim wins, even if overlapping cron
+  // invocations run. Claim before Discord POST to avoid duplicate messages.
+  const claimed = await env.DB.prepare(
+    "INSERT INTO meta(key,value) VALUES(?1,'claimed') ON CONFLICT(key) DO NOTHING"
+  ).bind(NEWS_TRIAL_KEY).run();
+  if (Number(claimed.meta.changes ?? 0) !== 1) return;
+  const result = await checkFfxivNews(env,true,true,true);
+  const outcome = result.ok ? (result.posted ? "sent" : "nothing-sent") : "error";
+  await writeMeta(env,NEWS_TRIAL_KEY,outcome);
+  await writeMeta(env,"ffxiv_news_trial_diagnostics",JSON.stringify(result).slice(0,1000));
+}
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
+  await requestedOneTimePreview(env,scheduledAt);
   const t = warsawTime(scheduledAt);
   // One-time provisioning when the feature is deployed: creates (or finds)
   // #ffxiv-news and baselines old RSS/releases without waiting until tomorrow.
