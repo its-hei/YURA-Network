@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=2;
+const RENDER_REVISION=3;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -73,17 +73,37 @@ function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
   const active=events?.filter(e=>e.start<=at&&at<e.end).sort((a,b)=>b.start-a.start)[0];
   return toCurrent("event",active,at);
 }
-function textFor(category:Category,x:Current|null):string{
+export function renderFfxivCardText(category:Category,x:Current|null):string {
   const header=canonical(category);
-  // The post's colour, readable title and full info live in a Discord embed.
-  // No huge raw URLs or duplicate preview cards below it.
-  if(x)return header;
-  return header+"\n_"+(
-    category==="event"?"Brak potwierdzonego trwającego eventu.":
-    category==="fashion"?"Oczekujemy na następny Fashion Report.":
-    category==="patch"?"Czekamy na oficjalne patch notes.":
-    "Nie udało się ustalić stabilnej wersji.")+"_";
+  // Discord may suppress rich embeds due to permissions or client settings.
+  // All essential information MUST be in regular content, not embed-only.
+  if(!x){
+    return header+"\n_"+(
+      category==="event"?"Brak potwierdzonego trwającego eventu.":
+      category==="fashion"?"Oczekujemy na następny Fashion Report.":
+      category==="patch"?"Czekamy na oficjalne patch notes.":
+      "Nie udało się ustalić stabilnej wersji.")+"_";
+  }
+  const title=safe(x.title,170).replace(/[*\x60]/g,"");
+  const link=(label:string)=>"["+label+"]("+x.url+")";
+  const date=(time?:number)=>time&&Number.isFinite(time)
+    ? "<t:"+Math.floor(time/1000)+":f>":"brak terminu";
+  switch(category){
+    case "event":
+      return [header,"**"+title+"** • trwa teraz",
+        "Koniec: "+date(x.end)+(x.end?" • <t:"+Math.floor(x.end/1000)+":R>":""),
+        link("Szczegóły wydarzenia")].join("\n");
+    case "fashion":
+      return [header,"80/100 pkt • do 60 000 MGP",
+        "Reset: "+date(x.expires),link("Otwórz aktualną infografikę")].join("\n");
+    case "patch":
+      return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
+    case "dalamud":
+      return [header,"**"+title+"**",link("Wersja stabilna • źródło")].join("\n");
+  }
 }
+const textFor=renderFfxivCardText;
+
 function embedsFor(category:Category,x:Current|null):unknown[]{
   if(!x)return [];
   const colours:Record<Category,number>={
@@ -176,18 +196,90 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
   await savePost(env,cfg,cat,state);
   return state;
 }
-async function threadWrite(env:Env,threadId:string,category:Category,old:Current):Promise<void>{
+
+// Upload a permanent copy of a Fashion infographic to the Discord post.
+// A native attachment displays even if rich link embeds are suppressed and
+// avoids expiring signed source URLs in archived weekly reports.
+const FASHION_IMAGE_HOSTS=new Set([
+  "fashionreportxiv.com","cdn.discordapp.com","media.discordapp.net",
+  "images-ext-1.discordapp.net","images-ext-2.discordapp.net"
+]);
+async function fashionAttachment(url:string):Promise<{blob:Blob;filename:string}> {
+  const uri=new URL(url);
+  if(uri.protocol!=="https:" || !FASHION_IMAGE_HOSTS.has(uri.hostname))
+    throw new Error("Image host is not an approved Fashion source");
+  const response=await fetch(uri.toString(),{
+    headers:{accept:"image/png,image/jpeg,image/webp"},
+    redirect:"error",
+    signal:AbortSignal.timeout(8000)
+  });
+  if(!response.ok)throw new Error("Fashion image HTTP "+response.status);
+  const mime=(response.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
+  const extension=mime==="image/png"?"png":mime==="image/jpeg"?"jpg":mime==="image/webp"?"webp":"";
+  if(!extension)throw new Error("Fashion source did not return an image");
+  const length=Number(response.headers.get("content-length")||0);
+  if(length>8*1024*1024)throw new Error("Fashion image exceeds 8 MB");
+  const bytes=await response.arrayBuffer();
+  if(bytes.byteLength<9000 || bytes.byteLength>8*1024*1024)
+    throw new Error("Fashion image has invalid size");
+  return {blob:new Blob([bytes],{type:mime}),filename:"fashion-report."+extension};
+}
+type DiscordCardPayload={content:string;embeds:unknown[];allowed_mentions:{parse:never[]};attachments?:unknown[]};
+async function deliverCard(
+  env:Env,path:string,method:"PATCH"|"POST",category:Category,x:Current|null,
+  warnings:string[],oldMessage?:any,archive=false
+):Promise<boolean>{
+  const content=(archive?"📁 Poprzednia informacja\n":"")+textFor(category,x);
+  const payload:DiscordCardPayload={content,embeds:embedsFor(category,x),
+    allowed_mentions:NO_PINGS,attachments:[]};
+  if(category==="fashion" && x?.image){
+    // For a layout-only migration, reuse a previously uploaded file when
+    // possible. Discord requires listing retained attachments on message edits.
+    const oldAttachment=Array.isArray(oldMessage?.attachments)
+      ? oldMessage.attachments.find((a:any)=>String(a.filename||"").startsWith("fashion-report."))
+      : null;
+    if(method==="PATCH" && oldAttachment?.id){
+      payload.attachments=[{id:String(oldAttachment.id),filename:String(oldAttachment.filename)}];
+      const rich=payload.embeds[0] as any;
+      if(rich?.image)rich.image={url:"attachment://"+String(oldAttachment.filename)};
+      await api(env,path,method,payload);
+      return true;
+    }
+    try{
+      const image=await fashionAttachment(x.image);
+      const multipart=new FormData();
+      const rich=payload.embeds[0] as any;
+      if(rich?.image)rich.image={url:"attachment://"+image.filename};
+      payload.attachments=[{id:0,filename:image.filename,description:"Fashion Report • rozwiązanie tygodnia"}];
+      multipart.append("payload_json",JSON.stringify(payload));
+      multipart.append("files[0]",image.blob,image.filename);
+      const response=await api(env,path,method,multipart);
+      if(!Array.isArray(response?.attachments) || !response.attachments.length)
+        throw new Error("Discord did not return the attached infographic");
+      return true;
+    }catch(e:any){
+      // A failed CDN download or ATTACH_FILES permission MUST NOT leave
+      // a header-only post. Text and an ordinary clickable link still render.
+      warnings.push("fashion image: "+String(e?.message||e).slice(0,160));
+      payload.embeds=embedsFor(category,x); // remove attachment:// URL
+      payload.attachments=[];
+      await api(env,path,method,payload);
+      return false;
+    }
+  }
+  await api(env,path,method,payload);
+  return true;
+}
+
+async function threadWrite(env:Env,threadId:string,category:Category,old:Current,warnings:string[]):Promise<void>{
   const t=await api(env,"channels/"+threadId);
   if(t.thread_metadata?.archived){
     if(t.thread_metadata?.locked)throw new Error("Archive thread locked: "+category);
     await api(env,"channels/"+threadId,"PATCH",{archived:false});
   }
-  await api(env,"channels/"+threadId+"/messages","POST",{
-    content:"📁 **Archiwum: "+LABEL[category]+"**\n"+textFor(category,old),
-    allowed_mentions:NO_PINGS,embeds:embedsFor(category,old)
-  });
+  await deliverCard(env,"channels/"+threadId+"/messages","POST",category,old,warnings,undefined,true);
 }
-async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Current|null):Promise<boolean>{
+async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Current|null,warnings:string[]=[]):Promise<boolean>{
   if(!changed(post.current,fresh)) {
     // After the compact layout was reconciled once, unchanged news requires
     // zero Discord API calls. In particular, no request is made at 10:00
@@ -206,10 +298,9 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       (!((expectedEmbeds[0] as any)?.image) || !!actualEmbeds[0]?.image)
     );
     if(displayed.content!==wanted || !hasCurrentEmbed || actualEmbeds.length!==expectedEmbeds.length){
-      await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
-        content:wanted,embeds:expectedEmbeds,allowed_mentions:NO_PINGS
-      });
-      await savePost(env,cfg,cat,{...post,renderRevision:RENDER_REVISION});
+      const imageOK=await deliverCard(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,
+        "PATCH",cat,post.current,warnings,displayed);
+      await savePost(env,cfg,cat,{...post,renderRevision:imageOK?RENDER_REVISION:0});
       return true;
     }
     await savePost(env,cfg,cat,{...post,renderRevision:RENDER_REVISION});
@@ -228,15 +319,14 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       old.id.startsWith("image-sha256-") &&
       fresh.id.startsWith("discord-fashion-");
     if(!sameWeekSourceSwitch && await getMeta(env,archivedKey)!=="1"){
-      await threadWrite(env,post.thread,cat,old);
+      await threadWrite(env,post.thread,cat,old,warnings);
       await putMeta(env,archivedKey,"1");
     }
   }
-  const next={...post,current:fresh,renderRevision:RENDER_REVISION,
+  const imageOK=await deliverCard(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,
+    "PATCH",cat,fresh,warnings);
+  const next={...post,current:fresh,renderRevision:imageOK?RENDER_REVISION:0,
     ...(cat==="fashion" && old && !fresh?{retiredId:old.id}:{})};
-  await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
-    content:textFor(cat,fresh),embeds:embedsFor(cat,fresh),allowed_mentions:NO_PINGS
-  });
   await savePost(env,cfg,cat,next);
   return true;
 }
@@ -412,7 +502,7 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
     const fresh=expected[cat];
     if(fresh===undefined)continue; // Failed source: do not clear current news.
     try{
-      const edited=await rollover(env,cfg,cat,post,fresh);
+      const edited=await rollover(env,cfg,cat,post,fresh,errors);
       if(edited)changes.push(cat);
     }catch(e:any){errors.push(cat+" update: "+String(e?.message||e));}
   }
@@ -447,7 +537,7 @@ Promise<{expired:Category[];errors:string[]}> {
       if(!post?.current)continue;
       const deadline=cat==="event"?post.current.end:post.current.expires;
       if(!deadline || deadline>at)continue;
-      await rollover(env,cfg,cat,post,null);
+      await rollover(env,cfg,cat,post,null,errors);
       expired.push(cat);
     }catch(e:any){errors.push(cat+": "+String(e?.message||e));}
   }
