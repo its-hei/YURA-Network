@@ -32,9 +32,16 @@ async function putMeta(env:FashionSourceEnv,key:string,value:string){
     .bind(key,value).run();
 }
 export async function locateFollowedFashionChannel(
-  env:FashionSourceEnv,guildId:string
+  env:FashionSourceEnv,guildId:string,configuredChannelId=""
 ):Promise<string|null>{
   if(!validID(guildId))throw new Error("FFXIV Discord guild not configured");
+  if(configuredChannelId){
+    if(!validID(configuredChannelId))throw new Error("Invalid Fashion source channel ID");
+    const ch=await discord(env,"channels/"+configuredChannelId);
+    if(String(ch?.guild_id)!==guildId || Number(ch?.type)!==0)
+      throw new Error("Wybrany kanał Fashion Source nie należy do tego serwera lub nie jest kanałem tekstowym");
+    return configuredChannelId;
+  }
   const chans:any=await discord(env,"guilds/"+guildId+"/channels");
   if(!Array.isArray(chans))throw new Error("Discord channel list unavailable");
   const matched=chans.filter((c:any)=>Number(c.type)===0 &&
@@ -120,8 +127,13 @@ export function parseInitialManualFashion(message:any,guildId:string,channelId:s
   const week=weekNumber(message);
   // An untitled image is allowed only during FIRST bootstrap, only if it
   // looks like a full infographic rather than an unrelated emoji/thumbnail.
-  const largeImage=attachments.some((a:any)=>Number(a.width)>=650 && Number(a.height)>=350)
-    || embeds.some((e:any)=>Number(e.image?.width)>=650 && Number(e.image?.height)>=350);
+  // A user-pasted screenshot of this publisher's 16:9 gear infographic
+  // can be around 550 px wide after Discord's image processing.
+  const imageSizeOK=(img:any)=>Number(img?.width)>=450 &&
+    Number(img?.height)>=240 &&
+    Number(img?.width)/Math.max(1,Number(img?.height))>=1.25;
+  const largeImage=attachments.some(imageSizeOK)
+    || embeds.some((e:any)=>imageSizeOK(e.image));
   if(!week&&!largeImage)return null;
   const candidate=makeFashion(message,guildId,channelId,largeImage);
   if(!candidate)return null;
@@ -133,9 +145,11 @@ export type FashionPoll={
   sourceChannelId:string;
   sourceStatus:"initialized"|"new"|"unchanged"|"manual-current";
   candidate?:FollowedFashion;cursor?:string;firstImport?:boolean;
+  inspected:number; validImages:number;
 };
-export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):Promise<FashionPoll|null>{
-  const id=await locateFollowedFashionChannel(env,guildId);
+export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string,
+  configuredChannelId="",forceInitialImport=false):Promise<FashionPoll|null>{
+  const id=await locateFollowedFashionChannel(env,guildId,configuredChannelId);
   if(!id)return null;
   const key=sourceKey(guildId,id);
   const raw=await discord(env,"channels/"+id+"/messages?limit=100");
@@ -143,17 +157,19 @@ export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):P
   const ordered=raw.filter((m:any)=>validID(String(m.id||"")))
     .sort((a:any,b:any)=>safeSnowflake(String(a.id))<safeSnowflake(String(b.id))?-1:1);
   const last=await meta(env,key);
+  const initialCandidates=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
+      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
+  const manualImageCount=initialCandidates.length;
   if(!last){
     // Import the latest manual report ONCE, but establish the high-water
     // mark at the most recent message to avoid treating old posts as new.
-    const candidates=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
-      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
-    const selected=candidates[candidates.length-1];
+    const selected=initialCandidates[initialCandidates.length-1];
     const newest=ordered.length?String(ordered[ordered.length-1].id):
       ((BigInt(Date.now())-discordEpoch)<<22n).toString();
     // Caller acknowledges after Discord main post has updated successfully.
     return {sourceChannelId:id,sourceStatus:selected?"manual-current":"initialized",
-      ...(selected?{candidate:selected}:{}),cursor:newest,firstImport:true};
+      ...(selected?{candidate:selected}:{}),cursor:newest,firstImport:true,
+      inspected:ordered.length,validImages:manualImageCount};
   }
   const newer=ordered.filter((m:any)=>safeSnowflake(String(m.id))>safeSnowflake(last));
   const newest=newer.length?String(newer[newer.length-1].id):last;
@@ -165,20 +181,27 @@ export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string):P
   // This one-time recovery imports it, without treating later manual chat
   // messages as automatic publications.
   const needsImport=await meta(env,importKey(guildId,id))!=="1";
-  if(needsImport && !selected) {
-    const existing=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
-      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
-    const initial=existing[existing.length-1];
+  // The initial post may have been missed by the previous threshold or
+  // source-cursor release. Explicit PUBLISH LATEST can recover it once.
+  const repairKey="ffxiv_fashion_manual_repair_v3_"+guildId+"_"+id;
+  const allowRepair=forceInitialImport && await meta(env,repairKey)!=="1";
+  if((needsImport || allowRepair) && !selected) {
+    const initial=initialCandidates[initialCandidates.length-1];
     return {sourceChannelId:id,sourceStatus:initial?"manual-current":"initialized",
-      ...(initial?{candidate:initial}:{}),cursor:newest,firstImport:true};
+      ...(initial?{candidate:initial}:{}),cursor:newest,
+      firstImport:!!initial,
+      inspected:ordered.length,validImages:manualImageCount};
   }
   return {sourceChannelId:id,sourceStatus:selected?"new":"unchanged",
     ...(selected?{candidate:selected}:{}),cursor:newest,
-    ...(needsImport?{firstImport:true}:{})};
+    firstImport:needsImport && !!selected,
+    inspected:ordered.length,validImages:manualImageCount};
 }
 export async function acknowledgeFashionPoll(env:FashionSourceEnv,guildId:string,poll:FashionPoll){
   if(poll.cursor && validID(poll.cursor))
     await putMeta(env,sourceKey(guildId,poll.sourceChannelId),poll.cursor);
-  if(poll.firstImport)
+  if(poll.firstImport && poll.candidate) {
     await putMeta(env,importKey(guildId,poll.sourceChannelId),"1");
+    await putMeta(env,"ffxiv_fashion_manual_repair_v3_"+guildId+"_"+poll.sourceChannelId,"1");
+  }
 }
