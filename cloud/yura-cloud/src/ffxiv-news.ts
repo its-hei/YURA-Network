@@ -1,6 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {updateFourPosts, expireFourPosts, type SourceItem} from "./ffxiv-dashboard";
+import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
   DB: D1Database;
@@ -208,6 +209,7 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
     const sources:{fashion?:SourceItem;dalamud?:SourceItem;patch?:SourceItem;events:LiveEvent[]|null}={events:null};
     const news:NewsItem[]=[];
     let topics:NewsItem[]|null=null;
+    let fashionPoll:FashionPoll|null=null;
     for(const feed of FEEDS){
       // The event detector always receives official Topics, independently
       // of the Patch Notes switch. Other news is optional.
@@ -236,14 +238,29 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
       catch(e:any){errors.push("dalamud: "+String(e?.message||e));}
     }
     if(cfg.fashion){
-      try{sources.fashion=await fashionReport();}
-      catch(e:any){errors.push("fashion: "+String(e?.message||e));}
+      try {
+        fashionPoll=await pollFollowedFashion(env,cfg.guildId);
+        if(!fashionPoll) {
+          errors.push("fashion: kanał #mods・spam nie jest widoczny dla YURY");
+        } else {
+          // Do not import the user's manually inserted first report.
+          // Only new Fashion Reporter webhook posts, after the persisted
+          // source cursor, may replace the active Fashion Report card.
+          if(fashionPoll.candidate) sources.fashion=fashionPoll.candidate;
+          await writeMeta(env,"ffxiv_fashion_follow_last_status",fashionPoll.sourceStatus);
+          await writeMeta(env,"ffxiv_fashion_follow_source_channel",fashionPoll.sourceChannelId);
+        }
+      } catch(e:any) {errors.push("fashion-follow: "+String(e?.message||e));}
     }
     const result=await updateFourPosts(env,{
       guildId:cfg.guildId,channelId,
       fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
     },sources);
     errors.push(...result.errors);
+    if(fashionPoll && !result.errors.some(x=>x.startsWith("fashion "))) {
+      try {await acknowledgeFashionPoll(env,cfg.guildId,fashionPoll);}
+      catch(e:any) {errors.push("fashion-cursor: "+String(e?.message||e));}
+    }
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
     await writeMeta(env,"ffxiv_news_last_status",errors.length?"partial":"ready");
     await writeMeta(env,"ffxiv_news_last_error",errors.join(" | ").slice(0,1200));
