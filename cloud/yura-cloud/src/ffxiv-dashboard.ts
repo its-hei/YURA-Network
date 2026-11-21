@@ -5,7 +5,7 @@ import type {LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
 
 interface Env {DB:D1Database; DISCORD_BOT_TOKEN?:string}
-export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string};
+export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string;imageProxy?:string};
 export type Sources={
   fashion?:SourceItem;patch?:SourceItem;dalamud?:SourceItem;events:LiveEvent[]|null;
 };
