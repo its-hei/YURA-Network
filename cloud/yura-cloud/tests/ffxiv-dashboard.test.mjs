@@ -6,7 +6,7 @@ const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
 const cases=[
   ["event",{id:"thepath",title:"The Path Infernal",url:source,end:Date.UTC(2026,11,9,14,59)},["The Path Infernal","Koniec:","Szczegóły wydarzenia"]],
-  ["fashion",{id:"discord-fashion-week-460",title:"Week 460",url:"https://discord.com/channels/111/222/333",image:report,expires:Date.UTC(2026,10,24,8)},["80/100","60 000 MGP","Otwórz aktualną infografikę"]],
+  ["fashion",{id:"discord-fashion-week-460",title:"Week 460",url:"https://discord.com/channels/111/222/333",image:report,expires:Date.UTC(2026,10,24,8)},["80/100","60 000 MGP","Fashion Report • źródło"]],
   ["patch",{id:"7.58",title:"Patch 7.58 Notes",url:source},["Patch 7.58 Notes","Przeczytaj patch notes"]],
   ["dalamud",{id:"stable",title:"Dalamud Stable 15.0.4.1",url:"https://github.com/goatcorp/dalamud-distrib"},["Dalamud Stable 15.0.4.1","Wersja stabilna"]]
 ];
@@ -66,7 +66,7 @@ test("If source image is unavailable, Fashion message still displays all informa
       "PATCH","fashion",cases[1][1],warnings);
     assert.equal(ok,false);
     assert.match(payload.content,/60 000 MGP/);
-    assert.match(payload.content,/Otwórz aktualną infografikę/);
+    assert.match(payload.content,/Fashion Report • źródło/);
     assert.equal(warnings.length,1);
   }finally{globalThis.fetch=original;}
 });
