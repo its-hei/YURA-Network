@@ -67,7 +67,7 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
     assert.ok(opts.body instanceof FormData);
     uploaded=true;
     const payload=JSON.parse(opts.body.get("payload_json"));
-    assert.match(payload.content,/Zobacz grafikę tygodnia/);
+    assert.match(payload.content,/Grafika tygodnia poniżej/);
     assert.equal(payload.attachments[0].filename,"fashion-report.png");
     return new Response(JSON.stringify({attachments:[{id:"777777777777777777",filename:"fashion-report.png"}]}),
       {status:200,headers:{"content-type":"application/json"}});
@@ -83,11 +83,42 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
     assert.equal(calls,3);
   }finally{globalThis.fetch=original;}
 });
+test("Discord media proxy can rescue an image when primary CDN returns 403",async()=>{
+  const original=globalThis.fetch;
+  const data={...cases[1][1],
+    imageProxy:"https://media.discordapp.net/attachments/111111111111111111/222222222222222222/report.png?ex=1234"};
+  let primary=0,proxy=0,post=0;
+  globalThis.fetch=async(url,opts)=>{
+    const u=String(url);
+    if(u.startsWith("https://cdn.discordapp.com/")) {
+      primary++;return new Response("Forbidden",{status:403});
+    }
+    if(u.startsWith("https://media.discordapp.net/")){
+      proxy++;return new Response(new Uint8Array(30000),{status:200,
+        headers:{"content-type":"image/png"}});
+    }
+    if(u.startsWith("https://discord.com/api/")){
+      post++;assert.ok(opts.body instanceof FormData);
+      return new Response(JSON.stringify({attachments:[{id:"999999999999999999",filename:"fashion-report.png"}]}),
+        {status:200,headers:{"content-type":"application/json"}});
+    }
+    throw Error("Unexpected "+u);
+  };
+  try{
+    const warnings=[];
+    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},
+      "channels/777777777777777777/messages/888888888888888888",
+      "PATCH","fashion",data,warnings);
+    assert.equal(ok,true);
+    assert.equal(warnings.length,0);
+    assert.deepEqual([primary,proxy,post],[1,1,1]);
+  }finally{globalThis.fetch=original;}
+});
 test("Original Fashion CDN link is re-signable by Discord and never exposes private source channel",()=>{
   const text=renderFfxivCardText("fashion",cases[1][1]);
-  assert.match(text,/Zobacz grafikę tygodnia/);
-  assert.match(text,/cdn\.discordapp\.com\/attachments\//);
-  assert.ok(!text.includes("ex=1234"),"signed URL must not expire in public post");
+  assert.match(text,/Grafika tygodnia poniżej/);
+  assert.ok(!text.includes("cdn.discordapp.com/attachments/"),
+    "Do not show raw Discord CDN image as a broken text link");
   assert.ok(!text.includes("discord.com/channels/111/222/333"),
     "no private moderators source-message links");
 });
@@ -124,7 +155,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?4:5};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?5:6};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -168,6 +199,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,5);
+    assert.equal(repaired.renderRevision,6);
   }finally{globalThis.fetch=originalFetch;}
 });
