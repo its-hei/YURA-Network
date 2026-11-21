@@ -37,7 +37,7 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
     const data=JSON.parse(String(opts.body.get("payload_json")));
     assert.ok(data.content.includes("60 000 MGP"));
     assert.equal(data.attachments[0].filename,"fashion-report.png");
-    assert.equal(data.embeds[0].image.url,"attachment://fashion-report.png");
+    assert.equal(data.embeds[0].image,undefined,"native image must not be hidden inside an embed");
     assert.ok(opts.body.get("files[0]") instanceof Blob);
     assert.equal(opts.headers["content-type"],undefined,"boundary must be added by fetch");
     return new Response(JSON.stringify({id:"123456789012345678",attachments:[{id:"999999999999999999",filename:"fashion-report.png"}]}),{status:200,headers:{"content-type":"application/json"}});
