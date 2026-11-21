@@ -2,7 +2,7 @@
 // Every announcement's previous version goes into that message's history
 // thread before the main message is edited. No daily no-news posts.
 import type {LiveEvent} from "./ffxiv-events";
-import {discordFfxivRequest} from "./ffxiv-discord-api";
+import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
 
 interface Env {DB:D1Database; DISCORD_BOT_TOKEN?:string}
 export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string};
@@ -225,7 +225,7 @@ async function fashionAttachment(url:string):Promise<{blob:Blob;filename:string}
   return {blob:new Blob([bytes],{type:mime}),filename:"fashion-report."+extension};
 }
 type DiscordCardPayload={content:string;embeds:unknown[];allowed_mentions:{parse:never[]};attachments?:unknown[]};
-async function deliverCard(
+export async function deliverCard(
   env:Env,path:string,method:"PATCH"|"POST",category:Category,x:Current|null,
   warnings:string[],oldMessage?:any,archive=false
 ):Promise<boolean>{
