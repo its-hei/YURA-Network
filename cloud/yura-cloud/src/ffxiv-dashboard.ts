@@ -11,9 +11,9 @@ export type Sources={
 };
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
-type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
+type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=5;
+const RENDER_REVISION=6;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -93,7 +93,8 @@ function toCurrent(category:Category,item:SourceItem|LiveEvent|undefined,at:numb
   const x=item as SourceItem;
   return {id:x.id,title:x.title,url:x.url,
     ...(category==="fashion"?{expires:nextTuesdayResetUTC(at)}:{}),
-    ...(x.image?{image:x.image}:{})};
+    ...(x.image?{image:x.image}:{}),
+    ...(x.imageProxy?{imageProxy:x.imageProxy}:{})};
 }
 function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
   const active=events?.filter(e=>e.start<=at&&at<e.end).sort((a,b)=>b.start-a.start)[0];
@@ -123,7 +124,7 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
       const media=x.image?publicFashionImageUrl(x.image):"";
       return [header,"80/100 pkt • do 60 000 MGP",
         "Reset: "+date(x.expires),
-        ...(media?["[🖼️ Zobacz grafikę tygodnia]("+media.replace(/\)/g,"%29")+")"]:[]),
+        ...(media?["🖼️ Grafika tygodnia poniżej"]:[]),
         "[Fashion Report • źródło](https://fashionreportxiv.com/)"].join("\n");
     }
     case "patch":
@@ -265,10 +266,16 @@ Promise<{blob:Blob;filename:string}> {
     throw new Error("Fashion image has invalid size");
   return {blob:new Blob([bytes],{type:mime}),filename:"fashion-report."+extension};
 }
-async function fashionAttachment(url:string,expires?:number):
+async function fashionAttachment(url:string,expires?:number,proxyUrl?:string):
 Promise<{blob:Blob;filename:string}> {
   try{return await downloadFashionImage(url);}
   catch(originalError:any){
+    // The Discord media proxy often has different edge access from the
+    // signed CDN URL. It is sourced from the same attachment in Discord API.
+    if(proxyUrl && proxyUrl!==url){
+      try{return await downloadFashionImage(proxyUrl);}
+      catch {/* continue to verified publisher fallback */}
+    }
     const src=publicFashionImageUrl(url);
     if(!src || !new URL(src).hostname.endsWith("discordapp.com") &&
        !new URL(src).hostname.endsWith("discordapp.net"))throw originalError;
@@ -313,7 +320,7 @@ export async function deliverCard(
       return true;
     }
     try{
-      const image=await fashionAttachment(x.image,x.expires);
+      const image=await fashionAttachment(x.image,x.expires,x.imageProxy);
       const multipart=new FormData();
       const rich=payload.embeds[0] as any;
       if(rich?.image)delete rich.image;
@@ -562,7 +569,8 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
             ...existing,
             // Refresh Discord's short-lived signed CDN URL without marking
             // a new Fashion week or creating an archived duplicate.
-            image:live.image||existing.image
+            image:live.image||existing.image,
+            imageProxy:live.imageProxy||existing.imageProxy
           };
         }else if(post.retiredId===live.id){
           // The source may serve last week's PNG for days after reset.
