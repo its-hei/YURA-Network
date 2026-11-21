@@ -11,7 +11,7 @@ PATCH JSON {discord_id, action: "approve_fc" | "revoke_fc"} lets the authenticat
 Members can edit their declared nicknames whenever needed using Edytuj nicki or the existing community buttons. Community buttons update just the selected fields and add the other community without deleting prior registration or changing existing FC decisions. Pending FC review messages are edited in place. Display names follow declared Twitch/FFXIV names even before FC approval; this never grants FC or subscriber roles. Changing a previously verified Twitch identity clears the verified ID. Self-service cannot restore revoked roles.
 
 ## Temporary automatic FC access
-For registrations selecting FC or both, the Worker grants FC automatically after Boomer is active; an old pending registration is processed on its next interaction. No review message is sent. Previously approved or revoked members do not regain a manually removed FC role. The explicit admin approve/revoke API remains available. The existing review-channel configuration is retained for later verification but is not used during automatic registration.
+For registrations selecting FC or both, the Worker grants FC independently of Boomer; an old pending registration is processed on its next interaction. No review message is sent. Previously approved or revoked members do not regain a manually removed FC role. The explicit admin approve/revoke API remains available. The existing review-channel configuration is retained for later verification but is not used during automatic registration.
 
 ## Boomer role retry and nickname priority
 Boomer is a self-service rules-acceptance role: a registered member's next status check or form submission retries granting it when the Discord member does not currently have it, even if the database recorded a successful grant earlier. Removing Boomer alone in Discord is therefore not a persistent moderation block. Explicit FC rejections/revocations remain protected; previously approved FC roles removed manually are not restored automatically. Nicknames use Twitch (FFXIV), or Twitch alone if the combined nickname exceeds Discord's length limit; matching names appear once.
@@ -27,3 +27,8 @@ Twitch and Ordo Noctis now open their modal directly. Existing registrations exp
 
 ## Silent community updates
 The public panel now contains only Twitch and Ordo Noctis. Both forms have independent editing/removal; updating one name preserves the other at SQL write time. Old Reset buttons no longer clear profiles. Successful form submissions delete their deferred ephemeral acknowledgement; errors and moderation warnings remain visible. Custom rules text is not changed.
+
+## Independent community role policy (2026-11-21)
+- Boomer is granted **only** while a Twitch nickname is saved; removing the Twitch nickname removes Boomer while preserving FC.
+- FC is granted **only** for a saved Ordo Noctis / FFXIV character name and does not require Boomer; removing the FFXIV name removes FC while preserving Boomer.
+- Administrative FC revocation stays persistent. The next registration/status action reconciles the roles from the saved profile. The old rules-text sentence about Boomer requiring either nickname is rewritten in rendered panels.
