@@ -1,5 +1,6 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
+import {discordFfxivRequest} from "./ffxiv-discord-api";
 import {updateFourPosts, expireFourPosts, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
@@ -54,18 +55,7 @@ async function loadConfig(env: NewsEnv): Promise<NewsConfig> {
     fashionSourceChannelId:idOK(String(saved.fashionSourceChannelId ?? ""))?String(saved.fashionSourceChannelId):""
   };
 }
-async function discord(env: NewsEnv, path: string, method = "GET", body?: unknown): Promise<any> {
-  if (!env.DISCORD_BOT_TOKEN?.trim()) throw new Error("DISCORD_BOT_TOKEN missing in Cloud secrets");
-  const r = await fetch("https://discord.com/api/v10/" + path, {
-    method, headers: {
-      "authorization": "Bot " + env.DISCORD_BOT_TOKEN.trim(),
-      "content-type": "application/json", "user-agent": "YURA-Cloud-FFXIV-News/1.0"
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) })
-  });
-  if (!r.ok) throw new Error("Discord " + method + " " + path.split("/")[0] + ": HTTP " + r.status);
-  return r.status === 204 ? null : r.json();
-}
+const discord=discordFfxivRequest;
 async function channel(env: NewsEnv, cfg: NewsConfig): Promise<string> {
   if (cfg.channelId) {
     const found = await discord(env, "channels/" + cfg.channelId);
