@@ -24,6 +24,11 @@ test("first native Discord forward reads image in message_snapshots",()=>{
   assert.equal(parseInitialManualFashion(msg,guild,channel)?.id,"discord-fashion-week-460");
   assert.equal(parseFollowedFashion(msg,guild,channel),null);
 });
+test("compressed current infographic still qualifies as a manual first report",()=>{
+  const msg={...base,attachments:[{url:image,width:560,height:311,filename:"image.png"}]};
+  const result=parseInitialManualFashion(msg,guild,channel);
+  assert.equal(result?.id,"discord-fashion-manual-2222222222222222222");
+});
 test("first manual image without a caption is accepted if large and recent",()=>{
   const msg={...base,attachments:[{url:image,width:1000,height:650,filename:"image.png"}]};
   const result=parseInitialManualFashion(msg,guild,channel);
