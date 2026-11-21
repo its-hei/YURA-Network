@@ -15,7 +15,7 @@ type Post={anchor:string;thread:string;current:Current|null;retiredId?:string};
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
-  patch:"⚔️ AKTUALNY PATCH",dalamud:"🟢 DALAMUD • STABLE"
+  patch:"⚔️ AKTUALNY PATCH",dalamud:"🟢 DALAMUD • WERSJA STABILNA"
 };
 const LEGACY:Partial<Record<Category,string>>={
   fashion:"fashion",patch:"lodestone",dalamud:"dalamud"
