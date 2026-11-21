@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=3;
+const RENDER_REVISION=4;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -301,13 +301,19 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       actualEmbeds[0]?.description===(expectedEmbeds[0] as any)?.description &&
       (!((expectedEmbeds[0] as any)?.image) || !!actualEmbeds[0]?.image)
     );
-    if(displayed.content!==wanted || !hasCurrentEmbed || actualEmbeds.length!==expectedEmbeds.length){
+    const hasFashionAttachment=cat!=="fashion" || !post.current?.image ||
+      (Array.isArray(displayed.attachments) &&
+       displayed.attachments.some((a:any)=>String(a.filename||"").startsWith("fashion-report.")));
+    // A colored rich embed alone is not evidence that the source image
+    // exists on Discord; require a native attachment as well.
+    if(displayed.content!==wanted || !hasCurrentEmbed ||
+       actualEmbeds.length!==expectedEmbeds.length || !hasFashionAttachment){
       const imageOK=await deliverCard(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,
         "PATCH",cat,post.current,warnings,displayed);
-      await savePost(env,cfg,cat,{...post,renderRevision:imageOK?RENDER_REVISION:0});
+      await savePost(env,cfg,cat,{...post,current:fresh,renderRevision:imageOK?RENDER_REVISION:0});
       return true;
     }
-    await savePost(env,cfg,cat,{...post,renderRevision:RENDER_REVISION});
+    await savePost(env,cfg,cat,{...post,current:fresh,renderRevision:RENDER_REVISION});
     return false;
   }
   const old=post.current;
@@ -486,7 +492,12 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
       const existing=post.current;
       if(live){
         if(existing?.id===live.id){
-          expected.fashion=existing?.expires && existing.expires<=at?null:existing;
+          expected.fashion=existing?.expires && existing.expires<=at?null:{
+            ...existing,
+            // Refresh Discord's short-lived signed CDN URL without marking
+            // a new Fashion week or creating an archived duplicate.
+            image:live.image||existing.image
+          };
         }else if(post.retiredId===live.id){
           // The source may serve last week's PNG for days after reset.
           expected.fashion=null;
@@ -503,8 +514,13 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   for(const cat of ORDER){
     const post=posts[cat];
     if(!post)continue;
-    const fresh=expected[cat];
-    if(fresh===undefined)continue; // Failed source: do not clear current news.
+    // On a renderer upgrade, rehydrate each existing message from D1 even
+    // when no newly forwarded source message is available. In particular
+    // Fashion previously remained a header forever when its source cursor
+    // had already consumed Week 460.
+    const fresh=expected[cat]===undefined && post.renderRevision!==RENDER_REVISION
+      ? post.current : expected[cat];
+    if(fresh===undefined)continue; // Failed source: preserve current news.
     try{
       const edited=await rollover(env,cfg,cat,post,fresh,errors);
       if(edited)changes.push(cat);
