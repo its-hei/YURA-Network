@@ -22,6 +22,8 @@ for name, url, kind in SOURCES:
             body = resp.read(6_000_000)
             if kind == "rss":
                 s = body.decode("utf-8", "ignore")
+                if "<item" not in s:
+                    print(f"DEBUG {name}: HTTP 200, response preview {s[:600]!r}")
                 assert "<item" in s and "<rss" in s, "RSS has no items"
                 detail = f"{len(re.findall('<item', s))} RSS items"
             elif kind == "version":
