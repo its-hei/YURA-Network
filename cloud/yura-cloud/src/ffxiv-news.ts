@@ -297,6 +297,24 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-shot repair for the Discord media proxy fallback and malformed
+  // Fashion link. Only touches the current four category messages and never
+  // creates a new one for unchanged data. Cloud cron retries at most twice.
+  const imageProxyRepairKey="ffxiv_fashion_image_proxy_repair_20261121_v6";
+  if((today==="2026-11-21" || today==="2026-11-22") &&
+      t.minute%5===3){
+    const state=await readMeta(env,imageProxyRepairKey);
+    const tries=Number(state)||0;
+    if(state!=="done" && tries<2){
+      await writeMeta(env,imageProxyRepairKey,String(tries+1));
+      const check=await checkFfxivNews(env);
+      await writeMeta(env,"ffxiv_fashion_image_proxy_repair_result",
+        JSON.stringify(check).slice(0,1800));
+      if(check.ok && check.fashion_source?.report_id &&
+          !check.source_errors?.some(x=>/fashion attachment|fashion image|HTTP 429/i.test(String(x))))
+        await writeMeta(env,imageProxyRepairKey,"done");
+    }
+  }
   // One-shot artwork upgrade of the EXISTING Fashion Report message.
   // Revision 5 reuses the same Discord message, first trying the original
   // Fashion Reporter graphic, then a verified-current publisher backup.
