@@ -22,10 +22,10 @@ for name, url, kind in SOURCES:
             body = resp.read(6_000_000)
             if kind == "rss":
                 s = body.decode("utf-8", "ignore")
-                if "<item" not in s:
-                    print(f"DEBUG {name}: HTTP 200, response preview {s[:600]!r}")
-                assert "<item" in s and "<rss" in s, "RSS has no items"
-                detail = f"{len(re.findall('<item', s))} RSS items"
+                assert "<feed" in s and "<entry" in s, "Atom feed has no entries"
+                assert "http://www.w3.org/2005/Atom" in s, "Expected official Atom namespace"
+                assert re.search(r'<entry\\b[\\s\\S]*?<title>', s), "Atom entries have no titles"
+                detail = f"{len(re.findall('<entry', s))} Atom entries"
             elif kind == "version":
                 v = json.loads(body)["AssemblyVersion"]
                 assert re.fullmatch(r"\d+\.\d+\.\d+\.\d+", v), "Invalid stable version"
