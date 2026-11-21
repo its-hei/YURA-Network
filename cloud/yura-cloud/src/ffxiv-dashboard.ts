@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=7;
+const RENDER_REVISION=8;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -233,7 +233,8 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
 // A native attachment displays even if rich link embeds are suppressed and
 // avoids expiring signed source URLs in archived weekly reports.
 const FASHION_IMAGE_HOSTS=new Set([
-  "fashionreportxiv.com","cdn.discordapp.com","media.discordapp.net",
+  "fashionreportxiv.com","www.fashionreportxiv.com",
+  "cdn.discordapp.com","media.discordapp.net",
   "images-ext-1.discordapp.net","images-ext-2.discordapp.net"
 ]);
 async function downloadFashionImage(url:string, weekStart?:number, verifiedWeek=false):
@@ -241,11 +242,27 @@ Promise<{blob:Blob;filename:string}> {
   const uri=new URL(url);
   if(uri.protocol!=="https:" || !FASHION_IMAGE_HOSTS.has(uri.hostname))
     throw new Error("Image host is not an approved Fashion source");
-  const response=await fetch(uri.toString(),{
-    headers:{accept:"image/png,image/jpeg,image/webp"},
-    redirect:"error",
-    signal:AbortSignal.timeout(8000)
-  });
+  // Cloudflare Workers supports only redirect:"follow" or "manual".
+  // redirect:"error" rejects BEFORE the HTTP request is even made,
+  // which previously broke ALL Fashion images (including publisher).
+  // Follow at most two redirects, each restricted to our image hosts.
+  let target=uri;
+  let response:Response|undefined;
+  for(let hop=0;hop<3;hop++){
+    response=await fetch(target.toString(),{
+      headers:{accept:"image/png,image/jpeg,image/webp"},
+      redirect:"manual",
+      signal:AbortSignal.timeout(8000)
+    });
+    if(response.status<300 || response.status>=400)break;
+    const location=response.headers.get("location");
+    if(!location || hop===2)throw new Error("Fashion image redirect could not be validated");
+    const next=new URL(location,target);
+    if(next.protocol!=="https:" || !FASHION_IMAGE_HOSTS.has(next.hostname))
+      throw new Error("Fashion image redirect to unapproved host");
+    target=next;
+  }
+  if(!response)throw new Error("Fashion source request was not performed");
   if(!response.ok)throw new Error("Fashion image "+uri.hostname+" HTTP "+response.status);
   const mime=(response.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
   const extension=mime==="image/png"?"png":mime==="image/jpeg"?"jpg":mime==="image/webp"?"webp":"";
