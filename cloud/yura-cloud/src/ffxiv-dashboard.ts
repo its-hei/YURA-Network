@@ -97,7 +97,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
     event:0xA77EEA,fashion:0xE89B52,patch:0x769BEE,dalamud:0x56BC92
   };
   const source:Record<Category,string>={
-    event:"Lodestone • wydarzenia",fashion:"Fashion Report XIV",
+    event:"Lodestone • wydarzenia",fashion:"Fashion Reporter • Discord",
     patch:"Lodestone • patch notes",dalamud:"Dalamud Distribution"
   };
   const at=(time?:number)=>time&&Number.isFinite(time)?"<t:"+Math.floor(time/1000)+":f>":"";
@@ -133,7 +133,10 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
     try {
       const img=new URL(x.image);
       if(img.protocol==="https:"&&(
-        (category==="fashion"&&img.hostname==="fashionreportxiv.com")||
+        (category==="fashion"&&(
+          img.hostname==="fashionreportxiv.com" ||
+          ["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"].includes(img.hostname)
+        ))||
         (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
         embed.image={url:img.toString()};
     }catch{}
@@ -221,7 +224,14 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
     // The old item is copied BEFORE the main post is edited. This is how
     // Discord can offer history, since it has no "move message" API.
     const archivedKey=keyFor(cfg,cat)+"_archived_"+encodeURIComponent(old.id).slice(0,300);
-    if(await getMeta(env,archivedKey)!=="1"){
+    // Switching this week's card from the former web image to the
+    // user's manually uploaded Discord image is a change of artwork
+    // provider, NOT a completed Fashion Report week. Do not create
+    // a duplicate historical week just because the source changed.
+    const sameWeekSourceSwitch=cat==="fashion" && !!fresh &&
+      old.id.startsWith("image-sha256-") &&
+      fresh.id.startsWith("discord-fashion-");
+    if(!sameWeekSourceSwitch && await getMeta(env,archivedKey)!=="1"){
       await threadWrite(env,post.thread,cat,old);
       await putMeta(env,archivedKey,"1");
     }
