@@ -38,6 +38,9 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
   const calls=[];
   globalThis.fetch=async (url,opts)=>{
     calls.push({url:String(url),opts});
+    if(String(url).startsWith("https://cdn.discordapp.com/")){
+      assert.equal(opts.redirect,"manual","Workers do not support redirect:error");
+    }
     if(String(url).startsWith("https://cdn.discordapp.com/"))
       return new Response(new Uint8Array(30000),{status:200,headers:{"content-type":"image/png","content-length":"30000"}});
     assert.ok(opts.body instanceof FormData,"Discord must receive multipart form data");
@@ -65,6 +68,9 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
   globalThis.fetch=async(url,opts)=>{
     calls++;
     const target=String(url);
+    if(target.startsWith("https://cdn.discordapp.com/") ||
+       target.startsWith("https://fashionreportxiv.com/"))
+      assert.equal(opts.redirect,"manual","Cloudflare Worker only accepts manual/follow");
     if(target.startsWith("https://cdn.discordapp.com/"))
       return new Response("Forbidden",{status:403});
     if(target==="https://fashionreportxiv.com/hint.png")
@@ -88,6 +94,38 @@ test("Cloudflare CDN 403 falls back to this week's publisher art and posts an in
     assert.equal(warnings.length,0);
     assert.equal(uploaded,true);
     assert.equal(calls,3);
+  }finally{globalThis.fetch=original;}
+});
+test("Publisher backup follows only approved https redirects in Cloudflare Workers",async()=>{
+  const original=globalThis.fetch;
+  const {DB}=backupDb();
+  let redirectCount=0;
+  globalThis.fetch=async(url,opts)=>{
+    const target=String(url);
+    if(target.startsWith("https://cdn.discordapp.com/"))
+      return new Response("403",{status:403});
+    if(target==="https://fashionreportxiv.com/hint.png"){
+      assert.equal(opts.redirect,"manual");
+      redirectCount++;
+      return new Response(null,{status:302,
+        headers:{location:"https://www.fashionreportxiv.com/hint.png"}});
+    }
+    if(target==="https://www.fashionreportxiv.com/hint.png"){
+      assert.equal(opts.redirect,"manual");
+      return new Response(new Uint8Array(36000),{
+        status:200,headers:{"content-type":"image/png"}});
+    }
+    assert.ok(opts.body instanceof FormData);
+    return new Response(JSON.stringify({attachments:[{id:"888888888888888888",filename:"fashion-report.png"}]}),
+      {status:200,headers:{"content-type":"application/json"}});
+  };
+  try{
+    const warnings=[];
+    assert.equal(await deliverCard({DISCORD_BOT_TOKEN:"test",DB},
+      "channels/777777777777777777/messages/888888888888888888",
+      "PATCH","fashion",cases[1][1],warnings),true);
+    assert.equal(redirectCount,1);
+    assert.deepEqual(warnings,[]);
   }finally{globalThis.fetch=original;}
 });
 test("Week 460 publisher backup succeeds without Last-Modified when source week is proven",async()=>{
@@ -194,7 +232,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?6:7};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?7:8};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -238,6 +276,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,7);
+    assert.equal(repaired.renderRevision,8);
   }finally{globalThis.fetch=originalFetch;}
 });
