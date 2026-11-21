@@ -118,15 +118,19 @@ async function lodestone(source: string, url: string): Promise<NewsItem[]> {
   }).filter((item):item is NewsItem => Boolean(item));
 }
 async function dalamud(): Promise<NewsItem[]> {
-  const raw = await fetchText("https://api.github.com/repos/goatcorp/Dalamud/releases?per_page=20");
-  const releases:any = JSON.parse(raw);
-  if (!Array.isArray(releases)) throw new Error("Dalamud GitHub releases are not an array");
-  return releases.filter((r:any) => r && !r.draft && !r.prerelease && r.tag_name && r.html_url)
-    .slice(0,15).map((r:any) => ({
-      source:"dalamud", id:clamp(r.id || r.tag_name,200),
-      title:clamp(r.name || ("Dalamud " + r.tag_name),200),
-      url:String(r.html_url), date:Date.parse(String(r.published_at ?? "")) || Date.now()
-    }));
+  // The GitHub releases API is not the active release feed (its latest public
+  // GitHub Release is from March 2026). The actual stable distribution lives here:
+  // https://github.com/goatcorp/dalamud-distrib/blob/main/version
+  const raw = await fetchText("https://raw.githubusercontent.com/goatcorp/dalamud-distrib/main/version");
+  let data:any;
+  try { data = JSON.parse(raw); } catch { throw new Error("Dalamud stable version is not JSON"); }
+  const version = String(data?.AssemblyVersion ?? "").trim();
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(version))
+    throw new Error("Dalamud stable version format is invalid");
+  return [{source:"dalamud",id:"stable-"+version,
+    title:"Dalamud Stable "+version,
+    url:"https://github.com/goatcorp/dalamud-distrib/blob/main/version",
+    date:Date.now()}];
 }
 function warsawTime(date: Date): { day: string; hour: number; minute: number; weekday: string } {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -139,20 +143,26 @@ function warsawTime(date: Date): { day: string; hour: number; minute: number; we
 }
 async function fashionReport(): Promise<NewsItem> {
   const url = "https://fashionreportxiv.com/";
-  const today = warsawTime(new Date());
-  let image: string | undefined;
-  try {
-    const html = await fetchText(url);
-    const imgs = [...html.matchAll(/<img\b[^>]*>/gi)];
-    const target = imgs.find(x => /Fashion Report Image/i.test(x[0]))?.[0] || "";
-    const attr = target.match(/\b(?:src|data-src)=["']([^"']+)["']/i);
-    if (attr) {
-      const resolved = new URL(attr[1],url);
-      if (resolved.protocol === "https:" && /\.(png|jpg|jpeg|webp)(?:$|\?)/i.test(resolved.pathname)) image = resolved.toString();
-    }
-  } catch { /* Do not claim the image exists unless fetched from the publisher. */ }
-  return { source:"fashion", id:"fashion-"+today.day, date:Date.now(),
-    title:"Fashion Report • sprawdź rozwiązanie tygodnia (80 punktów / MGP)", url, ...(image ? {image} : {}) };
+  // The publisher updates one permanent image each week. Detect actual changes,
+  // not Friday's date; some weeks the image is published after our 10:00 poll.
+  const imageUrl = new URL("hint.png",url);
+  imageUrl.searchParams.set("date",warsawTime(new Date()).day);
+  const response = await fetch(imageUrl.toString(), {
+    headers: {accept:"image/png", "user-agent":"YURA-Cloud-FFXIV-News/1.1"}
+  });
+  if (!response.ok) throw new Error("Fashion Report image: HTTP "+response.status);
+  if (!(response.headers.get("content-type") || "").toLowerCase().includes("image/"))
+    throw new Error("Fashion Report: image not available");
+  const imageData = await response.arrayBuffer();
+  if (imageData.byteLength < 20000 || imageData.byteLength > 5000000)
+    throw new Error("Fashion Report image size unexpected");
+  const digest = await crypto.subtle.digest("SHA-256",imageData);
+  const hash = Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
+  const displayImage = new URL("hint.png",url);
+  displayImage.searchParams.set("v",hash.slice(0,16)); // Avoid Discord's old image cache.
+  return { source:"fashion", id:"image-sha256-"+hash, date:Date.now(),
+    title:"Fashion Report • aktualna grafika z rozwiązaniem (80/100 punktów)",
+    url, image:displayImage.toString() };
 }
 async function seenFor(env: NewsEnv, source: string): Promise<Set<string>> {
   const rows = await env.DB.prepare("SELECT item_id FROM ffxiv_news_seen WHERE source=?1 ORDER BY first_seen_utc DESC LIMIT 300").bind(source).all<{item_id:string}>();
@@ -172,12 +182,12 @@ function linesFor(items:NewsItem[]): string {
   const fashion = by("fashion");
   if (fashion.length) {
     output.push("**👗 Fashion Report**");
-    for(const x of fashion) output.push("• [Sprawdź rozwiązanie tygodnia]("+x.url+")");
+    for(const x of fashion) output.push("• Aktualne wyposażenie na 80/100 punktów — "+x.url);
     output.push("");
   }
   const dal = by("dalamud");
   if (dal.length) {
-    output.push("**🟢 Dalamud • aktualizacje stabilne**");
+    output.push("**🟢 Dalamud • wersja stabilna**");
     for(const x of dal.slice(0,5)) output.push("• "+clamp(x.title,110)+" — "+x.url);
     if (dal.length>5) output.push("• oraz "+(dal.length-5)+" innych zmian");
     output.push("");
@@ -222,10 +232,17 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
       const seen = await seenFor(env,batch.source);
       for(const item of batch.items) if (!seen.has(item.id) && item.date >= Date.now() - 21*86400000) next.push(item);
     }
-    const local = warsawTime(new Date());
-    if (cfg.fashion && local.weekday === "Fri") {
-      const item = await fashionReport();
-      if (!(await seenFor(env,"fashion")).has(item.id)) next.push(item);
+    if (cfg.fashion) {
+      try {
+        const item = await fashionReport();
+        if (await readMeta(env,"ffxiv_news_baseline_fashion") !== "1") {
+          // First successful read establishes the current week as baseline.
+          await saveSeen(env,[item]);
+          await writeMeta(env,"ffxiv_news_baseline_fashion","1");
+        } else if (!(await seenFor(env,"fashion")).has(item.id)) next.push(item);
+      } catch (e:any) {
+        sourceErrors.push("fashion: "+String(e?.message || e));
+      }
     }
     const selected = next.sort((a,b)=>b.date-a.date).slice(0,30);
     if (selected.length) {
