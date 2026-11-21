@@ -7,7 +7,7 @@ const MONTH_INDEX:Record<string,number> = {
   january:0,february:1,march:2,april:3,may:4,june:5,
   july:6,august:7,september:8,october:9,november:10,december:11
 };
-const DATE_GMT = /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*(?:\(GMT\)|GMT|\(UTC\)|UTC)\b/gi;
+const DATE_GMT = /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*(?:\(GMT\)|GMT|\(UTC\)|UTC)(?![A-Za-z0-9])/gi;
 
 function cleanPage(html:string):string {
   // HTML is untrusted content. Extract text only, never render source HTML.
@@ -85,6 +85,21 @@ export async function discoverLiveEvents(
         events.push({...topic,...parsed});
       }
     } catch(e:any) {errors.push(topic.url+": "+String(e?.message||e).slice(0,120));}
+  }
+  // A verified Square Enix special page is a secondary official source:
+  // some announcements may roll off the Topics feed while the event remains
+  // active. This one bounded 2026 crossover fallback is NOT a hard-coded
+  // "active" status: the date range is parsed from the live official page.
+  if (!events.length && at>=Date.UTC(2026,10,18) && at<Date.UTC(2026,11,10)) {
+    const official="https://eu.finalfantasyxiv.com/lodestone/special/ffxvi/e86ytg2ko3";
+    try {
+      const parsed=parseOfficialEventPage(await getPage(official));
+      if (parsed && parsed.start<=at && at<parsed.end)
+        events.push({
+          title:"The Path Infernal — FFXIV × FFXVI",
+          url:official,date:parsed.start,...parsed
+        });
+    } catch(e:any) {errors.push("official event site: "+String(e?.message||e).slice(0,120));}
   }
   return {events:events.sort((a,b)=>b.start-a.start).slice(0,3),errors};
 }
