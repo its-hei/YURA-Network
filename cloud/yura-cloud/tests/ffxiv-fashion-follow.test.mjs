@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {parseInitialManualFashion,parseFollowedFashion} from "../src/ffxiv-fashion-follow.ts";
+import {parseInitialManualFashion,parseFollowedFashion,pollFollowedFashion,acknowledgeFashionPoll} from "../src/ffxiv-fashion-follow.ts";
 
 const guild="1181989574713557082";
 const channel="1111111111111111111";
@@ -46,4 +46,53 @@ test("a newly mirrored Fashion Reporter announcement becomes the next week",()=>
     embeds:[{title:"Fashion Report Week 461 - Full Details",image:{url:image,width:1000,height:600}}]};
   const result=parseFollowedFashion(mirrored,guild,channel);
   assert.equal(result?.id,"discord-fashion-week-461");
+});
+
+test("already consumed first manual report is recovered and then cached for unchanged daily checks",async()=>{
+  const originalFetch=globalThis.fetch;
+  const now=new Date().toISOString();
+  const sourceId="2222222222222222222",memberId="3333333333333333333";
+  const first={id:"4444444444444444444",timestamp:now,author:{id:memberId,bot:false,username:"heiyeshi"},
+    attachments:[{url:image,width:1100,height:650,filename:"Fashion_Report_Week_460.png"}],
+    content:"Fashion Report Week 460 - Full Details"};
+  const sourceUrl="channels/"+sourceId;
+  const store=new Map([["ffxiv_fashion_follow_cursor_v1_"+guild+"_"+sourceId,first.id],
+    ["ffxiv_fashion_first_manual_import_v2_"+guild+"_"+sourceId,"1"]]);
+  const env={DISCORD_BOT_TOKEN:"test",DB:{
+    prepare:(sql)=>({bind:(...args)=>({
+      first:async()=>({value:store.get(args[0])||""}),
+      run:async()=>{store.set(args[0],args[1]);return {}}
+    })})
+  }};
+  let messages=[first];
+  globalThis.fetch=async url=>{
+    const p=String(url);
+    if(p.endsWith("/"+sourceUrl))return new Response(JSON.stringify({id:sourceId,guild_id:guild,type:0}),{status:200});
+    if(p.includes("/"+sourceUrl+"/messages?"))return new Response(JSON.stringify(messages),{status:200});
+    throw Error("Unexpected Discord path "+p);
+  };
+  try {
+    const recovered=await pollFollowedFashion(env,guild,sourceId);
+    assert.equal(recovered.sourceStatus,"manual-current");
+    assert.equal(recovered.candidate.id,"discord-fashion-week-460");
+    await acknowledgeFashionPoll(env,guild,recovered);
+    const unchanged=await pollFollowedFashion(env,guild,sourceId);
+    assert.equal(unchanged.sourceStatus,"unchanged");
+    assert.equal(unchanged.candidate.id,"discord-fashion-week-460");
+    // A user can chat or upload an unrelated image; never replace a saved
+    // Fashion week with those once the first manual image is acknowledged.
+    messages=[first,{...first,id:"5555555555555555555",
+      content:"Hello unrelated manually posted image",attachments:[]}];
+    const still=await pollFollowedFashion(env,guild,sourceId);
+    assert.equal(still.candidate.id,"discord-fashion-week-460");
+    // New Fashion Reporter webhook brings next week automatically.
+    messages=[...messages,{
+      id:"6666666666666666666",timestamp:now,
+      webhook_id:"7777777777777777777",author:{bot:true,username:"Fashion Reporter"},
+      embeds:[{title:"Fashion Report Week 461 - Full Details",image:{url:image,width:1000,height:550}}]
+    }];
+    const next=await pollFollowedFashion(env,guild,sourceId);
+    assert.equal(next.sourceStatus,"new");
+    assert.equal(next.candidate.id,"discord-fashion-week-461");
+  }finally{globalThis.fetch=originalFetch;}
 });
