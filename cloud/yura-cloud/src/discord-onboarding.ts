@@ -449,7 +449,7 @@ export async function discordOnboardingAdmin(req:Request,env:OnboardingEnv,loadV
       }
       const key=String(app.verify_key||"");
       if(!/^[a-f0-9]{64}$/i.test(key)) return response({error:"Discord application verification key unavailable"},502);
-      const c:Config={guild:x.guild,welcome:x.welcome,staff:old?.staff||"",boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
+      const c:Config={guild:x.guild,welcome:x.welcome,staff:old?.staff||"",boomer:x.boomer,fc:x.fc,key,...(old?.welcome===x.welcome&&old?.message?{message:old.message}:{}),...(old?.panel_text?{panel_text:old.panel_text}:{}),...(old?.vip_role?{vip_role:old.vip_role}:{})};
       if(typeof x.vip_role==="string") {
         const roleId=x.vip_role.trim();
         if(roleId) {
