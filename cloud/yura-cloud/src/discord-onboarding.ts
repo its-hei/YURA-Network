@@ -68,8 +68,8 @@ function desiredNick(p:Profile):string {
   }
   return ff || ttv;
 }
-// Report independent outcomes. Boomer is the self-service rules acceptance role;
-// an explicitly revoked FC membership still requires an administrator.
+// Twitch nickname controls Boomer; Ordo Noctis nickname controls FC independently.
+// An explicitly revoked FC membership still requires an administrator.
 function safeDiscordError(error:unknown):string {
   const msg=error instanceof Error ? error.message : "";
   return /^Discord API [0-9]{3}( \/ [0-9]+)? \((GET|POST|PUT|PATCH|DELETE) [a-z0-9_-]+\)\.$/.test(msg)
@@ -84,7 +84,7 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile, previousNick
   try {
     // Discord's actual member roles are authoritative for Boomer. Do not let
     // an old success marker (e.g. after testing or rejoining) block registration.
-    const wantsBoomer=Boolean(p.twitch_login || p.ffxiv_name);
+    const wantsBoomer=Boolean(p.twitch_login);
     if (wantsBoomer!==boomer) {
       await discord(env,path+"/roles/"+c.boomer,wantsBoomer?"PUT":"DELETE");
       boomer=wantsBoomer;
@@ -99,27 +99,24 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile, previousNick
     try {await discord(env,path+"/roles/"+c.fc,"DELETE");fc=false;}
     catch(e) {warnings.push("Nie udało się odebrać rangi FC: "+safeDiscordError(e));}
   } else if(p.ffxiv_name && p.fc_state==="pending") {
-    if(!boomer) {
-      warnings.push("Ranga FC wymaga aktywnej rangi Boomer.");
-    } else {
-      try {
-        const latest=await profile(env,c.guild,p.discord_id);
-        if(latest?.fc_state==="pending") {
-          if(!fc) {
-            await discord(env,path+"/roles/"+c.fc,"PUT");
-            fc=true;
-          }
-          const write=await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state='approved' WHERE guild_id=?1 AND discord_id=?2 AND fc_state='pending'").bind(c.guild,p.discord_id).run();
-          if(Number(write.meta.changes??0)===0) {
-            const current=await profile(env,c.guild,p.discord_id);
-            if(current?.fc_state==="rejected") {
-              await discord(env,path+"/roles/"+c.fc,"DELETE");
-              fc=false;
-            }
+    // FC is independent of Twitch and does not require the Boomer role.
+    try {
+      const latest=await profile(env,c.guild,p.discord_id);
+      if(latest?.fc_state==="pending") {
+        if(!fc) {
+          await discord(env,path+"/roles/"+c.fc,"PUT");
+          fc=true;
+        }
+        const write=await env.DB.prepare("UPDATE discord_onboarding_profiles SET fc_state='approved' WHERE guild_id=?1 AND discord_id=?2 AND fc_state='pending'").bind(c.guild,p.discord_id).run();
+        if(Number(write.meta.changes??0)===0) {
+          const current=await profile(env,c.guild,p.discord_id);
+          if(current?.fc_state==="rejected") {
+            await discord(env,path+"/roles/"+c.fc,"DELETE");
+            fc=false;
           }
         }
-      } catch(e) { warnings.push("Nie udało się nadać rangi FC: "+safeDiscordError(e)); }
-    }
+      }
+    } catch(e) { warnings.push("Nie udało się nadać rangi FC: "+safeDiscordError(e)); }
   } else if(p.ffxiv_name && p.fc_state==="approved" && !fc) {
     warnings.push("Ranga FC została wcześniej odebrana. Tylko administracja może ją przywrócić.");
   }
@@ -136,10 +133,10 @@ async function reconcile(env: OnboardingEnv, c: Config, p: Profile, previousNick
   return {boomer,fc,nicknameApplied,warnings};
 }
 function button(id: string, label: string, style = 2) { return {type:2,style,custom_id:prefix+id,label}; }
-const DEFAULT_PANEL_TEXT="**Rejestracja**\nWybierz Twitch lub Ordo Noctis. Zatwierdzając formularz, akceptujesz regulamin. Możesz dołączyć do obu społeczności. Podaj dokładny login Twitch oraz nick postaci FFXIV, jeśli grasz z nami. Puste pole oznacza brak powiązania z daną społecznością. Ranga Boomer wymaga przynajmniej jednego nicku, a FC – nicku FFXIV. Nicki możesz zmieniać w dowolnej chwili.";
+const DEFAULT_PANEL_TEXT="**Rejestracja**\nWybierz Twitch lub Ordo Noctis. Zatwierdzając formularz, akceptujesz regulamin. Możesz dołączyć do obu społeczności. Podaj dokładny login Twitch oraz nick postaci FFXIV, jeśli grasz z nami. Puste pole oznacza brak powiązania z daną społecznością. Ranga Boomer wymaga nicku Twitch, a FC – nicku FFXIV. Nicki możesz zmieniać w dowolnej chwili.";
 function panel(c:Config) {
   return {
-    embeds:[{title:"Witaj u Boomersów!",description:c.panel_text || DEFAULT_PANEL_TEXT,color:0xe89b52}],
+    embeds:[{title:"Witaj u Boomersów!",description:(c.panel_text || DEFAULT_PANEL_TEXT).replace("Ranga Boomer wymaga przynajmniej jednego nicku, a FC – nicku FFXIV.", "Ranga Boomer wymaga nicku Twitch, a FC – nicku FFXIV."),color:0xe89b52}],
     components:[{type:1,components:[button("ttv","Twitch",1),button("fc","Ordo Noctis",1)]}],
     allowed_mentions:safeMentions
   };
