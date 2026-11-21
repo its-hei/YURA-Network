@@ -243,7 +243,9 @@ export async function deliverCard(
     if(method==="PATCH" && oldAttachment?.id){
       payload.attachments=[{id:String(oldAttachment.id),filename:String(oldAttachment.filename)}];
       const rich=payload.embeds[0] as any;
-      if(rich?.image)rich.image={url:"attachment://"+String(oldAttachment.filename)};
+      // Native attachment should display independently of Embed Links.
+      // Referencing it via attachment:// would hide the standalone file.
+      if(rich?.image)delete rich.image;
       await api(env,path,method,payload);
       return true;
     }
@@ -251,7 +253,7 @@ export async function deliverCard(
       const image=await fashionAttachment(x.image);
       const multipart=new FormData();
       const rich=payload.embeds[0] as any;
-      if(rich?.image)rich.image={url:"attachment://"+image.filename};
+      if(rich?.image)delete rich.image;
       payload.attachments=[{id:0,filename:image.filename,description:"Fashion Report • rozwiązanie tygodnia"}];
       multipart.append("payload_json",JSON.stringify(payload));
       multipart.append("files[0]",image.blob,image.filename);
