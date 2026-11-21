@@ -3439,7 +3439,7 @@ async function apiPublicAvatarBatch(req:Request,env:Env):Promise<Response> {
   cacheUrl.pathname='/api/avatars';
   cacheUrl.search='?logins='+encodeURIComponent(logins.join(','));
   const cacheKey=new Request(cacheUrl.toString());
-  const cache=caches.default;
+  const cache=(caches as CacheStorage & {default:Cache}).default;
   try { const hit=await cache.match(cacheKey); if(hit)return hit; }catch{}
   const url=new URL('https://api.twitch.tv/helix/users');
   for(const login of logins)url.searchParams.append('login',login);
