@@ -367,14 +367,24 @@ export async function deliverCard(
       multipart.append("payload_json",JSON.stringify(payload));
       multipart.append("files[0]",image.blob,image.filename);
       const response=await api(env,path,method,multipart);
-      if(!Array.isArray(response?.attachments) || !response.attachments.length)
-        throw new Error("Discord did not return the attached infographic");
-      if(image.publisherWeek!==undefined && image.publisherHash) {
-        await putMeta(env,"ffxiv_fashion_publisher_backup_last_v1",
-          JSON.stringify({week:image.publisherWeek,hash:image.publisherHash}));
+      let attachments=Array.isArray(response?.attachments)?response.attachments:[];
+      if(!attachments.length && method==="PATCH"){
+        // The edit can be applied even when Discord's response omits the
+        // attachment list. Verify it before considering the upload failed.
+        const live=await api(env,path);
+        attachments=Array.isArray(live?.attachments)?live.attachments:[];
       }
-      await putMeta(env,"ffxiv_fashion_media_status_v1",
-        "OK • plik "+image.filename+" zapisany w wiadomości Discorda");
+      if(!attachments.some((a:any)=>String(a.filename||"").startsWith("fashion-report.")))
+        throw new Error("Discord did not confirm the attached infographic");
+      // Successful Discord upload is independent of whether D1 can write
+      // diagnostics: never roll back an uploaded file due to D1 errors.
+      try{
+        if(image.publisherWeek!==undefined && image.publisherHash)
+          await putMeta(env,"ffxiv_fashion_publisher_backup_last_v1",
+            JSON.stringify({week:image.publisherWeek,hash:image.publisherHash}));
+        await putMeta(env,"ffxiv_fashion_media_status_v1",
+          "OK • plik "+image.filename+" zapisany w wiadomości Discorda");
+      }catch{/* Do not remove a successfully uploaded image. */}
       return true;
     }catch(e:any){
       // Discord's CDN often rejects direct Cloudflare Worker downloads with
@@ -384,7 +394,8 @@ export async function deliverCard(
       // a JSON PATCH just because its response omitted attachment metadata.
       const reason="fashion attachment: "+String(e?.message||e).slice(0,175);
       warnings.push(reason);
-      await putMeta(env,"ffxiv_fashion_media_status_v1",reason);
+      try{await putMeta(env,"ffxiv_fashion_media_status_v1",reason);}
+      catch{/* Preserve the original Discord error for the API caller. */}
       payload.embeds=embedsFor(category,x);
       payload.attachments=[];
       await api(env,path,method,payload);
