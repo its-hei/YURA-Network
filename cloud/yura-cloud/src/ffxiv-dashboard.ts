@@ -674,6 +674,23 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   return {updated:changes.length,changes,errors};
 }
 
+// A Discord REST read is the source of truth: a successful Cloud run or
+// a green message does not prove that the image was actually uploaded.
+export async function verifyFashionReportImage(env:Env,cfg:BoardConfig):
+Promise<{attached:boolean;reason:string;messageId?:string}>{
+  const state=await loadPost(env,cfg,"fashion");
+  if(!state?.current?.image)return {attached:false,reason:"Brak bieżącego Fashion Reportu w Cloud"};
+  const message=await api(env,"channels/"+cfg.channelId+"/messages/"+state.anchor);
+  const attachment=(Array.isArray(message?.attachments)?message.attachments:[])
+    .find((a:any)=>/^fashion-report\.(?:png|jpg|webp)$/i.test(String(a.filename||"")));
+  if(attachment?.id)return {
+    attached:true,reason:"Plik "+String(attachment.filename)+" zapisany w Discordzie",
+    messageId:state.anchor
+  };
+  return {attached:false,messageId:state.anchor,
+    reason:"Wiadomość Fashion Report nie ma załączonej grafiki • sprawdź Attach Files dla YURY"};
+}
+
 // Called only at the top of each UTC hour (two compact D1 reads). It does
 // NOT poll public news feeds or post a status update. A scheduled event or
 // the Fashion Report can expire promptly even when the next news check is
