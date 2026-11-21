@@ -22,6 +22,7 @@ function keyFor(path:string,method:string):string {
   return method+" /"+parts.slice(0,3).join("/");
 }
 function seconds(value:unknown):number|null {
+  if(value===null || value===undefined || value==="")return null;
   const n=Number(value);
   return Number.isFinite(n) && n>=0 && n<=3600 ? n:null;
 }
