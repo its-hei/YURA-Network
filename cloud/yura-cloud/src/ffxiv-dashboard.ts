@@ -95,7 +95,8 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
         link("Szczegóły wydarzenia")].join("\n");
     case "fashion":
       return [header,"80/100 pkt • do 60 000 MGP",
-        "Reset: "+date(x.expires),link("Otwórz aktualną infografikę")].join("\n");
+        "Reset: "+date(x.expires),
+        "[Fashion Report • źródło](https://fashionreportxiv.com/)"].join("\n");
     case "patch":
       return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
     case "dalamud":
@@ -138,7 +139,8 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       break;
   }
   const embed:any={
-    color:colours[category],title,url:x.url,
+    color:colours[category],title,
+    url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
     description:description.trim(),
     footer:{text:"Źródło: "+source[category]}
   };
