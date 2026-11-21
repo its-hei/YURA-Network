@@ -297,6 +297,24 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-time repair of the four header-only Discord posts shown by the
+  // operator. They are EDITED in place, never recreated or duplicated.
+  // Run on the existing every-minute cron; stop after one successful check
+  // or three limited attempts in case Discord is temporarily rate-limited.
+  const cardRepairKey="ffxiv_news_readable_cards_repair_20261121_v3";
+  if((today==="2026-11-21" || today==="2026-11-22") &&
+     t.minute%5===4) {
+    const value=await readMeta(env,cardRepairKey);
+    const attempts=Number(value)||0;
+    if(value!=="done" && attempts<3){
+      await writeMeta(env,cardRepairKey,String(attempts+1));
+      const repair=await checkFfxivNews(env);
+      await writeMeta(env,"ffxiv_news_readable_cards_repair_result",
+        JSON.stringify(repair).slice(0,1500));
+      if(repair.ok && !repair.source_errors?.some(x=>String(x).includes("HTTP 429")))
+        await writeMeta(env,cardRepairKey,"done");
+    }
+  }
   // One-time recovery for a real Discord HTTP 429 reported by the operator.
   // Runs at most 3 brief source reconciliations on 21-22 Nov, away from the
   // daily 10:00 job. All four cards remain idempotent: no new Discord
