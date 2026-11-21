@@ -50,11 +50,13 @@ async function requestInternal(
     if(spent+wait>MAX_TOTAL_WAIT_MS) throw timeoutError(method,path,wait);
     if(wait){await sleep(wait);spent+=wait;}
     nextRequestAt=Date.now()+REQUEST_GAP_MS;
+    const multipart=body instanceof FormData;
     const response=await fetch("https://discord.com/api/v10/"+path,{
       method,
-      headers:{"authorization":"Bot "+token,"content-type":"application/json",
+      headers:{"authorization":"Bot "+token,
+        ...(multipart?{}:{"content-type":"application/json"}),
         "user-agent":"YURA-Cloud-FFXIV/RateLimited"},
-      ...(body===undefined?{}:{body:JSON.stringify(body)})
+      ...(body===undefined?{}:{body:multipart?body:JSON.stringify(body)})
     });
     const remaining=response.headers.get("X-RateLimit-Remaining");
     const reset=seconds(response.headers.get("X-RateLimit-Reset-After"));
