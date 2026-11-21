@@ -214,6 +214,113 @@ function linesFor(items:NewsItem[], manualPreview = false): string {
   }
   return output.join("\n").slice(0,1950);
 }
+function newsCategory(item: NewsItem): "fashion" | "dalamud" | "lodestone" {
+  return item.source === "fashion" ? "fashion" : item.source === "dalamud" ? "dalamud" : "lodestone";
+}
+type NewsCategory = ReturnType<typeof newsCategory>;
+
+const NEWS_TOPIC: Record<NewsCategory,{title:string;thread:string}> = {
+  fashion: {title:"👗 FASHION REPORT • AKTUALNE",thread:"👗 Fashion Report — archiwum"},
+  dalamud: {title:"🟢 DALAMUD • STABLE",thread:"🟢 Dalamud — archiwum"},
+  lodestone:{title:"⚔️ FINAL FANTASY XIV • AKTUALNOŚCI",thread:"⚔️ FFXIV — archiwum"}
+};
+function topicMessage(topic:NewsCategory, entries:NewsItem[],history=false):string {
+  const head = "**"+NEWS_TOPIC[topic].title+"**";
+  const date = warsawTime(new Date()).day;
+  const lines = [head, ...(history ? ["📁 Wpis z "+date+" • historia pozostaje w tym wątku."] : ["Najnowsza informacja • starsze wpisy znajdziesz w wątku."]),""];
+  if(topic==="fashion"){
+    lines.push("Grafika z rozwiązaniem na 80/100 punktów • do 60 000 MGP");
+    lines.push(entries[0]?.url || "https://fashionreportxiv.com/");
+  } else {
+    for(const item of entries.slice(0,history?7:1))
+      lines.push("• "+clamp(item.title,120)+" — "+item.url);
+    if(history && entries.length>7) lines.push("• oraz "+(entries.length-7)+" innych ogłoszeń");
+  }
+  return lines.join("\n").slice(0,1950);
+}
+function newsEmbeds(topic:NewsCategory, entries:NewsItem[]):unknown[] {
+  if (topic!=="fashion") return [];
+  const f = entries.find(x=>x.image);
+  if (!f) return [];
+  return [{
+    color:0xe89b52,
+    title:"👗 FASHION REPORT • 80/100 PUNKTÓW",
+    description:"Aktualna grafika tygodnia • do 60 000 MGP w Gold Saucer.",
+    url:f.url,
+    image:{url:f.image},
+    footer:{text:"Źródło: Fashion Report XIV"}
+  }];
+}
+function archiveKey(cfg:NewsConfig, id:string, topic:NewsCategory) {
+  return "ffxiv_news_archive_v1_"+cfg.guildId+"_"+id+"_"+topic;
+}
+async function ensureCategoryThread(env:NewsEnv,cfg:NewsConfig,channelId:string,topic:NewsCategory) {
+  const key=archiveKey(cfg,channelId,topic);
+  let previous:{anchor:string;thread:string}|null=null;
+  try {previous=JSON.parse(await readMeta(env,key) || "null");} catch {}
+  if (previous && idOK(previous.anchor) && idOK(previous.thread)) {
+    try {
+      const t = await discord(env,"channels/"+previous.thread);
+      if (String(t.parent_id)===channelId && String(t.guild_id)===cfg.guildId && [11,12].includes(Number(t.type)))
+        return previous;
+    } catch {/* Reconcile the existing anchor before creating anything. */}
+  }
+
+  // Recover an existing bot-created category anchor after a partial D1 write.
+  // Never touch community messages or test posts sent by other bots.
+  const messages:any = await discord(env,"channels/"+channelId+"/messages?limit=100");
+  const title=NEWS_TOPIC[topic].title;
+  const found=Array.isArray(messages)
+    ? messages.find((m:any)=>m.author?.bot===true && String(m.content??"").startsWith("**"+title+"**"))
+    : null;
+  let anchor=String(found?.id ?? "");
+  if (!idOK(anchor)) {
+    const created=await discord(env,"channels/"+channelId+"/messages","POST",{
+      content:"**"+title+"**\nNowe wiadomości pojawią się w tym poście. Historia jest zapisywana w wątku.",
+      allowed_mentions:{parse:[]}
+    });
+    anchor=String(created?.id ?? "");
+    if (!idOK(anchor)) throw new Error("Discord did not return category anchor ID");
+  }
+
+  // A thread created from a message shares its snowflake ID with the starter.
+  // GET before POST prevents a duplicate thread when the D1 write failed.
+  let thread="";
+  try {
+    const t=await discord(env,"channels/"+anchor);
+    if (String(t.parent_id)===channelId && [11,12].includes(Number(t.type))) thread=String(t.id);
+  } catch {}
+  if(!thread) {
+    const created=await discord(env,"channels/"+channelId+"/messages/"+anchor+"/threads","POST",{
+      name:NEWS_TOPIC[topic].thread,auto_archive_duration:1440
+    });
+    thread=String(created?.id ?? "");
+    if(!idOK(thread)) throw new Error("Discord did not return category thread ID");
+  }
+  const state={anchor,thread};
+  await writeMeta(env,key,JSON.stringify(state));
+  return state;
+}
+async function publishInArchive(env:NewsEnv,cfg:NewsConfig,channelId:string,topic:NewsCategory,entries:NewsItem[]):Promise<void> {
+  const state=await ensureCategoryThread(env,cfg,channelId,topic);
+  const thread:any=await discord(env,"channels/"+state.thread);
+  if (thread.thread_metadata?.archived) {
+    if (thread.thread_metadata?.locked) throw new Error("Discord archive thread is locked: "+topic);
+    await discord(env,"channels/"+state.thread,"PATCH",{archived:false});
+  }
+  // Publish full entry in the archived timeline first. Then update the one
+  // permanent main-channel message to display only the latest entry.
+  const embeds=newsEmbeds(topic,entries);
+  await discord(env,"channels/"+state.thread+"/messages","POST",{
+    content:topicMessage(topic,entries,true),allowed_mentions:{parse:[]},
+    ...(embeds.length?{embeds}:{})
+  });
+  await discord(env,"channels/"+channelId+"/messages/"+state.anchor,"PATCH",{
+    content:topicMessage(topic,entries),allowed_mentions:{parse:[]},
+    ...(embeds.length?{embeds}:{})
+  });
+}
+
 export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest = false, onePerCategory = false) {
   const cfg = await loadConfig(env);
   if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false};
@@ -280,30 +387,29 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
         ...(oneLodestone ? [oneLodestone] : [])
       ];
     }
-    if (selected.length) {
-      const fashionItem = selected.find(x=>x.source==="fashion" && x.image);
-      // Dedicated large-image card: infographic is readable on mobile without
-      // burying it among links to Dalamud and Lodestone.
-      const embeds = fashionItem ? [{
-        color:0xe89b52,
-        title:"👗 FASHION REPORT • 80/100 PUNKTÓW",
-        description:"Aktualna grafika tygodnia • odbierz do 60 000 MGP w Gold Saucer.",
-        url:fashionItem.url,
-        image:{url:fashionItem.image},
-        footer:{text:"Źródło: Fashion Report XIV • Kaiyoko Star"}
-      }] : [];
-      await discord(env,"channels/"+channelId+"/messages","POST",{
-        content:linesFor(selected,publishLatest),allowed_mentions:{parse:[]},
-        ...(embeds.length ? {embeds} : {})
-      });
-      await saveSeen(env,selected);
-      await writeMeta(env,"ffxiv_news_last_post_utc",now());
+    // Each category has exactly one up-to-date starter message in the main
+    // channel; old announcements are retained in category-specific threads.
+    // Discord archives inactive threads after 24h (without deleting history).
+    const delivered:NewsItem[]=[];
+    for(const topic of ["fashion","dalamud","lodestone"] as const){
+      const entries=selected.filter(item=>newsCategory(item)===topic);
+      if(!entries.length) continue;
+      try {
+        await publishInArchive(env,cfg,channelId,topic,entries);
+        // A category that was successfully posted must be marked seen even if
+        // another category fails; avoids reposting it on the next daily run.
+        await saveSeen(env,entries);
+        delivered.push(...entries);
+      } catch(e:any) {
+        sourceErrors.push("archive-"+topic+": "+String(e?.message || e));
+      }
     }
+    if(delivered.length) await writeMeta(env,"ffxiv_news_last_post_utc",now());
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
     await writeMeta(env,"ffxiv_news_last_status",sourceErrors.length ? "partial" : "ready");
     await writeMeta(env,"ffxiv_news_last_error",sourceErrors.join(" | ").slice(0,1200));
     return {ok:true,status:sourceErrors.length ? "partial" : "ready",
-      posted:selected.length > 0, items:selected.length, channel_id:channelId, source_errors:sourceErrors};
+      posted:delivered.length > 0, items:delivered.length, channel_id:channelId, source_errors:sourceErrors};
   } catch(e:any) {
     const error = String(e?.message || e).slice(0,1000);
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
