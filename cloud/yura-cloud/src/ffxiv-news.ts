@@ -313,7 +313,7 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   // v3-v6 repair jobs have been removed to avoid duplicate polls and Discord
   // rate limits. The actual message is checked for a native attachment by
   // Discord REST; only that verification marks this repair as complete.
-  const mediaRepairKey="ffxiv_fashion_verified_attachment_repair_v7";
+  const mediaRepairKey="ffxiv_fashion_verified_attachment_repair_v8";
   if((today==="2026-11-21" || today==="2026-11-22") &&
       t.minute%5===3) {
     const state=await readMeta(env,mediaRepairKey);
