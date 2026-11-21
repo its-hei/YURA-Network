@@ -309,6 +309,23 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-time compact Fashion text refresh. Edit the existing anchored
+  // message in place without sending another Discord post; preserve its
+  // current native infographic and its historical thread.
+  const compactResetKey="ffxiv_fashion_compact_reset_v9_20261121";
+  if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===1){
+    const value=await readMeta(env,compactResetKey);
+    const count=Number(value)||0;
+    if(value!=="done" && count<2){
+      await writeMeta(env,compactResetKey,String(count+1));
+      const check=await checkFfxivNews(env,true,false);
+      await writeMeta(env,"ffxiv_fashion_compact_reset_result",
+        JSON.stringify(check).slice(0,1200));
+      if(check.ok && !check.source_errors?.some(x=>
+        /fashion update:|fashion attachment:|HTTP 429/.test(String(x))))
+        await writeMeta(env,compactResetKey,"done");
+    }
+  }
   // Consolidated one-time repair for the current Fashion Report. Previous
   // v3-v6 repair jobs have been removed to avoid duplicate polls and Discord
   // rate limits. The actual message is checked for a native attachment by
