@@ -1,3 +1,4 @@
+import {discordFfxivRequest} from "./ffxiv-discord-api";
 // Discord Follow mirrors an announcement channel into the user's private
 // #mods・spam channel. Read-only: we do not write to the source channel.
 // The first scan imports the user's already-posted infographic as the current
@@ -14,15 +15,7 @@ const normalized=(text:string)=>text.normalize("NFKC").toLowerCase().replace(/[^
 const sourceKey=(guild:string,channel:string)=>"ffxiv_fashion_follow_cursor_v1_"+guild+"_"+channel;
 const importKey=(guild:string,channel:string)=>"ffxiv_fashion_first_manual_import_v2_"+guild+"_"+channel;
 const imageHosts=new Set(["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"]);
-async function discord(env:FashionSourceEnv,path:string):Promise<any>{
-  const bot=env.DISCORD_BOT_TOKEN?.trim();
-  if(!bot)throw new Error("Discord bot token missing");
-  const r=await fetch("https://discord.com/api/v10/"+path,{
-    headers:{authorization:"Bot "+bot,"user-agent":"YURA-Cloud/Fashion-Follow"}
-  });
-  if(!r.ok)throw new Error("Discord Fashion source HTTP "+r.status);
-  return r.json();
-}
+const discord=discordFfxivRequest;
 async function meta(env:FashionSourceEnv,key:string):Promise<string>{
   const r=await env.DB.prepare("SELECT value FROM meta WHERE key=?1").bind(key).first<{value:string}>();
   return String(r?.value??"");
