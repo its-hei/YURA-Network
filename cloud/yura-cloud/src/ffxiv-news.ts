@@ -105,8 +105,18 @@ function tag(raw: string, key: string): string {
   return m ? unescapeXml(m[1]) : "";
 }
 async function lodestone(source: string, url: string): Promise<NewsItem[]> {
-  const xml = await fetchText(url);
-  const items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].slice(0,35);
+  // The official NA feed is confirmed live by public feed monitors; use it
+  // as a fallback when the EU mirror is unavailable or returns no items.
+  let xml:string;
+  let items:RegExpMatchArray[];
+  try {
+    xml = await fetchText(url);
+    items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].slice(0,35);
+    if (!items.length) throw new Error("empty RSS");
+  } catch {
+    xml = await fetchText(url.replace("eu.finalfantasyxiv.com","na.finalfantasyxiv.com"));
+    items = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].slice(0,35);
+  }
   if (!items.length) throw new Error("Lodestone RSS: no entries (" + source + ")");
   return items.map(m => {
     const title = tag(m[1],"title");
@@ -227,7 +237,7 @@ export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest 
         // Existing releases/news must not flood the new Discord channel.
         await saveSeen(env,batch.items);
         await writeMeta(env,baselineKey,"1");
-        continue;
+        if (!publishLatest) continue;
       }
       const seen = await seenFor(env,batch.source);
       if (publishLatest) {
