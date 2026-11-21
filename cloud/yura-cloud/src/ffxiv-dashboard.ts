@@ -11,7 +11,7 @@ export type Sources={
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;expires?:number};
-type Post={anchor:string;thread:string;current:Current|null};
+type Post={anchor:string;thread:string;current:Current|null;retiredId?:string};
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -149,7 +149,7 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
     thread=String(created?.id??"");
   }
   if(!ID.test(thread))throw new Error("Discord did not return "+cat+" history thread");
-  const state:Post={anchor:id,thread,current:saved?.current||null};
+  const state:Post={anchor:id,thread,current:saved?.current||null,...(saved?.retiredId?{retiredId:saved.retiredId}:{})};
   await savePost(env,cfg,cat,state);
   return state;
 }
@@ -186,7 +186,7 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       await putMeta(env,archivedKey,"1");
     }
   }
-  const next={...post,current:fresh};
+  const next={...post,current:fresh,...(cat==="fashion" && old && !fresh?{retiredId:old.id}:{})};
   await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,"PATCH",{
     content:textFor(cat,fresh),embeds:embedsFor(cat,fresh),allowed_mentions:NO_PINGS
   });
@@ -296,6 +296,7 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
           // until a NEW hash is seen, never reactivated automatically.
           expected.fashion=current;
         }
+      }else if(post.retiredId===live.id) expected.fashion=null;
       }else if(existing?.expires && existing.expires<=at) expected.fashion=null;
     }
   }
