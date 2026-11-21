@@ -297,6 +297,24 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-shot artwork upgrade of the EXISTING Fashion Report message.
+  // Revision 5 reuses the same Discord message, first trying the original
+  // Fashion Reporter graphic, then a verified-current publisher backup.
+  // Does not change the 10:00 recurring news cadence.
+  const artRepairKey="ffxiv_art_inline_repair_20261121_v5";
+  if((today==="2026-11-21" || today==="2026-11-22") &&
+     t.minute%5===3) {
+    const value=await readMeta(env,artRepairKey);
+    const count=Number(value)||0;
+    if(value!=="done" && count<3){
+      await writeMeta(env,artRepairKey,String(count+1));
+      const attempt=await checkFfxivNews(env);
+      await writeMeta(env,"ffxiv_art_inline_diagnostic",JSON.stringify(attempt).slice(0,1800));
+      if(attempt.ok && attempt.fashion_source?.report_id &&
+         !attempt.source_errors?.some(x=>/fashion image|fashion attachment|HTTP 429/.test(String(x))))
+        await writeMeta(env,artRepairKey,"done");
+    }
+  }
   // Restore the Fashion Report that was consumed by the old source cursor
   // but never appeared on the persistent public message. This uses the
   // existing every-minute Cloud cron, not Desktop, and edits IN PLACE.
