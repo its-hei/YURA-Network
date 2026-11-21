@@ -2,6 +2,7 @@
 // Every announcement's previous version goes into that message's history
 // thread before the main message is edited. No daily no-news posts.
 import type {LiveEvent} from "./ffxiv-events";
+import {discordFfxivRequest} from "./ffxiv-discord-api";
 
 interface Env {DB:D1Database; DISCORD_BOT_TOKEN?:string}
 export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string};
@@ -36,16 +37,7 @@ async function getMeta(env:Env,key:string):Promise<string>{
 async function putMeta(env:Env,key:string,value:string):Promise<void>{
   await env.DB.prepare("INSERT INTO meta(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key,value).run();
 }
-async function api(env:Env,path:string,method="GET",body?:unknown):Promise<any>{
-  if(!env.DISCORD_BOT_TOKEN?.trim())throw new Error("Cloud Discord bot token missing");
-  const res=await fetch("https://discord.com/api/v10/"+path,{
-    method,headers:{"authorization":"Bot "+env.DISCORD_BOT_TOKEN.trim(),"content-type":"application/json",
-      "user-agent":"YURA-FFXIV/4-Posts"},
-    ...(body===undefined?{}:{body:JSON.stringify(body)})
-  });
-  if(!res.ok)throw new Error("Discord "+method+" "+path.split("/")[0]+" HTTP "+res.status);
-  return res.status===204?null:res.json();
-}
+const api=discordFfxivRequest;
 async function loadPost(env:Env,cfg:BoardConfig,category:Category):Promise<Post|null>{
   try {
     const obj=JSON.parse(await getMeta(env,keyFor(cfg,category))||"null");
