@@ -12,8 +12,10 @@ type NewsConfig = {
   guildId: string;
   channelId: string;
   fashion: boolean;
+  events: boolean;
   dalamud: boolean;
   lodestone: boolean;
+  fashionSourceChannelId: string;
 };
 type NewsItem = { source: string; id: string; title: string; url: string; date: number; image?: string };
 const DEFAULT_GUILD = "1181989574713557082"; // Existing YURA Discord schedule server.
@@ -47,7 +49,9 @@ async function loadConfig(env: NewsEnv): Promise<NewsConfig> {
   return {
     enabled: saved.enabled !== false, guildId,
     channelId: idOK(String(saved.channelId ?? "")) ? String(saved.channelId) : "",
-    fashion: saved.fashion !== false, dalamud: saved.dalamud !== false, lodestone: saved.lodestone !== false
+    fashion: saved.fashion !== false, events: saved.events !== false,
+    dalamud: saved.dalamud !== false, lodestone: saved.lodestone !== false,
+    fashionSourceChannelId:idOK(String(saved.fashionSourceChannelId ?? ""))?String(saved.fashionSourceChannelId):""
   };
 }
 async function discord(env: NewsEnv, path: string, method = "GET", body?: unknown): Promise<any> {
@@ -198,7 +202,7 @@ async function saveSeen(env: NewsEnv, items: NewsItem[]) {
 function isPatchArticle(x: NewsItem):boolean {
   return /\bpatch\s+\d+(?:\.\d+){1,3}\s+notes?\b|\bhotfix(?:es)?\b|\bpatch notes\b/i.test(x.title);
 }
-export async function checkFfxivNews(env: NewsEnv, force = false) {
+export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion = false) {
   const cfg=await loadConfig(env);
   if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false,items:0};
   const checkAt=now();
@@ -210,10 +214,14 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
     const news:NewsItem[]=[];
     let topics:NewsItem[]|null=null;
     let fashionPoll:FashionPoll|null=null;
+    const fashionDiagnostic:{status:string;source_channel:string;inspected:number;matched:number;report_id:string;error:string}={
+      status:"not-checked",source_channel:"",inspected:0,matched:0,report_id:"",error:""
+    };
     for(const feed of FEEDS){
       // The event detector always receives official Topics, independently
       // of the Patch Notes switch. Other news is optional.
       if(feed.source==="lodestone-news" && !cfg.lodestone)continue;
+      if(feed.source==="lodestone-topics" && !cfg.events && !cfg.lodestone)continue;
       try{
         const items=await lodestone(feed.source,feed.url);
         if(feed.source==="lodestone-topics")topics=items;
@@ -225,7 +233,7 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
       if(newest)sources.patch=newest;
       // On temporary RSS failure, leave the previous patch untouched.
     }
-    if(topics){
+    if(cfg.events && topics){
       const events=await discoverLiveEvents(topics,fetchText,Date.now());
       errors.push(...events.errors.map(x=>"event: "+x));
       // A complete scan with no relevant active event authoritatively clears
@@ -239,24 +247,43 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
     }
     if(cfg.fashion){
       try {
-        fashionPoll=await pollFollowedFashion(env,cfg.guildId);
+        fashionPoll=await pollFollowedFashion(env,cfg.guildId,cfg.fashionSourceChannelId,repairFashion);
         if(!fashionPoll) {
-          errors.push("fashion: kanał #mods・spam nie jest widoczny dla YURY");
+          fashionDiagnostic.status="source-not-found";
+          fashionDiagnostic.error="Kanał źródłowy Fashion nie został znaleziony; wybierz #mods・spam w YURZE.";
+          errors.push("fashion: "+fashionDiagnostic.error);
         } else {
-          // Do not import the user's manually inserted first report.
-          // Only new Fashion Reporter webhook posts, after the persisted
-          // source cursor, may replace the active Fashion Report card.
+          fashionDiagnostic.status=fashionPoll.sourceStatus;
+          fashionDiagnostic.source_channel=fashionPoll.sourceChannelId;
+          fashionDiagnostic.inspected=fashionPoll.inspected;
+          fashionDiagnostic.matched=fashionPoll.validImages;
+          fashionDiagnostic.report_id=fashionPoll.candidate?.id||"";
           if(fashionPoll.candidate) sources.fashion=fashionPoll.candidate;
+          if(!fashionPoll.candidate && fashionPoll.sourceStatus==="initialized")
+            fashionDiagnostic.error="Nie znaleziono odpowiednio dużej infografiki w ostatnich 100 wiadomościach.";
           await writeMeta(env,"ffxiv_fashion_follow_last_status",fashionPoll.sourceStatus);
           await writeMeta(env,"ffxiv_fashion_follow_source_channel",fashionPoll.sourceChannelId);
         }
-      } catch(e:any) {errors.push("fashion-follow: "+String(e?.message||e));}
+      } catch(e:any) {
+        fashionDiagnostic.status="error";
+        fashionDiagnostic.error=String(e?.message||e);
+        errors.push("fashion-follow: "+fashionDiagnostic.error);
+      }
     }
     const result=await updateFourPosts(env,{
       guildId:cfg.guildId,channelId,
-      fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+      fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
     },sources);
     errors.push(...result.errors);
+    if(result.errors.some(x=>x.startsWith("fashion "))) {
+      fashionDiagnostic.status="publish-error";
+      fashionDiagnostic.error=result.errors.filter(x=>x.startsWith("fashion ")).join(" | ");
+    } else if(fashionPoll?.candidate && result.changes.includes("fashion")) {
+      fashionDiagnostic.status="published";
+    } else if(fashionPoll?.candidate) {
+      fashionDiagnostic.status="already-current";
+    }
+    await writeMeta(env,"ffxiv_fashion_follow_last_diagnostic",JSON.stringify(fashionDiagnostic).slice(0,1500));
     if(fashionPoll && !result.errors.some(x=>x.startsWith("fashion "))) {
       try {await acknowledgeFashionPoll(env,cfg.guildId,fashionPoll);}
       catch(e:any) {errors.push("fashion-cursor: "+String(e?.message||e));}
@@ -267,7 +294,8 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
     if(result.updated)await writeMeta(env,"ffxiv_news_last_post_utc",now());
     return {ok:true,status:errors.length?"partial":"ready",
       posted:result.updated>0,items:result.updated,
-      updated_sections:result.changes,channel_id:channelId,source_errors:errors};
+      updated_sections:result.changes,channel_id:channelId,
+      fashion_source:fashionDiagnostic,source_errors:errors};
   }catch(e:any){
     const error=String(e?.message||e).slice(0,1000);
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
@@ -308,7 +336,7 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
     if(cfg.enabled && cfg.channelId) {
       const ended=await expireFourPosts(env,{
         guildId:cfg.guildId,channelId:cfg.channelId,
-        fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+        fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
       },scheduledAt.getTime());
       if(ended.expired.length) await writeMeta(env,"ffxiv_news_last_post_utc",now());
       if(ended.errors.length) await writeMeta(env,"ffxiv_news_last_error",ended.errors.join(" | ").slice(0,1200));
@@ -339,6 +367,7 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
       last_post_utc:await readMeta(env,"ffxiv_news_last_post_utc"),
       status:await readMeta(env,"ffxiv_news_last_status"),
       error:await readMeta(env,"ffxiv_news_last_error"),
+      fashion_source_diagnostic:await readMeta(env,"ffxiv_fashion_follow_last_diagnostic"),
       daily_at:"10:00 Europe/Warsaw",layout:"4 editable posts with history threads"});
   }
   if(req.method==="PUT"){
@@ -347,18 +376,26 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
     const prev=await loadConfig(env);
     const guildId=x.guildId===undefined?prev.guildId:String(x.guildId).trim();
     const channelId=x.channelId===undefined?prev.channelId:String(x.channelId).trim();
-    if(!idOK(guildId) || (channelId&&!idOK(channelId)))
-      return newsJson({error:"Invalid guild/channel ID"},400);
+    const fashionSourceChannelId=x.fashionSourceChannelId===undefined
+      ?prev.fashionSourceChannelId:String(x.fashionSourceChannelId).trim();
+    if(!idOK(guildId) || (channelId&&!idOK(channelId)) ||
+      (fashionSourceChannelId&&!idOK(fashionSourceChannelId)))
+      return newsJson({error:"Invalid guild/channel/source ID"},400);
     const cfg:NewsConfig={
-      guildId,channelId,enabled:x.enabled===undefined?prev.enabled:x.enabled===true,
+      guildId,channelId,fashionSourceChannelId,
+      enabled:x.enabled===undefined?prev.enabled:x.enabled===true,
       fashion:x.fashion===undefined?prev.fashion:x.fashion===true,
+      events:x.events===undefined?prev.events:x.events===true,
       dalamud:x.dalamud===undefined?prev.dalamud:x.dalamud===true,
       lodestone:x.lodestone===undefined?prev.lodestone:x.lodestone===true
     };
-    if(cfg.channelId && (cfg.channelId!==prev.channelId || cfg.guildId!==prev.guildId)){
-      const d=await discord(env,"channels/"+cfg.channelId);
+    for(const id of [cfg.channelId,cfg.fashionSourceChannelId]) {
+      if(!id)continue;
+      if(id===prev.channelId && cfg.guildId===prev.guildId)continue;
+      if(id===prev.fashionSourceChannelId && cfg.guildId===prev.guildId)continue;
+      const d=await discord(env,"channels/"+id);
       if(String(d.guild_id)!==cfg.guildId || ![0,5].includes(Number(d.type)))
-        return newsJson({error:"News channel belongs to another server"},400);
+        return newsJson({error:"Selected Discord channel belongs to another server"},400);
     }
     await writeMeta(env,"ffxiv_news_config_v1",JSON.stringify(cfg));
     // A new channel needs its own initial four-post setup.
@@ -381,7 +418,7 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
     }
     // Both CHECK NOW and PUBLISH LATEST refresh the four persistent messages.
     // Neither creates a duplicate when source content is unchanged.
-    const r=await checkFfxivNews(env,true);
+    const r=await checkFfxivNews(env,true,x.action==="publish-latest");
     return newsJson(r,r.ok?200:502);
   }
   return newsJson({error:"Method not allowed"},405);
