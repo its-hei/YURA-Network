@@ -290,14 +290,15 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
       if(live){
         if(existing?.id===live.id){
           expected.fashion=existing?.expires && existing.expires<=at?null:existing;
+        }else if(post.retiredId===live.id){
+          // The source may serve last week's PNG for days after reset.
+          expected.fashion=null;
         }else{
-          const current=toCurrent("fashion",live,at);
-          // An old image cached by the source after Tuesday remains expired
-          // until a NEW hash is seen, never reactivated automatically.
-          expected.fashion=current;
+          expected.fashion=toCurrent("fashion",live,at);
         }
-      }else if(post.retiredId===live.id) expected.fashion=null;
-      }else if(existing?.expires && existing.expires<=at) expected.fashion=null;
+      }else if(existing?.expires && existing.expires<=at){
+        expected.fashion=null;
+      }
     }
   }
   if(posts.event?.current?.end && posts.event.current.end<=at && events===null) expected.event=null;
