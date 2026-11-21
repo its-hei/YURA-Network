@@ -170,7 +170,9 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
     thread=String(created?.id??"");
   }
   if(!ID.test(thread))throw new Error("Discord did not return "+cat+" history thread");
-  const state:Post={anchor:id,thread,current:saved?.current||null,...(saved?.retiredId?{retiredId:saved.retiredId}:{})};
+  // An existing state already returned above; a genuinely new post has
+  // no previous content to archive.
+  const state:Post={anchor:id,thread,current:null};
   await savePost(env,cfg,cat,state);
   return state;
 }
