@@ -1,4 +1,6 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
+import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
+import {updateFourPosts, type SourceItem} from "./ffxiv-dashboard";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
   DB: D1Database;
@@ -190,327 +192,145 @@ async function saveSeen(env: NewsEnv, items: NewsItem[]) {
     if (statements.length) await env.DB.batch(statements);
   }
 }
-function linesFor(items:NewsItem[], manualPreview = false): string {
-  const by = (source:string) => items.filter(x => x.source===source);
-  const output = ["**📰 FFXIV NEWS • YURA**", manualPreview ? "🧪 Jednorazowy test: najnowsze dostępne informacje z trzech kategorii." : "Nowe informacje z ostatniego sprawdzenia:", ""];
-  const fashion = by("fashion");
-  if (fashion.length) {
-    output.push("**👗 Fashion Report**");
-    for(const x of fashion) output.push("• Gotowa grafika poniżej • 80 punktów = 60 000 MGP • "+x.url);
-    output.push("");
-  }
-  const dal = by("dalamud");
-  if (dal.length) {
-    output.push("**🟢 Dalamud • wersja stabilna**");
-    for(const x of dal.slice(0,5)) output.push("• "+clamp(x.title,110)+" — "+x.url);
-    if (dal.length>5) output.push("• oraz "+(dal.length-5)+" innych zmian");
-    output.push("");
-  }
-  const lod = items.filter(x=>x.source.startsWith("lodestone"));
-  if (lod.length) {
-    output.push("**⚔️ Final Fantasy XIV • Lodestone**");
-    for(const x of lod.slice(0,7)) output.push("• "+clamp(x.title,110)+" — "+x.url);
-    if (lod.length>7) output.push("• oraz "+(lod.length-7)+" innych ogłoszeń");
-  }
-  return output.join("\n").slice(0,1950);
+// Genuine patch notes only: do not replace the current patch with store news,
+// livestreams or unrelated Lodestone Topics posts.
+function isPatchArticle(x: NewsItem):boolean {
+  return /\bpatch\s+\d+(?:\.\d+){1,3}\s+notes?\b|\bhotfix(?:es)?\b|\bpatch notes\b/i.test(x.title);
 }
-function newsCategory(item: NewsItem): "fashion" | "dalamud" | "lodestone" {
-  return item.source === "fashion" ? "fashion" : item.source === "dalamud" ? "dalamud" : "lodestone";
-}
-type NewsCategory = ReturnType<typeof newsCategory>;
-
-const NEWS_TOPIC: Record<NewsCategory,{title:string;thread:string}> = {
-  fashion: {title:"👗 FASHION REPORT • AKTUALNE",thread:"👗 Fashion Report — archiwum"},
-  dalamud: {title:"🟢 DALAMUD • STABLE",thread:"🟢 Dalamud — archiwum"},
-  lodestone:{title:"⚔️ FINAL FANTASY XIV • AKTUALNOŚCI",thread:"⚔️ FFXIV — archiwum"}
-};
-function topicMessage(topic:NewsCategory, entries:NewsItem[],history=false):string {
-  const head = "**"+NEWS_TOPIC[topic].title+"**";
-  const date = warsawTime(new Date()).day;
-  const lines = [head, ...(history ? ["📁 Wpis z "+date+" • historia pozostaje w tym wątku."] : ["Najnowsza informacja • starsze wpisy znajdziesz w wątku."]),""];
-  if(topic==="fashion"){
-    lines.push("Grafika z rozwiązaniem na 80/100 punktów • do 60 000 MGP");
-    lines.push(entries[0]?.url || "https://fashionreportxiv.com/");
-  } else {
-    for(const item of entries.slice(0,history?7:1))
-      lines.push("• "+clamp(item.title,120)+" — "+item.url);
-    if(history && entries.length>7) lines.push("• oraz "+(entries.length-7)+" innych ogłoszeń");
-  }
-  return lines.join("\n").slice(0,1950);
-}
-function newsEmbeds(topic:NewsCategory, entries:NewsItem[]):unknown[] {
-  if (topic!=="fashion") return [];
-  const f = entries.find(x=>x.image);
-  if (!f) return [];
-  return [{
-    color:0xe89b52,
-    title:"👗 FASHION REPORT • 80/100 PUNKTÓW",
-    description:"Aktualna grafika tygodnia • do 60 000 MGP w Gold Saucer.",
-    url:f.url,
-    image:{url:f.image},
-    footer:{text:"Źródło: Fashion Report XIV"}
-  }];
-}
-function archiveKey(cfg:NewsConfig, id:string, topic:NewsCategory) {
-  return "ffxiv_news_archive_v1_"+cfg.guildId+"_"+id+"_"+topic;
-}
-async function ensureCategoryThread(env:NewsEnv,cfg:NewsConfig,channelId:string,topic:NewsCategory) {
-  const key=archiveKey(cfg,channelId,topic);
-  let previous:{anchor:string;thread:string}|null=null;
-  try {previous=JSON.parse(await readMeta(env,key) || "null");} catch {}
-  if (previous && idOK(previous.anchor) && idOK(previous.thread)) {
-    try {
-      const t = await discord(env,"channels/"+previous.thread);
-      if (String(t.parent_id)===channelId && String(t.guild_id)===cfg.guildId && [11,12].includes(Number(t.type)))
-        return previous;
-    } catch {/* Reconcile the existing anchor before creating anything. */}
-  }
-
-  // Recover an existing bot-created category anchor after a partial D1 write.
-  // Never touch community messages or test posts sent by other bots.
-  const messages:any = await discord(env,"channels/"+channelId+"/messages?limit=100");
-  const title=NEWS_TOPIC[topic].title;
-  const found=Array.isArray(messages)
-    ? messages.find((m:any)=>m.author?.bot===true && String(m.content??"").startsWith("**"+title+"**"))
-    : null;
-  let anchor=String(found?.id ?? "");
-  if (!idOK(anchor)) {
-    const created=await discord(env,"channels/"+channelId+"/messages","POST",{
-      content:"**"+title+"**\nNowe wiadomości pojawią się w tym poście. Historia jest zapisywana w wątku.",
-      allowed_mentions:{parse:[]}
-    });
-    anchor=String(created?.id ?? "");
-    if (!idOK(anchor)) throw new Error("Discord did not return category anchor ID");
-  }
-
-  // A thread created from a message shares its snowflake ID with the starter.
-  // GET before POST prevents a duplicate thread when the D1 write failed.
-  let thread="";
+export async function checkFfxivNews(env: NewsEnv, force = false) {
+  const cfg=await loadConfig(env);
+  if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false,items:0};
+  const checkAt=now();
+  const errors:string[]=[];
+  let channelId="";
   try {
-    const t=await discord(env,"channels/"+anchor);
-    if (String(t.parent_id)===channelId && [11,12].includes(Number(t.type))) thread=String(t.id);
-  } catch {}
-  if(!thread) {
-    const created=await discord(env,"channels/"+channelId+"/messages/"+anchor+"/threads","POST",{
-      name:NEWS_TOPIC[topic].thread,auto_archive_duration:1440
-    });
-    thread=String(created?.id ?? "");
-    if(!idOK(thread)) throw new Error("Discord did not return category thread ID");
-  }
-  const state={anchor,thread};
-  await writeMeta(env,key,JSON.stringify(state));
-  return state;
-}
-async function publishInArchive(env:NewsEnv,cfg:NewsConfig,channelId:string,topic:NewsCategory,entries:NewsItem[]):Promise<void> {
-  const state=await ensureCategoryThread(env,cfg,channelId,topic);
-  const thread:any=await discord(env,"channels/"+state.thread);
-  if (thread.thread_metadata?.archived) {
-    if (thread.thread_metadata?.locked) throw new Error("Discord archive thread is locked: "+topic);
-    await discord(env,"channels/"+state.thread,"PATCH",{archived:false});
-  }
-  // Publish full entry in the archived timeline first. Then update the one
-  // permanent main-channel message to display only the latest entry.
-  const embeds=newsEmbeds(topic,entries);
-  await discord(env,"channels/"+state.thread+"/messages","POST",{
-    content:topicMessage(topic,entries,true),allowed_mentions:{parse:[]},
-    ...(embeds.length?{embeds}:{})
-  });
-  await discord(env,"channels/"+channelId+"/messages/"+state.anchor,"PATCH",{
-    content:topicMessage(topic,entries),allowed_mentions:{parse:[]},
-    ...(embeds.length?{embeds}:{})
-  });
-}
-
-export async function checkFfxivNews(env: NewsEnv, force = false, publishLatest = false, onePerCategory = false) {
-  const cfg = await loadConfig(env);
-  if (!cfg.enabled && !force) return {ok:true,status:"disabled",posted:false};
-  const checkAt = now();
-  const sourceErrors:string[]=[];
-  const next:NewsItem[]=[];
-  let channelId = "";
-  try {
-    channelId = await channel(env,cfg);
-    const batches: { source:string; items:NewsItem[] }[] = [];
-    if (cfg.lodestone) {
-      for(const feed of FEEDS) {
-        try { batches.push({source:feed.source,items:await lodestone(feed.source,feed.url)}); }
-        catch(e:any) {sourceErrors.push(feed.source+": "+String(e.message || e));}
-      }
+    channelId=await channel(env,cfg);
+    const sources:{fashion?:SourceItem;dalamud?:SourceItem;patch?:SourceItem;events:LiveEvent[]|null}={events:null};
+    const news:NewsItem[]=[];
+    let topics:NewsItem[]|null=null;
+    for(const feed of FEEDS){
+      // The event detector always receives official Topics, independently
+      // of the Patch Notes switch. Other news is optional.
+      if(feed.source==="lodestone-news" && !cfg.lodestone)continue;
+      try{
+        const items=await lodestone(feed.source,feed.url);
+        if(feed.source==="lodestone-topics")topics=items;
+        if(cfg.lodestone)news.push(...items);
+      }catch(e:any){errors.push(feed.source+": "+String(e?.message||e));}
     }
-    if (cfg.dalamud) {
-      try { batches.push({source:"dalamud",items:await dalamud()}); }
-      catch(e:any) { sourceErrors.push("dalamud: "+String(e.message || e)); }
+    if(cfg.lodestone){
+      const newest=news.filter(isPatchArticle).sort((a,b)=>b.date-a.date)[0];
+      if(newest)sources.patch=newest;
+      // On temporary RSS failure, leave the previous patch untouched.
     }
-    for(const batch of batches) {
-      if (!batch.items.length) continue;
-      const baselineKey = "ffxiv_news_baseline_" + batch.source;
-      if (await readMeta(env,baselineKey) !== "1") {
-        // Existing releases/news must not flood the new Discord channel.
-        await saveSeen(env,batch.items);
-        await writeMeta(env,baselineKey,"1");
-        if (!publishLatest) continue;
-      }
-      const seen = await seenFor(env,batch.source);
-      if (publishLatest) {
-        // A conscious operator action: post today's real data once, even if
-        // this is the first-ever feed check. Normal automatic checks remain
-        // new-items-only and never send the historical backlog.
-        next.push(...(batch.source.startsWith("lodestone") ? batch.items.slice(0,4) : batch.items.slice(0,1)));
-      } else {
-        for(const item of batch.items) if (!seen.has(item.id) && item.date >= Date.now() - 21*86400000) next.push(item);
-      }
+    if(topics){
+      const events=await discoverLiveEvents(topics,fetchText,Date.now());
+      errors.push(...events.errors.map(x=>"event: "+x));
+      // A complete scan with no relevant active event authoritatively clears
+      // the card. Partial fetch failures preserve the current card until
+      // its already-verified expiry is reached.
+      if(!events.errors.length || events.events.length) sources.events=events.events;
     }
-    if (cfg.fashion) {
-      try {
-        const item = await fashionReport();
-        if (await readMeta(env,"ffxiv_news_baseline_fashion") !== "1") {
-          // First successful read establishes the current week as baseline.
-          await saveSeen(env,[item]);
-          await writeMeta(env,"ffxiv_news_baseline_fashion","1");
-          if (publishLatest) next.push(item);
-        } else if (publishLatest || !(await seenFor(env,"fashion")).has(item.id)) next.push(item);
-      } catch (e:any) {
-        sourceErrors.push("fashion: "+String(e?.message || e));
-      }
+    if(cfg.dalamud){
+      try{sources.dalamud=(await dalamud())[0];}
+      catch(e:any){errors.push("dalamud: "+String(e?.message||e));}
     }
-    // Both Lodestone feeds can occasionally reference the same announcement.
-    const distinct = new Map<string,NewsItem>();
-    for (const item of next) if (!distinct.has(item.url)) distinct.set(item.url,item);
-    let selected = [...distinct.values()].sort((a,b)=>b.date-a.date).slice(0,30);
-    // A one-time operator-requested demonstration contains one real item
-    // from each category, not a back-catalogue or a full historical digest.
-    if (onePerCategory) {
-      const oneLodestone = selected.find(x => x.source.startsWith("lodestone"));
-      selected = [
-        ...selected.filter(x => x.source === "fashion").slice(0,1),
-        ...selected.filter(x => x.source === "dalamud").slice(0,1),
-        ...(oneLodestone ? [oneLodestone] : [])
-      ];
+    if(cfg.fashion){
+      try{sources.fashion=await fashionReport();}
+      catch(e:any){errors.push("fashion: "+String(e?.message||e));}
     }
-    // Each category has exactly one up-to-date starter message in the main
-    // channel; old announcements are retained in category-specific threads.
-    // Discord archives inactive threads after 24h (without deleting history).
-    const delivered:NewsItem[]=[];
-    for(const topic of ["fashion","dalamud","lodestone"] as const){
-      const entries=selected.filter(item=>newsCategory(item)===topic);
-      if(!entries.length) continue;
-      try {
-        await publishInArchive(env,cfg,channelId,topic,entries);
-        // A category that was successfully posted must be marked seen even if
-        // another category fails; avoids reposting it on the next daily run.
-        await saveSeen(env,entries);
-        delivered.push(...entries);
-      } catch(e:any) {
-        sourceErrors.push("archive-"+topic+": "+String(e?.message || e));
-      }
-    }
-    if(delivered.length) await writeMeta(env,"ffxiv_news_last_post_utc",now());
+    const result=await updateFourPosts(env,{
+      guildId:cfg.guildId,channelId,
+      fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+    },sources);
+    errors.push(...result.errors);
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
-    await writeMeta(env,"ffxiv_news_last_status",sourceErrors.length ? "partial" : "ready");
-    await writeMeta(env,"ffxiv_news_last_error",sourceErrors.join(" | ").slice(0,1200));
-    return {ok:true,status:sourceErrors.length ? "partial" : "ready",
-      posted:delivered.length > 0, items:delivered.length, channel_id:channelId, source_errors:sourceErrors};
-  } catch(e:any) {
-    const error = String(e?.message || e).slice(0,1000);
+    await writeMeta(env,"ffxiv_news_last_status",errors.length?"partial":"ready");
+    await writeMeta(env,"ffxiv_news_last_error",errors.join(" | ").slice(0,1200));
+    if(result.updated)await writeMeta(env,"ffxiv_news_last_post_utc",now());
+    return {ok:true,status:errors.length?"partial":"ready",
+      posted:result.updated>0,items:result.updated,
+      updated_sections:result.changes,channel_id:channelId,source_errors:errors};
+  }catch(e:any){
+    const error=String(e?.message||e).slice(0,1000);
     await writeMeta(env,"ffxiv_news_last_check_utc",checkAt);
     await writeMeta(env,"ffxiv_news_last_status","error");
     await writeMeta(env,"ffxiv_news_last_error",error);
     return {ok:false,status:"error",error,channel_id:channelId};
   }
 }
-// Specific one-time preview authorized by the operator on 21 November 2026.
-// Guarded by an atomic D1 claim; it never becomes part of the daily news cycle.
-// It only targets a *saved* Discord channel, never auto-creates or guesses one.
-const NEWS_TRIAL_KEY = "ffxiv_news_trial_20261121_v1";
-async function requestedOneTimePreview(env: NewsEnv, scheduledAt: Date) {
-  const t = warsawTime(scheduledAt);
-  if (t.day !== "2026-11-21" && t.day !== "2026-11-22") return;
-  if (scheduledAt.getUTCMinutes() % 5 !== 0) return;
-  const existing = await readMeta(env,NEWS_TRIAL_KEY);
-  if (existing) return;
-  const cfg = await loadConfig(env);
-  if (!cfg.enabled || !cfg.channelId || !idOK(cfg.channelId)) {
-    await writeMeta(env,"ffxiv_news_trial_diagnostics","Not sent: news disabled or Discord channel not saved");
-    return;
-  }
-  // Exactly one successful atomic claim wins, even if overlapping cron
-  // invocations run. Claim before Discord POST to avoid duplicate messages.
-  const claimed = await env.DB.prepare(
-    "INSERT INTO meta(key,value) VALUES(?1,'claimed') ON CONFLICT(key) DO NOTHING"
-  ).bind(NEWS_TRIAL_KEY).run();
-  if (Number(claimed.meta.changes ?? 0) !== 1) return;
-  const result = await checkFfxivNews(env,true,true,true);
-  const outcome = result.ok ? (result.posted ? "sent" : "nothing-sent") : "error";
-  await writeMeta(env,NEWS_TRIAL_KEY,outcome);
-  await writeMeta(env,"ffxiv_news_trial_diagnostics",JSON.stringify(result).slice(0,1000));
-}
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
-  await requestedOneTimePreview(env,scheduledAt);
-  const t = warsawTime(scheduledAt);
-  // One-time provisioning when the feature is deployed: creates (or finds)
-  // #ffxiv-news and baselines old RSS/releases without waiting until tomorrow.
-  // It is not a recurring 15-minute news poll.
-  if (t.hour !== 10 || t.minute !== 0) {
-    if (t.minute % 15 !== 0) return;
-    if (await readMeta(env,"ffxiv_news_bootstrapped") === "1") return;
-    const initial = await checkFfxivNews(env);
-    if (initial.ok) await writeMeta(env,"ffxiv_news_bootstrapped","1");
+  const t=warsawTime(scheduledAt);
+  const today=t.day;
+  // Provision the four permanent posts once soon after deployment. This is
+  // not a recurring source poll. A failed provisioning may retry at :00/:15.
+  if(t.hour!==10 || t.minute!==0){
+    if(t.minute%15!==0)return;
+    if(await readMeta(env,"ffxiv_news_board_v3_bootstrapped")==="1")return;
+    const r=await checkFfxivNews(env);
+    if(r.ok && !r.source_errors?.length)
+      await writeMeta(env,"ffxiv_news_board_v3_bootstrapped","1");
     return;
   }
-  // The Worker already has a per-minute cron. Only the 10:00 PL tick fetches
-  // sources regularly; no additional schedules or Desktop polling.
-  const last = await readMeta(env,"ffxiv_news_last_daily_day");
-  if (last === t.day) return;
-  const result = await checkFfxivNews(env);
-  if (result.ok) {
-    await writeMeta(env,"ffxiv_news_last_daily_day",t.day);
-    await writeMeta(env,"ffxiv_news_bootstrapped","1");
+  if(await readMeta(env,"ffxiv_news_last_daily_day")===today)return;
+  const r=await checkFfxivNews(env);
+  if(r.ok){
+    await writeMeta(env,"ffxiv_news_last_daily_day",today);
+    await writeMeta(env,"ffxiv_news_board_v3_bootstrapped","1");
   }
 }
-export async function ffxivNewsAdmin(req:Request, env:NewsEnv):Promise<Response> {
-  if (req.method === "GET") {
-    const cfg = await loadConfig(env);
-    return newsJson({ok:true,...cfg, last_check_utc:await readMeta(env,"ffxiv_news_last_check_utc"),
+export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response> {
+  const url=new URL(req.url);
+  if(req.method==="GET"){
+    const cfg=await loadConfig(env);
+    return newsJson({ok:true,...cfg,last_check_utc:await readMeta(env,"ffxiv_news_last_check_utc"),
       last_post_utc:await readMeta(env,"ffxiv_news_last_post_utc"),
       status:await readMeta(env,"ffxiv_news_last_status"),
-      error:await readMeta(env,"ffxiv_news_last_error"), daily_at:"10:00 Europe/Warsaw"});
+      error:await readMeta(env,"ffxiv_news_last_error"),
+      daily_at:"10:00 Europe/Warsaw",layout:"4 editable posts with history threads"});
   }
-  if (req.method === "PUT") {
+  if(req.method==="PUT"){
     let x:any;
-    try { x = await req.json(); } catch { return newsJson({error:"invalid JSON"},400); }
-    const prev = await loadConfig(env);
-    const guildId = x.guildId === undefined ? prev.guildId : String(x.guildId).trim();
-    const channelId = x.channelId === undefined ? prev.channelId : String(x.channelId).trim();
-    if (!idOK(guildId) || (channelId && !idOK(channelId))) return newsJson({error:"invalid guild or channel ID"},400);
-    const cfg:NewsConfig = {guildId,channelId,
-      enabled: x.enabled === undefined ? prev.enabled : x.enabled === true,
-      fashion: x.fashion === undefined ? prev.fashion : x.fashion === true,
-      dalamud: x.dalamud === undefined ? prev.dalamud : x.dalamud === true,
-      lodestone: x.lodestone === undefined ? prev.lodestone : x.lodestone === true
+    try{x=await req.json();}catch{return newsJson({error:"Invalid JSON"},400);}
+    const prev=await loadConfig(env);
+    const guildId=x.guildId===undefined?prev.guildId:String(x.guildId).trim();
+    const channelId=x.channelId===undefined?prev.channelId:String(x.channelId).trim();
+    if(!idOK(guildId) || (channelId&&!idOK(channelId)))
+      return newsJson({error:"Invalid guild/channel ID"},400);
+    const cfg:NewsConfig={
+      guildId,channelId,enabled:x.enabled===undefined?prev.enabled:x.enabled===true,
+      fashion:x.fashion===undefined?prev.fashion:x.fashion===true,
+      dalamud:x.dalamud===undefined?prev.dalamud:x.dalamud===true,
+      lodestone:x.lodestone===undefined?prev.lodestone:x.lodestone===true
     };
-    if (cfg.guildId !== prev.guildId || cfg.channelId !== prev.channelId) {
-      if (cfg.channelId) {
-        const selected = await discord(env,"channels/"+cfg.channelId);
-        if (selected.guild_id !== cfg.guildId || ![0,5].includes(Number(selected.type)))
-          return newsJson({error:"channel does not belong to the server"},400);
-      }
+    if(cfg.channelId && (cfg.channelId!==prev.channelId || cfg.guildId!==prev.guildId)){
+      const d=await discord(env,"channels/"+cfg.channelId);
+      if(String(d.guild_id)!==cfg.guildId || ![0,5].includes(Number(d.type)))
+        return newsJson({error:"News channel belongs to another server"},400);
     }
     await writeMeta(env,"ffxiv_news_config_v1",JSON.stringify(cfg));
-    return newsJson({ok:true,...cfg, daily_at:"10:00 Europe/Warsaw"});
+    // A new channel needs its own initial four-post setup.
+    if(cfg.guildId!==prev.guildId || cfg.channelId!==prev.channelId)
+      await writeMeta(env,"ffxiv_news_board_v3_bootstrapped","0");
+    return newsJson({ok:true,...cfg,daily_at:"10:00 Europe/Warsaw"});
   }
-  if (req.method === "POST") {
-    let x:any = {};
-    try {x=await req.json();}catch{}
-    if (x.action === "test") {
-      try {
-        const cfg = await loadConfig(env);
-        const id = await channel(env,cfg);
-        await discord(env,"channels/"+id+"/messages","POST",{content:"✅ **YURA FFXIV NEWS** • test kanału. Automatyczne sprawdzanie: codziennie o 10:00 czasu polskiego.",allowed_mentions:{parse:[]}});
+  if(req.method==="POST"){
+    let x:any={};try{x=await req.json();}catch{}
+    if(x.action==="test"){
+      try{
+        const cfg=await loadConfig(env);
+        const id=await channel(env,cfg);
+        await discord(env,"channels/"+id+"/messages","POST",{
+          content:"✅ **YURA FFXIV** • test połączenia, automatyczne sprawdzanie codziennie o 10:00.",
+          allowed_mentions:{parse:[]}
+        });
         return newsJson({ok:true,status:"test-sent",channel_id:id});
-      } catch(e:any) {return newsJson({ok:false,error:String(e.message || e)},502);}
+      }catch(e:any){return newsJson({ok:false,error:String(e?.message||e)},502);}
     }
-    const result = await checkFfxivNews(env,true,x.action === "publish-latest");
-    return newsJson(result,result.ok?200:502);
+    // Both CHECK NOW and PUBLISH LATEST refresh the four persistent messages.
+    // Neither creates a duplicate when source content is unchanged.
+    const r=await checkFfxivNews(env,true);
+    return newsJson(r,r.ok?200:502);
   }
-  return newsJson({error:"method not allowed"},405);
+  return newsJson({error:"Method not allowed"},405);
 }
