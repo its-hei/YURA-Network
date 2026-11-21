@@ -1,4 +1,5 @@
 import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat, syncDiscordVips } from "./discord-onboarding";
+import { ffxivNewsAdmin, scheduleFfxivNews } from "./ffxiv-news";
 
 interface Env {
   DB: D1Database;
@@ -3896,6 +3897,10 @@ export default {
       if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
       return discordOnboardingAdmin(req,env,()=>loadDiscordTwitchVips(env));
     }
+    if (url.pathname === "/api/admin/ffxiv-news") {
+      if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
+      return ffxivNewsAdmin(req,env);
+    }
     if (url.pathname === "/health") {
       try {
         // Tiny D1 probe: unlike /api/status this does not scan application tables, but it
@@ -3981,6 +3986,9 @@ export default {
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     const vipSyncAt=new Date(_controller.scheduledTime);
+    // FFXIV sources are checked once at 10:00 Europe/Warsaw (DST-aware).
+    // Independent waitUntil: news outages cannot block stream/presence cron jobs.
+    ctx.waitUntil(scheduleFfxivNews(env,vipSyncAt).catch(e=>console.warn("FFXIV News:",String(e))));
     if(vipSyncAt.getUTCHours()===3 && vipSyncAt.getUTCMinutes()===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
     ctx.waitUntil((async () => {
       // Deadline alarms handle manual raffle; cron is recovery only.
