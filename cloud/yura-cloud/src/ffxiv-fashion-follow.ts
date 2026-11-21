@@ -13,6 +13,7 @@ const discordEpoch=1420070400000n;
 const safeSnowflake=(id:string):bigint=>validID(id)?BigInt(id):0n;
 const normalized=(text:string)=>text.normalize("NFKC").toLowerCase().replace(/[^a-z0-9]+/g,"");
 const sourceKey=(guild:string,channel:string)=>"ffxiv_fashion_follow_cursor_v1_"+guild+"_"+channel;
+const currentKey=(guild:string,channel:string)=>"ffxiv_fashion_current_source_v4_"+guild+"_"+channel;
 const importKey=(guild:string,channel:string)=>"ffxiv_fashion_first_manual_import_v2_"+guild+"_"+channel;
 const imageHosts=new Set(["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"]);
 const discord=discordFfxivRequest;
@@ -140,6 +141,22 @@ export type FashionPoll={
   candidate?:FollowedFashion;cursor?:string;firstImport?:boolean;
   inspected:number; validImages:number;
 };
+function storedCurrent(value:string,guildId:string,channelId:string):FollowedFashion|null {
+  try {
+    const x=JSON.parse(value);
+    if(x?.source!=="fashion" || typeof x.id!=="string" ||
+       !/^discord-fashion-(?:week-\d{3,4}|manual-\d{15,22})$/.test(x.id) ||
+       typeof x.title!=="string" || !Number.isFinite(x.date) ||
+       typeof x.url!=="string" ||
+       !x.url.startsWith("https://discord.com/channels/"+guildId+"/"+channelId+"/") ||
+       !safeImage(x.image))return null;
+    return x as FollowedFashion;
+  }catch{return null;}
+}
+function weekOf(x:FollowedFashion):number|null {
+  const m=x.id.match(/^discord-fashion-week-(\d{3,4})$/);
+  return m?Number(m[1]):null;
+}
 export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string,
   configuredChannelId="",forceInitialImport=false):Promise<FashionPoll|null>{
   const id=await locateFollowedFashionChannel(env,guildId,configuredChannelId);
@@ -151,48 +168,60 @@ export async function pollFollowedFashion(env:FashionSourceEnv,guildId:string,
     .sort((a:any,b:any)=>safeSnowflake(String(a.id))<safeSnowflake(String(b.id))?-1:1);
   const last=await meta(env,key);
   const initialCandidates=ordered.map((m:any)=>parseInitialManualFashion(m,guildId,id))
-      .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
-  const manualImageCount=initialCandidates.length;
-  if(!last){
-    // Import the latest manual report ONCE, but establish the high-water
-    // mark at the most recent message to avoid treating old posts as new.
-    const selected=initialCandidates[initialCandidates.length-1];
-    const newest=ordered.length?String(ordered[ordered.length-1].id):
-      ((BigInt(Date.now())-discordEpoch)<<22n).toString();
-    // Caller acknowledges after Discord main post has updated successfully.
-    return {sourceChannelId:id,sourceStatus:selected?"manual-current":"initialized",
-      ...(selected?{candidate:selected}:{}),cursor:newest,firstImport:true,
-      inspected:ordered.length,validImages:manualImageCount};
-  }
-  const newer=ordered.filter((m:any)=>safeSnowflake(String(m.id))>safeSnowflake(last));
-  const newest=newer.length?String(newer[newer.length-1].id):last;
-  const candidates=newer.map((m:any)=>parseFollowedFashion(m,guildId,id))
     .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
-  const selected=candidates[candidates.length-1];
-  // During rollout an earlier version of the poller may already have
-  // recorded the cursor without importing the user's first manual image.
-  // This one-time recovery imports it, without treating later manual chat
-  // messages as automatic publications.
-  const needsImport=await meta(env,importKey(guildId,id))!=="1";
-  // The initial post may have been missed by the previous threshold or
-  // source-cursor release. Explicit PUBLISH LATEST can recover it once.
-  const repairKey="ffxiv_fashion_manual_repair_v3_"+guildId+"_"+id;
-  const allowRepair=forceInitialImport && await meta(env,repairKey)!=="1";
-  if((needsImport || allowRepair) && !selected) {
-    const initial=initialCandidates[initialCandidates.length-1];
-    return {sourceChannelId:id,sourceStatus:initial?"manual-current":"initialized",
-      ...(initial?{candidate:initial}:{}),cursor:newest,
-      firstImport:!!initial,
-      inspected:ordered.length,validImages:manualImageCount};
+  const manualImageCount=initialCandidates.length;
+  const stored=storedCurrent(await meta(env,currentKey(guildId,id)),guildId,id);
+  // Read an up-to-date signed CDN URL from the original Discord message
+  // when available, but never switch to a *different* manual message once
+  // the initial report has been acknowledged.
+  const current=stored
+    ? initialCandidates.find(x=>x.id===stored.id)||stored : null;
+  const newer=last?ordered.filter((m:any)=>safeSnowflake(String(m.id))>safeSnowflake(last)):[];
+  const webhookReports=newer.map((m:any)=>parseFollowedFashion(m,guildId,id))
+    .filter((x:FollowedFashion|null):x is FollowedFashion=>x!==null);
+  const latestWebhook=webhookReports[webhookReports.length-1];
+  const newest=ordered.length?String(ordered[ordered.length-1].id):
+    ((BigInt(Date.now())-discordEpoch)<<22n).toString();
+  const cursor=last && safeSnowflake(newest)<safeSnowflake(last)?last:newest;
+  let selected:FollowedFashion|null=null;
+  let firstImport=false;
+  let status:FashionPoll["sourceStatus"]="unchanged";
+  if(latestWebhook){
+    const nextWeek=weekOf(latestWebhook),previousWeek=current&&weekOf(current);
+    // Do not replace a newer report with an old week re-forwarded later.
+    if(previousWeek===null || nextWeek===null || nextWeek>=previousWeek) {
+      selected=latestWebhook;
+      status="new";
+    }
   }
-  return {sourceChannelId:id,sourceStatus:selected?"new":"unchanged",
-    ...(selected?{candidate:selected}:{}),cursor:newest,
-    firstImport:needsImport && !!selected,
+  if(!selected && current){
+    // Reconcile the active Discord card even when the source cursor
+    // has advanced. Without replay, the board sees undefined and skips
+    // a previously created-but-empty Fashion post forever.
+    selected=current;
+    status="unchanged";
+  }
+  if(!selected && !stored){
+    // One-time recovery: old releases marked the import as complete even
+    // when the image never reached the main Discord post. If no current
+    // source was persisted, recover the manual post still visible this week.
+    // Once acknowledged, all later manual chat posts remain ignored.
+    selected=initialCandidates[initialCandidates.length-1]||null;
+    firstImport=!!selected;
+    status=selected?"manual-current":"initialized";
+  }
+  return {sourceChannelId:id,sourceStatus:status,
+    ...(selected?{candidate:selected}:{}),cursor,
+    firstImport:firstImport||(!last&&!!selected),
     inspected:ordered.length,validImages:manualImageCount};
 }
 export async function acknowledgeFashionPoll(env:FashionSourceEnv,guildId:string,poll:FashionPoll){
   if(poll.cursor && validID(poll.cursor))
     await putMeta(env,sourceKey(guildId,poll.sourceChannelId),poll.cursor);
+  // Persist the actual last accepted report, not only the cursor. Cursor
+  // progress by itself cannot recover a Fashion card left without content.
+  if(poll.candidate)
+    await putMeta(env,currentKey(guildId,poll.sourceChannelId),JSON.stringify(poll.candidate));
   if(poll.firstImport && poll.candidate) {
     await putMeta(env,importKey(guildId,poll.sourceChannelId),"1");
     await putMeta(env,"ffxiv_fashion_manual_repair_v3_"+guildId+"_"+poll.sourceChannelId,"1");
