@@ -8,6 +8,17 @@ const now=new Date().toISOString();
 const image="https://cdn.discordapp.com/attachments/1111111111111111111/2222222222222222222/Fashion_Report_Week_460.png?ex=abc";
 const base={id:"2222222222222222222",timestamp:now,author:{id:"3333333333333333333",bot:false,username:"heiyeshi"}};
 
+test("Forwarded Fashion Reporter keeps its Discord proxy image as a backup",()=>{
+  const original="https://cdn.discordapp.com/attachments/1111111111111111111/2222222222222222222/image.png?ex=abc";
+  const proxy="https://media.discordapp.net/attachments/1111111111111111111/2222222222222222222/image.png?ex=abc";
+  const message={...base,webhook_id:"5555555555555555555",
+    author:{username:"Fashion Reporter",bot:true},
+    embeds:[{title:"Fashion Report Week 461 - Full Details",
+      image:{url:original,proxy_url:proxy,width:1000,height:600}}]};
+  const result=parseFollowedFashion(message,guild,channel);
+  assert.equal(result?.image,original);
+  assert.equal(result?.imageProxy,proxy);
+});
 test("first manually uploaded current report becomes the initial active image",()=>{
   const msg={...base,content:"Fashion Report Week 460 - Full Details #ffxiv",
     attachments:[{url:image,width:1100,height:650,filename:"Fashion_Report_Week_460.png"}]};
