@@ -112,7 +112,11 @@ function updatedSnapshot(
 ):Snapshot {
   const next:Snapshot={...old};
   for(const key of ["fashion","dalamud","lodestone"] as const)
-    if(observed[key]) next[key]=observed[key];
+    if(observed[key] && (!next[key] || next[key]?.id!==observed[key]?.id ||
+      next[key]?.url!==observed[key]?.url)) next[key]=observed[key];
+  // Stable IDs, not the time of the source check, drive dashboard updates.
+  // The stable Dalamud and Fashion Report records are read daily, but their
+  // fetched-at timestamps must not cause a Discord edit every morning.
   if(currentEvents!==null) {
     const active=currentEvents.find(x=>x.start<=at && at<x.end);
     if(active) next.event={title:friendlyEventTitle(active),url:active.url,start:active.start,end:active.end};
@@ -211,12 +215,19 @@ export async function updateNewsDashboard(
     return {changed:false,archived:0,mainMessageId:await getMeta(env,base+"_anchor")};
 
   const anchor=await master(env,cfg,base);
-  if(items.length) {
-    // Archive only genuine new items, never the whole source backlog on
-    // startup. One main post + one category-labelled history thread.
+  const eventChanged=JSON.stringify(old.event||null)!==JSON.stringify(next.event||null);
+  if(items.length || eventChanged) {
+    // One shared archive thread, with historical category labels. A new
+    // event or verified event expiry is saved only once when state changes.
     const thread=await historyThread(env,cfg,base,anchor);
+    const eventNote=eventChanged
+      ? (next.event ? "🎉 Nowy event: "+short(next.event.title)+" • koniec <t:"+Math.floor(next.event.end/1000)+":f>\n"+next.event.url
+        : (old.event ? "🏁 Zakończony event: "+short(old.event.title) : ""))
+      : "";
+    const message=items.length ? historyText(items,events) : "**📁 FFXIV — historia zmian**";
     await discord(env,"channels/"+thread+"/messages","POST",{
-      content:historyText(items,events),allowed_mentions:{parse:[]}
+      content:(message+(eventNote?"\n\n"+eventNote:"")).slice(0,1950),
+      allowed_mentions:{parse:[]}
     });
   }
   if(changed){
