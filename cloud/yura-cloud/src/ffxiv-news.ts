@@ -297,6 +297,22 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // One-time recovery for a real Discord HTTP 429 reported by the operator.
+  // Runs at most 3 brief source reconciliations on 21-22 Nov, away from the
+  // daily 10:00 job. All four cards remain idempotent: no new Discord
+  // message is sent when content has not actually changed.
+  const rateFixKey="ffxiv_news_discord_429_recovery_v1";
+  if((today==="2026-11-21" || today==="2026-11-22") && t.minute%5===2) {
+    const countRaw=await readMeta(env,rateFixKey);
+    const count=Number(countRaw)||0;
+    if(countRaw!=="done" && count<3){
+      await writeMeta(env,rateFixKey,String(count+1));
+      const attempt=await checkFfxivNews(env);
+      await writeMeta(env,"ffxiv_news_discord_429_recovery_diagnostic",JSON.stringify(attempt).slice(0,1400));
+      if(attempt.ok && !attempt.source_errors?.some(x=>String(x).includes("HTTP 429")))
+        await writeMeta(env,rateFixKey,"done");
+    }
+  }
   // One-time adoption of the manually uploaded current Fashion Report:
   // the following weeks are taken exclusively from the mirrored Reporter
   // webhook. No recurring extra polling beyond the normal 10:00 schedule.
