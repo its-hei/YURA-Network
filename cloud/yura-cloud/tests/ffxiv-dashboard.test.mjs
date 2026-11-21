@@ -51,6 +51,46 @@ test("Fashion Report is uploaded as native Discord image attachment",async()=>{
     assert.equal(calls.length,2);
   }finally{globalThis.fetch=original;}
 });
+test("Cloudflare CDN 403 falls back to this week's publisher art and posts an inline attachment",async()=>{
+  const original=globalThis.fetch;
+  let calls=0,uploaded=false;
+  const publisherLastModified=new Date(Date.UTC(2026,10,20,10)).toUTCString();
+  globalThis.fetch=async(url,opts)=>{
+    calls++;
+    const target=String(url);
+    if(target.startsWith("https://cdn.discordapp.com/"))
+      return new Response("Forbidden",{status:403});
+    if(target==="https://fashionreportxiv.com/hint.png")
+      return new Response(new Uint8Array(32000),{status:200,
+        headers:{"content-type":"image/png","last-modified":publisherLastModified}});
+    assert.ok(target.startsWith("https://discord.com/api/v10/"));
+    assert.ok(opts.body instanceof FormData);
+    uploaded=true;
+    const payload=JSON.parse(opts.body.get("payload_json"));
+    assert.match(payload.content,/Zobacz grafikę tygodnia/);
+    assert.equal(payload.attachments[0].filename,"fashion-report.png");
+    return new Response(JSON.stringify({attachments:[{id:"777777777777777777",filename:"fashion-report.png"}]}),
+      {status:200,headers:{"content-type":"application/json"}});
+  };
+  try{
+    const warnings=[];
+    const ok=await deliverCard({DISCORD_BOT_TOKEN:"test"},
+      "channels/777777777777777777/messages/888888888888888888",
+      "PATCH","fashion",cases[1][1],warnings);
+    assert.equal(ok,true);
+    assert.equal(warnings.length,0);
+    assert.equal(uploaded,true);
+    assert.equal(calls,3);
+  }finally{globalThis.fetch=original;}
+});
+test("Original Fashion CDN link is re-signable by Discord and never exposes private source channel",()=>{
+  const text=renderFfxivCardText("fashion",cases[1][1]);
+  assert.match(text,/Zobacz grafikę tygodnia/);
+  assert.match(text,/cdn\.discordapp\.com\/attachments\//);
+  assert.ok(!text.includes("ex=1234"),"signed URL must not expire in public post");
+  assert.ok(!text.includes("discord.com/channels/111/222/333"),
+    "no private moderators source-message links");
+});
 test("If source image is unavailable, Fashion message still displays all information",async()=>{
   const original=globalThis.fetch;
   let payload=null;
