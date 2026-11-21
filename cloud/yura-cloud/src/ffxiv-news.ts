@@ -1,6 +1,6 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
-import {updateFourPosts, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, type SourceItem} from "./ffxiv-dashboard";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
   DB: D1Database;
@@ -262,6 +262,19 @@ export async function checkFfxivNews(env: NewsEnv, force = false) {
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   const t=warsawTime(scheduledAt);
   const today=t.day;
+  // In-memory D1 deadline check only, hourly, independent of the once-a-day
+  // source polling. It archives expired Event/Fashion cards without flooding.
+  if(scheduledAt.getUTCMinutes()===0 && t.hour!==10) {
+    const cfg=await loadConfig(env);
+    if(cfg.enabled && cfg.channelId) {
+      const ended=await expireFourPosts(env,{
+        guildId:cfg.guildId,channelId:cfg.channelId,
+        fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+      },scheduledAt.getTime());
+      if(ended.expired.length) await writeMeta(env,"ffxiv_news_last_post_utc",now());
+      if(ended.errors.length) await writeMeta(env,"ffxiv_news_last_error",ended.errors.join(" | ").slice(0,1200));
+    }
+  }
   // Provision the four permanent posts once soon after deployment. This is
   // not a recurring source poll. A failed provisioning may retry at :00/:15.
   if(t.hour!==10 || t.minute!==0){
