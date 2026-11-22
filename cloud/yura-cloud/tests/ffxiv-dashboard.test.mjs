@@ -37,7 +37,7 @@ test("Event has a clickable headline above its official rich preview",()=>{
   assert.equal(renderFfxivCardText("event",other),"[Starlight Celebration]("+source+")");
   const summer={...other,end:Date.UTC(2027,5,1,7)};
   const [summerEmbed]=renderFfxivCardEmbeds("event",summer);
-  assert.match(summerEmbed.description,/Koniec: 1 czerwca 2027 09:00/,"summer DST is correct");
+  assert.match(summerEmbed.description,/koniec: 1 czerwca 2027 09:00/,"summer DST is correct");
 });
 test("Source preview restoration preserves event message and history thread",async()=>{
   const guildId="911111111111111111",channelId="922222222222222222";
