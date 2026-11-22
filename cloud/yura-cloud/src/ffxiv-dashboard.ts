@@ -244,7 +244,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
           img.hostname==="fashionreportxiv.com" ||
           ["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"].includes(img.hostname)
         ))||
-        (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
+        ((category==="event"||category==="patch")&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
         embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
@@ -256,6 +256,9 @@ function changed(a:Current|null,b:Current|null):boolean{
   // A new or finished event requires an update even when the lead event has
   // not changed. Stable order and IDs prevent duplicate Discord PATCH calls.
   return a?.id!==b?.id || a?.url!==b?.url ||
+    // Image improvements on the SAME official article are presentation-only
+    // changes. A transient page fetch failure must not remove existing art.
+    (!!b?.image && a?.image!==b.image) ||
     JSON.stringify(a?.otherEvents?.map(x=>x.id)||[])!==JSON.stringify(b?.otherEvents?.map(x=>x.id)||[]);
 }
 async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
@@ -538,7 +541,9 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
     return false;
   }
   const old=post.current;
-  if(old){
+  if(old && !(cat==="patch"&&fresh&&old.id===fresh.id&&old.url===fresh.url)){
+    // The patch banner is allowed to arrive after publication. Updating the
+    // same Patch's artwork is NOT a new patch and must not archive it.
     // Only events that ACTUALLY ended leave the active panel. Adding a new
     // event must never archive another still-active event.
     const stillActive=new Set(cat==="event"?eventItems(fresh).map(x=>x.id):[]);
@@ -825,6 +830,49 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
     else errors.push("Discord did not confirm the compact event layout"+
       " (bodyOK="+bodyOK+", embedOK="+embedsOK+", embeds="+actual.length+")");
   }catch(e:any){errors.push(String(e?.message??e).slice(0,220));}
+  return {checked,updated,verified,errors};
+}
+
+// Add or repair the OFFICIAL headline art on the existing Patch message.
+// Preserve the original message ID and thread; return success only after
+// Discord REST confirms the image is attached to the blue embed.
+export async function refreshFfxivPatchBanner(env:Env,cfg:BoardConfig,artUrl:string):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
+    return {checked,updated,verified,errors:["Invalid FFXIV Discord channel"]};
+  try{
+    const image=new URL(artUrl);
+    if(image.protocol!=="https:"||image.hostname!=="img.finalfantasyxiv.com"||
+      !/^\/t\/[0-9a-f]{40}\.(?:jpg|jpeg|png|webp)$/i.test(image.pathname))
+      return {checked,updated,verified,errors:["Banner is not an official Lodestone topic image"]};
+    const post=await loadPost(env,cfg,"patch");
+    if(!post?.current)return {checked,updated,verified,errors:["Patch anchor not initialized"]};
+    checked=1;
+    const fresh:Current={...post.current,image:image.toString()};
+    const path="channels/"+cfg.channelId+"/messages/"+post.anchor;
+    if(changed(post.current,fresh)){
+      if(await rollover(env,cfg,"patch",post,fresh,errors))updated++;
+    }
+    let message=await api(env,path);
+    const correct=(m:any)=>{
+      const e=Array.isArray(m?.embeds)?m.embeds:[];
+      const wanted=embedsFor("patch",fresh) as any[];
+      return String(m?.content??"")===textFor("patch",fresh) &&
+        e.length===1 && e[0]?.url===wanted[0]?.url &&
+        Number(e[0]?.color)===Number(wanted[0]?.color) &&
+        !!e[0]?.image && !!e[0]?.image?.url;
+    };
+    if(!correct(message)){
+      // The saved image URL alone is not proof it rendered on Discord.
+      await deliverCard(env,path,"PATCH","patch",fresh,errors,message);
+      updated++;
+      message=await api(env,path);
+    }
+    if(correct(message))verified=1;
+    else errors.push("Discord did not confirm the official Patch banner");
+  }catch(e:any){errors.push("patch-banner: "+String(e?.message||e).slice(0,190));}
   return {checked,updated,verified,errors};
 }
 

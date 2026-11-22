@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
@@ -187,6 +187,32 @@ async function saveSeen(env: NewsEnv, items: NewsItem[]) {
     if (statements.length) await env.DB.batch(statements);
   }
 }
+// Official Lodestone Topics articles use one hero at
+// img.finalfantasyxiv.com/t/<40-character-topic-id>.jpg. Read the article
+// instead of guessing a thumbnail, since a side banner may be unrelated.
+export function extractOfficialPatchHero(html:string,articleUrl:string):string|null{
+  let article:URL;
+  try{article=new URL(articleUrl);}catch{return null;}
+  if(!["eu.finalfantasyxiv.com","na.finalfantasyxiv.com"].includes(article.hostname))
+    return null;
+  const id=article.pathname.match(/^\/lodestone\/topics\/detail\/([0-9a-f]{40})\/?$/i)?.[1];
+  if(!id)return null;
+  const decoded=String(html??"").replace(/&amp;/gi,"&");
+  const pattern=new RegExp(
+    "(?:(?:https?:)?\\/\\/)?img\\.finalfantasyxiv\\.com\\/t\\/"+id+
+    "\\.(?:jpe?g|png|webp)(?:\\?[^\\s\\\"'<>]*)?","i");
+  const hit=decoded.match(pattern)?.[0];
+  if(!hit)return null;
+  const text=hit.startsWith("//")?"https:"+hit:
+    /^https?:\/\//i.test(hit)?hit:"https://"+hit;
+  try{
+    const image=new URL(text);
+    if(image.protocol==="https:" && image.hostname==="img.finalfantasyxiv.com" &&
+      new RegExp("^/t/"+id+"\\.(?:jpe?g|png|webp)$","i").test(image.pathname))
+      return image.toString();
+  }catch{}
+  return null;
+}
 // Genuine patch notes only: do not replace the current patch with store news,
 // livestreams or unrelated Lodestone Topics posts.
 function isPatchArticle(x: NewsItem):boolean {
@@ -220,7 +246,18 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
     }
     if(cfg.lodestone){
       const newest=news.filter(isPatchArticle).sort((a,b)=>b.date-a.date)[0];
-      if(newest)sources.patch=newest;
+      if(newest){
+        sources.patch=newest;
+        try{
+          const hero=extractOfficialPatchHero(await fetchText(newest.url),newest.url);
+          if(hero)sources.patch={...newest,image:hero};
+        }catch(e:any){
+          // The article is still valid if media is temporarily inaccessible.
+          // Existing art is retained and Cloud can retry at the next check.
+          await writeMeta(env,"ffxiv_patch_art_last_error",
+            String(e?.message||e).slice(0,190)).catch(()=>{});
+        }
+      }
       // On temporary RSS failure, leave the previous patch untouched.
     }
     if(cfg.events && topics){
@@ -342,6 +379,34 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         JSON.stringify(attempt).slice(0,1800));
       if(attempt.ok && attempt.fashion_media?.attached===true)
         await writeMeta(env,mediaRepairKey,"done");
+    }
+  }
+  // One-time migration for already-published Patch Notes: read its own
+  // Lodestone page, find the official hero and PATCH only the old message.
+  // No new news posts, no extra history messages, no repeated scanning.
+  const artKey="ffxiv_patch_hero_v1_20261122";
+  const artState=await readMeta(env,artKey);
+  if(artState!=="done" && (Number(artState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled&&cfg.channelId&&cfg.lodestone){
+      await writeMeta(env,artKey,String((Number(artState)||0)+1));
+      try{
+        const raw=await readMeta(env,"ffxiv_board_v3_"+cfg.guildId+"_"+cfg.channelId+"_patch");
+        const saved=JSON.parse(raw||"null");
+        const url=String(saved?.current?.url??"");
+        const hero=extractOfficialPatchHero(await fetchText(url),url);
+        if(!hero)throw new Error("Official patch hero not found in the Lodestone article");
+        const result=await refreshFfxivPatchBanner(env,{
+          guildId:cfg.guildId,channelId:cfg.channelId,
+          events:cfg.events,fashion:cfg.fashion,lodestone:cfg.lodestone,dalamud:cfg.dalamud
+        },hero);
+        await writeMeta(env,"ffxiv_patch_hero_v1_result",JSON.stringify(result).slice(0,1200));
+        if(result.checked===1&&result.verified===1&&!result.errors.length)
+          await writeMeta(env,artKey,"done");
+      }catch(e:any){
+        await writeMeta(env,"ffxiv_patch_hero_v1_result",
+          JSON.stringify({error:String(e?.message||e).slice(0,220)}));
+      }
     }
   }
   // One-shot cosmetic Patch cleanup: the linked blue embed already

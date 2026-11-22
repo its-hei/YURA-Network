@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {extractOfficialPatchHero} from "../src/ffxiv-news.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -313,6 +314,70 @@ test("Dalamud retains a readable text fallback outside the embed",()=>{
     assert.match(content,/\]\(https:\/\//,category+" must contain a clickable link");
     assert.ok(content.length>50,"card is merely a header: "+category);
   }
+});
+test("Official Patch 7.58 hero art is selected without unrelated image links",()=>{
+  const id="b5a3ecf6c8e56e3f669681a077bf6d389dce10bd";
+  const article="https://eu.finalfantasyxiv.com/lodestone/topics/detail/"+id;
+  const image="https://img.finalfantasyxiv.com/t/"+id+".jpg?1794219335=";
+  const html='<img src="https://img.finalfantasyxiv.com/t/ffffffffffffffffffffffffffffffffffffffff.jpg">'+
+    '<a href="//img.finalfantasyxiv.com/t/'+id+'.jpg?1794219335=">Banner</a>';
+  assert.equal(extractOfficialPatchHero(html,article),image);
+  assert.equal(extractOfficialPatchHero(html,article.replace("eu.","evil.")),null);
+  assert.equal(extractOfficialPatchHero(html.replace(id,"ffffffffffffffffffffffffffffffffffffffff"),article),null);
+  const patch=cases.find(([category])=>category==="patch")[1];
+  assert.deepEqual(renderFfxivCardEmbeds("patch",{...patch,image})[0].image,{url:image});
+  assert.equal(renderFfxivCardEmbeds("patch",{...patch,image})[0].url,source,
+    "the embed title must still link to the official patch notes");
+  assert.equal(renderFfxivCardEmbeds("patch",{...patch,
+    image:"https://cdn.discordapp.com/attachments/123/something.jpg"})[0].image,undefined,
+    "reject non-official article banner origins");
+});
+test("Adding official hero updates existing Patch embed without archiving the same patch",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222",
+    anchor="933333333333333333",thread="944444444444444444";
+  const articleId="b5a3ecf6c8e56e3f669681a077bf6d389dce10bd";
+  const banner="https://img.finalfantasyxiv.com/t/"+articleId+".jpg?1794219335=";
+  const current={id:"7.58",title:"Patch 7.58 Notes",
+    url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/"+articleId};
+  const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_patch";
+  const stored=new Map([[key,JSON.stringify({anchor,thread,current,renderRevision:14})]]);
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:stored.get(args[0])??""}),
+    run:async()=>{stored.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  const oldFetch=globalThis.fetch, requests=[];
+  let message={id:anchor,content:"",embeds:[{title:"Patch 7.58 Notes",url:current.url,
+    description:"Oficjalne informacje o aktualizacji FFXIV.",color:0x5CA9F5}]};
+  globalThis.fetch=async(url,opts={})=>{
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    const method=opts.method??"GET";
+    requests.push({path,method});
+    assert.equal(path,"channels/"+channelId+"/messages/"+anchor,
+      "no new post or history thread write");
+    if(method==="PATCH"){
+      const body=JSON.parse(opts.body);
+      assert.equal(body.content,"");
+      assert.equal(body.embeds[0].url,current.url);
+      assert.equal(body.embeds[0].color,0x5CA9F5);
+      assert.deepEqual(body.embeds[0].image,{url:banner});
+      message={...message,content:body.content,embeds:body.embeds};
+    }
+    return new Response(JSON.stringify(message),{status:200,
+      headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,lodestone:true,events:true,fashion:true,dalamud:true};
+    assert.deepEqual(await refreshFfxivPatchBanner({DB,DISCORD_BOT_TOKEN:"test"},cfg,banner),
+      {checked:1,updated:1,verified:1,errors:[]});
+    assert.deepEqual(requests.map(x=>x.method),["PATCH","GET"]);
+    const saved=JSON.parse(stored.get(key));
+    assert.equal(saved.anchor,anchor);
+    assert.equal(saved.thread,thread);
+    assert.equal(saved.current.image,banner);
+    assert.deepEqual(await refreshFfxivPatchBanner({DB,DISCORD_BOT_TOKEN:"test"},cfg,banner),
+      {checked:1,updated:0,verified:1,errors:[]},"idempotent");
+    assert.equal(requests.filter(x=>x.method==="PATCH").length,1,"no duplicate updates");
+  }finally{globalThis.fetch=oldFetch;}
 });
 test("Published Patch uses only its blue official Lodestone embed",()=>{
   const current=cases.find(([category])=>category==="patch")[1];
