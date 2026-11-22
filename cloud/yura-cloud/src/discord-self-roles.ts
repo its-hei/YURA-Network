@@ -189,8 +189,14 @@ export async function publishSelfRolePanel(env:Env){
       if(!/Discord POST channels HTTP 403/.test(String(e)))throw e;
       // A bot can edit channel overwrites through Manage Roles; grant only
       // itself VIEW/SEND/EMBED/HISTORY, then retry its own message once.
-      await ensureSelfRoleBotChannelPermission(env,guild,c.channel_id);
-      msg=await api(env,"channels/"+c.channel_id+"/messages","POST",payload);
+      try{
+        await ensureSelfRoleBotChannelPermission(env,guild,c.channel_id);
+        msg=await api(env,"channels/"+c.channel_id+"/messages","POST",payload);
+      }catch(e2){
+        if(/HTTP 403/.test(String(e2)))
+          throw new Error("YURA nie ma dostępu do #role. W Discordzie nadaj botowi: Wyświetlanie kanału, Wysyłanie wiadomości i Osadzanie linków.");
+        throw e2;
+      }
     }
     if(!snow(msg?.id))throw new Error("Discord did not return a panel message ID");
     messageId=msg.id;operation="created";
@@ -208,9 +214,18 @@ export async function ensureSelfRolePanel(env:Env){
   try{
     const c=await readConfig(env);
     if(c?.message_id)return;
+    // Avoid repeatedly contacting Discord after an explicit permission failure.
+    // Manual PUBLISH PANEL bypasses this backoff and retries immediately.
+    const previous=await getMeta(env,STATUS);
+    if(previous){
+      const last=JSON.parse(previous);
+      if(last?.status==="waiting" && /uprawnień|HTTP 403/.test(String(last.error||"")) &&
+         Number.isFinite(Date.parse(String(last.checked_at_utc||""))) &&
+         Date.now()-Date.parse(last.checked_at_utc)<900000)return;
+    }
     return await publishSelfRolePanel(env);
   }catch(e:any){
-    const message=String(e?.message??e).slice(0,180);
+    const message=String(e?.message??e).slice(0,250);
     await putMeta(env,STATUS,{status:"waiting",error:message,checked_at_utc:new Date().toISOString()});
   }
 }
