@@ -741,7 +741,7 @@ export async function ensureFfxivEmbedLinks(env:Env,cfg:BoardConfig):Promise<str
 // No news feed calls, no newly posted messages and no archive rollover.
 export async function refreshFfxivCardPalette(env:Env,cfg:BoardConfig):
 Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
-  let checked=0,updated=0,verified=0,permissionChecked=false;
+  let checked=0,updated=0,verified=0,permissionChecked=false,permissionError="";
   const errors:string[]=[];
   if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
     return {checked,updated,verified,errors:["Invalid FFXIV Discord channel configuration"]};
@@ -764,7 +764,7 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
             const changed=await ensureFfxivEmbedLinks(env,cfg);
             await putMeta(env,"ffxiv_card_palette_embed_permission_v11",changed);
           }catch(e:any){
-            errors.push("embed-permission: "+String(e?.message||e).slice(0,140));
+            permissionError="embed-permission: "+String(e?.message||e).slice(0,140);
           }
         }
         if(await deliverCard(env,"channels/"+cfg.channelId+"/messages/"+stored.anchor,
@@ -793,6 +793,9 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
       }else verified++;
     }catch(e:any){errors.push(category+": "+String(e?.message||e).slice(0,160));}
   }
+  // If a moderator grants Embed Links to YURA's server role, a bot-only
+  // override may still fail with 403. Live embed verification is authoritative.
+  if(permissionError && verified!==4)errors.unshift(permissionError);
   return {checked,updated,verified,errors};
 }
 

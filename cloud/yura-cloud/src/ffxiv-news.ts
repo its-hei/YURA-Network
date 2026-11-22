@@ -460,6 +460,19 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
     // Both CHECK NOW and PUBLISH LATEST refresh the four persistent messages.
     // Neither creates a duplicate when source content is unchanged.
     const r=await checkFfxivNews(env,true,x.action==="publish-latest");
+    if(x.action==="publish-latest"){
+      const cfg=await loadConfig(env);
+      if(cfg.enabled&&cfg.channelId){
+        const palette=await refreshFfxivCardPalette(env,{
+          guildId:cfg.guildId,channelId:cfg.channelId,
+          events:cfg.events,fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+        });
+        await writeMeta(env,"ffxiv_card_palette_v11_result",JSON.stringify(palette).slice(0,1900));
+        if(palette.checked===4&&palette.verified===4&&!palette.errors.length)
+          await writeMeta(env,"ffxiv_card_palette_v11_embed_repair_20261122","done");
+        return newsJson({...r,palette},r.ok?200:502);
+      }
+    }
     return newsJson(r,r.ok?200:502);
   }
   return newsJson({error:"Method not allowed"},405);
