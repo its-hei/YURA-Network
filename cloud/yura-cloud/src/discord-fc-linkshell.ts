@@ -1,7 +1,7 @@
 // Automatic AND-gate for Boomersi / Ordo Noctis #fc-linkshell.
 // Only members who actually have BOTH Discord roles XIV and FC may have
 // the technical FC XIV role. The source roles are never assigned here.
-import {discordFfxivRequest} from "./ffxiv-discord-api";
+import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
 
 type Env={DB:D1Database;DISCORD_BOT_TOKEN?:string};
 type Role={id:string;name:string;position:number;permissions:string;managed?:boolean};
