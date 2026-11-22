@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,refreshFfxivDalamudInfo,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 import {extractOfficialPatchHero} from "../src/ffxiv-patch-hero.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
@@ -306,14 +306,69 @@ test("In-place color migration preserves all anchors, thread IDs and the attache
   }finally{globalThis.fetch=original;}
 });
 
-test("Dalamud retains a readable text fallback outside the embed",()=>{
-  for(const [category,item,parts] of cases.filter(([cat])=>cat==="dalamud")){
-    const content=renderFfxivCardText(category,item);
-    assert.ok(content.startsWith(FFXIV_CARD_PALETTE[category].marker+" **"));
-    for(const part of parts)assert.ok(content.includes(part),category+": missing "+part);
-    assert.match(content,/\]\(https:\/\//,category+" must contain a clickable link");
-    assert.ok(content.length>50,"card is merely a header: "+category);
-  }
+test("Dalamud card uses an informational title link instead of the raw version feed",()=>{
+  const old=cases.find(([category])=>category==="dalamud")[1];
+  assert.equal(renderFfxivCardText("dalamud",old),"",
+    "there must be no duplicated header or raw version link above the card");
+  const [card]=renderFfxivCardEmbeds("dalamud",old);
+  assert.equal(card.title,"Stable 15.0.4.1");
+  assert.equal(card.url,"https://dalamud.dev/versions/");
+  assert.equal(card.color,0x43C6A2);
+  assert.ok(card.description.includes("https://dalamud.dev/versions/v15/"));
+  assert.ok(!card.description.includes("dalamud-distrib"));
+  assert.match(renderFfxivCardText("dalamud",null),/Nie udało się ustalić stabilnej wersji/);
+});
+test("Dalamud informational migration edits only the existing Discord card, preserving member version and history",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const anchor="933333333333333333",thread="944444444444444444";
+  const current={id:"stable-15.0.4.1",title:"Dalamud Stable 15.0.4.1",
+    url:"https://github.com/goatcorp/dalamud-distrib/blob/main/version"};
+  const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_dalamud";
+  const stored=new Map([[key,JSON.stringify({anchor,thread,current,renderRevision:14})]]);
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:stored.get(args[0])??""}),
+    run:async()=>{stored.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  const oldFetch=globalThis.fetch, requests=[];
+  let message={id:anchor,content:"Old duplicate header",embeds:[{
+    title:"Stable 15.0.4.1",url:current.url,color:0x43C6A2,
+    description:"Aktualnie dostępna stabilna wersja Dalamuda."
+  }]};
+  globalThis.fetch=async(url,opts={})=>{
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    const method=opts.method??"GET";
+    requests.push({path,method});
+    assert.equal(path,"channels/"+channelId+"/messages/"+anchor,
+      "must never post a new message or alter history");
+    if(method==="PATCH"){
+      const payload=JSON.parse(opts.body);
+      assert.equal(payload.content,"");
+      assert.equal(payload.embeds.length,1);
+      assert.equal(payload.embeds[0].url,"https://dalamud.dev/versions/");
+      assert.equal(payload.embeds[0].color,0x43C6A2);
+      assert.match(payload.embeds[0].description,/Co nowego w Dalamud v15/);
+      assert.deepEqual(payload.allowed_mentions,{parse:[]});
+      message={...message,content:payload.content,embeds:payload.embeds};
+    }
+    return new Response(JSON.stringify(message),{status:200,
+      headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    assert.deepEqual(await refreshFfxivDalamudInfo({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:1,verified:1,errors:[]});
+    assert.deepEqual(requests.map(r=>r.method),["GET","PATCH","GET"]);
+    const saved=JSON.parse(stored.get(key));
+    assert.equal(saved.anchor,anchor);
+    assert.equal(saved.thread,thread);
+    assert.equal(saved.current.id,"stable-15.0.4.1");
+    assert.equal(saved.current.url,current.url,
+      "the underlying stable distribution feed remains unchanged");
+    assert.deepEqual(await refreshFfxivDalamudInfo({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:0,verified:1,errors:[]});
+    assert.equal(requests.filter(r=>r.method==="POST").length,0);
+    assert.equal(requests.filter(r=>r.method==="PATCH").length,1);
+  }finally{globalThis.fetch=oldFetch;}
 });
 test("Official Patch 7.58 hero art is selected without unrelated image links",()=>{
   const id="b5a3ecf6c8e56e3f669681a077bf6d389dce10bd";
