@@ -11,6 +11,10 @@ type Config={revision:number;builtin_enabled:boolean;rules:AutoRule[]};
 const CONFIG="discord_auto_roles_config_v1",STATUS="discord_auto_roles_last_sync_v1";
 const SNOW=/^[0-9]{15,22}$/,RULEID=/^auto-[a-z0-9-]{6,50}$/;
 const ADMIN=8n,MANAGE_ROLES=1n<<28n,MAX_CHANGES=25;
+// Never automatically hand out administrative or moderation capabilities.
+// A technical access role may grant channel visibility, not management powers.
+const BLOCKED_ROLE_PERMISSIONS=[1,2,3,4,5,7,13,17,22,23,24,27,28,29,30,33,34,40,41,51,52]
+  .reduce((mask,bit)=>mask|(1n<<BigInt(bit)),0n);
 const api=discordFfxivRequest;
 async function read(env:Env,key:string){
   const r=await env.DB.prepare("SELECT value FROM meta WHERE key=?1").bind(key).first<{value:string}>();
@@ -39,7 +43,7 @@ function botHighest(roles:Role[],ids:string[]):number{
 export function validateAutoRules(raw:unknown,roles:Role[],botRoles:string[],guildId:string):AutoRule[]{
   if(!Array.isArray(raw)||raw.length>12)throw new Error("Maximum 12 automatic role rules");
   const map=new Map(roles.map(r=>[r.id,r]));
-  const reserved=new Set(roles.filter(r=>["FC XIV","FC","XIV","Y.U.R.A.","Admin"].includes(r.name)).map(r=>r.id));
+  const reserved=new Set(roles.filter(r=>["FC XIV","FC","XIV","Y.U.R.A.","Admin","VIP","Boomer"].includes(r.name)).map(r=>r.id));
   const seen=new Set<string>(),targets=new Set<string>(),highest=botHighest(roles,botRoles);
   return raw.map((x:any)=>{
     const id=String(x?.id??""),name=String(x?.name??"").trim();
@@ -53,7 +57,7 @@ export function validateAutoRules(raw:unknown,roles:Role[],botRoles:string[],gui
     if(!SNOW.test(target)||target===guildId||required.includes(target)||
       reserved.has(target)||targets.has(target))throw new Error("Target role is reserved, repeated or required");
     const r=map.get(target);
-    if(!r||r.managed||(BigInt(r.permissions||"0")&(ADMIN|MANAGE_ROLES))!==0n||
+    if(!r||r.managed||(BigInt(r.permissions||"0")&BLOCKED_ROLE_PERMISSIONS)!==0n||
       Number(r.position)>=highest)throw new Error("Target role cannot be managed safely by YURA");
     if(required.some((v:string)=>v===guildId||!map.has(v)))throw new Error("Required role does not exist");
     seen.add(id);targets.add(target);
