@@ -1,0 +1,73 @@
+name: Verify confirmed KazWolfe Dalamud status card
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-dalamud-confirmed-status-verification.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Confirm updated existing Discord card and persistent last confirmed status
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_dalamud_patch_758_confirmed_v2_20261122','ffxiv_dalamud_patch_758_confirmed_v2_result') OR key LIKE 'ffxiv_board_v3_%_dalamud';" \
+              > "$RUNNER_TEMP/confirmed.json"
+            if python3 - "$RUNNER_TEMP/confirmed.json" <<'PY'
+          import json,sys,datetime
+          raw=json.load(open(sys.argv[1],encoding="utf8"))
+          data={}
+          for batch in raw if isinstance(raw,list) else [raw]:
+              for record in batch.get("results",[]):
+                  data[str(record.get("key"))]=record.get("value")
+          state=data.get("ffxiv_dalamud_patch_758_confirmed_v2_20261122")
+          try: result=json.loads(data.get("ffxiv_dalamud_patch_758_confirmed_v2_result") or "{}")
+          except ValueError: result={}
+          confirmed=False
+          status_flag=False
+          last_date=None
+          for k,v in data.items():
+              if not (k.startswith("ffxiv_board_v3_") and k.endswith("_dalamud")):continue
+              try: post=json.loads(v)
+              except (ValueError,TypeError):continue
+              if not isinstance(post,dict) or not isinstance(post.get("current"),dict):continue
+              entry=post["current"]
+              announcement=entry.get("dalamudStatus")
+              if not isinstance(announcement,dict):continue
+              valid=bool(post.get("anchor") and post.get("thread") and entry.get("id"))
+              last_date=announcement.get("at")
+              if valid and (announcement.get("messageId")=="manual-screenshot-kazwolfe-758-20261110"
+                  or (isinstance(last_date,(int,float)) and last_date>1794348300000)):
+                  confirmed=True
+                  status_flag=(entry.get("dalamudStatusFresh") is True)
+          print("Migration:",state,"Discord verified:",result.get("verified"),
+                "confirmed notice:",confirmed,"status retained:",status_flag,
+                "errors:",str(result.get("errors",[]))[:200])
+          if state=="done" and result.get("verified")==1 and confirmed and status_flag and not result.get("errors"):
+              print("SUCCESS: Verified Discord card displays last confirmed Dalamud state without test label")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 12
+          done
+          echo "::error::Live Dalamud status update not yet confirmed on Discord"
+          exit 1
