@@ -1,0 +1,62 @@
+name: Verify Dalamud official Discord status feed
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-dalamud-official-status-verification.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Confirm monitored channel was read and existing Dalamud embed verified
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..10}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key LIKE 'ffxiv_dalamud_official_status_v1' OR key LIKE 'ffxiv_dalamud_status_layout_v1_%';" \
+              > "$RUNNER_TEMP/dalamud-status.json"
+            if python3 - "$RUNNER_TEMP/dalamud-status.json" <<'PY'
+          import json,sys
+          doc=json.load(open(sys.argv[1],encoding="utf8"))
+          data={}
+          for batch in doc if isinstance(doc,list) else [doc]:
+              for row in batch.get("results",[]):
+                  data[row.get("key")]=row.get("value")
+          raw=data.get("ffxiv_dalamud_official_status_v1")
+          try: status=json.loads(raw) if raw else {}
+          except ValueError: status={}
+          layout=any(k.startswith("ffxiv_dalamud_status_layout_v1_") and v=="1"
+                     for k,v in data.items())
+          # Only non-sensitive metadata; do NOT print Discord message content,
+          # account names, tokens or source channel IDs.
+          print("Discord messages scanned:",status.get("inspected",0),
+                "webhook messages:",status.get("followed",0),
+                "qualified official updates:",status.get("qualified",0),
+                "last status classification:",status.get("state","unknown"),
+                "card verified:",status.get("verified",0),
+                "layout:",layout,
+                "errors:",str(status.get("errors",status.get("error","")))[:180])
+          if status.get("inspected",0)>0 and status.get("verified")==1 and layout and not status.get("errors"):
+              print("SUCCESS: YURA reads its subscribed Discord channel and updates existing Dalamud status card")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 12
+          done
+          echo "::error::Official Dalamud status source/card not fully verified in production"
+          exit 1
