@@ -344,6 +344,38 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         await writeMeta(env,mediaRepairKey,"done");
     }
   }
+  // One-shot v14 reconciliation: fetch the current official event schedule
+  // immediately after deployment, not only at the next daily 10:00 check.
+  // Keep the existing EVENT message/thread, clear its duplicate headline,
+  // and render every verified active event as a separate native embed.
+  const allEventsKey="ffxiv_events_all_active_v14_20261122";
+  const allEventsState=await readMeta(env,allEventsKey);
+  if(allEventsState!=="done" && (Number(allEventsState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled&&cfg.channelId&&cfg.events){
+      await writeMeta(env,allEventsKey,String((Number(allEventsState)||0)+1));
+      try{
+        const scan=await checkFfxivNews(env,true,false);
+        const config={
+          guildId:cfg.guildId,channelId:cfg.channelId,
+          fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+        };
+        const live=await refreshFfxivEventCompact(env,config);
+        const sourceErrors=(scan.source_errors||[]).filter((x:string)=>
+          /^event:|^lodestone-topics:/.test(String(x)));
+        await writeMeta(env,"ffxiv_events_all_active_v14_result",JSON.stringify({
+          status:scan.status,event_source_errors:sourceErrors,verification:live
+        }).slice(0,1500));
+        if(scan.ok && sourceErrors.length===0 && live.checked===1 &&
+          live.verified===1 && live.errors.length===0)
+          await writeMeta(env,allEventsKey,"done");
+      }catch(e:any){
+        await writeMeta(env,"ffxiv_events_all_active_v14_result",JSON.stringify({
+          error:String(e?.message||e).slice(0,220)
+        }));
+      }
+    }
+  }
   // Restore the Lodestone source preview below the short event headline,
   // editing the existing message without creating new posts or threads.
   const compactKey="ffxiv_event_rich_preview_v13_20261122";
