@@ -62,25 +62,25 @@ export function parseFollowedDalamudMessages(messages:unknown,guildId:string,
     const onTopic=/\bdalamud\b|\bplugins?\b|\bxivlauncher\b|\bpatch\s*\d+\.\d+/i.test(full);
     const status=classifyDalamudAnnouncement(full);
     if(!identifiable||!onTopic||status==="unknown")continue;
-    // Never treat a message from another channel as an official statement
-    // when Discord provides source-guild identity on followed announcements.
+    // A Channel Following webhook is located in our guild, but its source
+    // message may belong to another guild. We only read the local mirror.
     const reference=m.message_reference;
-    if(reference?.guild_id&&String(reference.guild_id)!==guildId) {
-      // Following explicitly forwards from a DIFFERENT guild; that is normal.
-      // The source message is never queried, only linked.
-    }
     const stamp=Date.parse(String(m.timestamp??""));
     if(!Number.isFinite(stamp)||stamp>at+60000)continue;
     qualified++;
     const sourceGuild=String(reference?.guild_id??guildId);
     const sourceChannel=String(reference?.channel_id??channelId);
     const sourceMessage=String(reference?.message_id??m.id);
-    const original=SNOW.test(sourceGuild)&&SNOW.test(sourceChannel)&&SNOW.test(sourceMessage);
+    const original=SNOW.test(String(reference?.guild_id??"")) &&
+      SNOW.test(String(reference?.channel_id??"")) &&
+      SNOW.test(String(reference?.message_id??"")) &&
+      SNOW.test(sourceGuild)&&SNOW.test(sourceChannel)&&SNOW.test(sourceMessage);
     const link=original
       ? "https://discord.com/channels/"+sourceGuild+"/"+sourceChannel+"/"+sourceMessage
       : "https://discord.com/channels/"+guildId+"/"+channelId+"/"+m.id;
     const headline=tidy(embeds[0]?.title||full.split(/\n/)[0]||"Komunikat Dalamud",110);
-    const etaMatch=full.match(/\b(?:ETA|estimated (?:time|release)|expected (?:by|around|at))\s*[:\-]?\s*([^.!?]{3,110})/i);
+    const etaMatch=/\b(?:no|unknown|not announced|no confirmed)\s+(?:ETA|estimated (?:time|date))\b/i.test(full)
+      ?null:full.match(/\b(?:ETA|estimated (?:time|release)|expected (?:by|around|at))\s*[:\-]?\s*([^.!?]{3,110})/i);
     candidates.push({
       messageId:String(m.id),channelId,guildId,headline,
       excerpt:tidy(full,510),author:author||"XIVLauncher & Dalamud",
