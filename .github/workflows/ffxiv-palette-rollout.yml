@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in {1..12}; do
+          for attempt in {1..2}; do
             npx wrangler d1 execute yura-cloud --remote --json \
               --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_card_palette_v11_20261122','ffxiv_card_palette_v11_result');" \
               > "$RUNNER_TEMP/palette.json"
@@ -52,7 +52,7 @@ jobs:
           sys.exit(1)
           PY
             then exit 0; fi
-            sleep 15
+            sleep 5
           done
           echo "::error::FFXIV Discord palette was not fully verified by live Discord API"
           exit 1
