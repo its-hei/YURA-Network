@@ -344,9 +344,9 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         await writeMeta(env,mediaRepairKey,"done");
     }
   }
-  // Apply compact Event header to its original message in-place at the
-  // next Cloud cron tick, without re-fetching FFXIV news or creating history.
-  const compactKey="ffxiv_event_compact_v12_20261122";
+  // Restore the Lodestone source preview below the short event headline,
+  // editing the existing message without creating new posts or threads.
+  const compactKey="ffxiv_event_rich_preview_v13_20261122";
   const compactState=await readMeta(env,compactKey);
   if(compactState!=="done"&&(Number(compactState)||0)<4){
     const cfg=await loadConfig(env);
