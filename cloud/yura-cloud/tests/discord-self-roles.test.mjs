@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {isSelfRoleChannel,validateSelfRoles,selfRolePanelPayload,handleSelfRoleClick} from "../src/discord-self-roles.ts";
+import {isSelfRoleChannel,validateSelfRoles,selfRolePanelPayload,handleSelfRoleClick,ensureSelfRoleBotChannelPermission} from "../src/discord-self-roles.ts";
 
 const guild="111111111111111111",xiv="222222222222222222",gamba="333333333333333333",
   fc="444444444444444444",bot="555555555555555555";
@@ -51,5 +51,38 @@ test("stale or unrelated button cannot mutate Discord roles",async()=>{
     const data=await res.json();
     assert.equal(data.type,4);
     assert.equal(calls,0);
+  }finally{globalThis.fetch=old;}
+});
+
+test("HTTP 403 remediation is a narrowly scoped bot-only channel overwrite",async()=>{
+  const old=globalThis.fetch;
+  const channel="666666666666666666";
+  let changes=0;
+  globalThis.fetch=async(url,opts)=>{
+    const path=new URL(url).pathname.replace("/api/v10/","");
+    if(opts.method==="GET"){
+      const item=path==="users/@me"?{id:bot}:
+        path==="channels/"+channel?{guild_id:guild,type:0,permission_overwrites:[
+          {id:guild,type:0,allow:"0",deny:"1024"},
+          {id:bot,type:1,allow:"32",deny:"1024"}
+        ]}:null;
+      if(!item)throw Error("Unexpected GET "+path);
+      return new Response(JSON.stringify(item),{status:200,headers:{"content-type":"application/json"}});
+    }
+    assert.equal(path,"channels/"+channel+"/permissions/"+bot);
+    assert.equal(opts.method,"PUT");
+    const p=JSON.parse(opts.body);
+    assert.equal(p.type,1);
+    assert.equal((BigInt(p.allow)&32n)!==0n,true,"preserves unrelated bits");
+    assert.equal((BigInt(p.allow)&1024n)!==0n,true,"bot can view");
+    assert.equal((BigInt(p.allow)&2048n)!==0n,true,"bot can send messages");
+    assert.equal((BigInt(p.allow)&16384n)!==0n,true,"bot can embed links");
+    assert.equal((BigInt(p.deny)&1024n)===0n,true,"removes bot view deny");
+    changes++;
+    return new Response(null,{status:204});
+  };
+  try{
+    await ensureSelfRoleBotChannelPermission({DISCORD_BOT_TOKEN:"test"},guild,channel);
+    assert.equal(changes,1);
   }finally{globalThis.fetch=old;}
 });

@@ -86,6 +86,26 @@ async function channelExists(env:Env,guild:string,channelId:string){
   if(channel.guild_id!==guild||Number(channel.type)!==0)
     throw new Error("Role panel must be published to a text channel in this server");
 }
+// Only on a missing-permission response, give this particular YURA bot user
+// the channel ability to post its role panel. Preserve every existing
+// overwrite bit; never modify @everyone, Zira or any member's access.
+export async function ensureSelfRoleBotChannelPermission(env:Env,guild:string,channelId:string){
+  const [identity,channel]=await Promise.all([
+    api(env,"users/@me"),api(env,"channels/"+channelId)
+  ]);
+  if(!snow(identity?.id)||channel.guild_id!==guild||Number(channel.type)!==0||
+     !Array.isArray(channel.permission_overwrites))
+    throw new Error("Cannot verify the Discord role channel for a bot-only override");
+  const old=channel.permission_overwrites.find((p:any)=>String(p.id)===identity.id&&Number(p.type)===1);
+  const required=(1n<<10n)|(1n<<11n)|(1n<<14n)|(1n<<16n);
+  const allow=BigInt(String(old?.allow??"0"))|required;
+  const deny=BigInt(String(old?.deny??"0"))&~required;
+  if(old&&allow===BigInt(String(old.allow))&&deny===BigInt(String(old.deny)))
+    throw new Error("Discord denied a message even though the bot-only channel permissions are already granted");
+  await api(env,"channels/"+channelId+"/permissions/"+identity.id,"PUT",{
+    type:1,allow:allow.toString(),deny:deny.toString()
+  });
+}
 async function defaults(env:Env,guild:string):Promise<Config>{
   const [roles,channels]=await Promise.all([
     api(env,"guilds/"+guild+"/roles"),api(env,"guilds/"+guild+"/channels")
@@ -162,7 +182,16 @@ export async function publishSelfRolePanel(env:Env){
     }
   }
   if(!messageId){
-    const msg=await api(env,"channels/"+c.channel_id+"/messages","POST",payload);
+    let msg:any;
+    try{
+      msg=await api(env,"channels/"+c.channel_id+"/messages","POST",payload);
+    }catch(e){
+      if(!/Discord POST channels HTTP 403/.test(String(e)))throw e;
+      // A bot can edit channel overwrites through Manage Roles; grant only
+      // itself VIEW/SEND/EMBED/HISTORY, then retry its own message once.
+      await ensureSelfRoleBotChannelPermission(env,guild,c.channel_id);
+      msg=await api(env,"channels/"+c.channel_id+"/messages","POST",payload);
+    }
     if(!snow(msg?.id))throw new Error("Discord did not return a panel message ID");
     messageId=msg.id;operation="created";
   }
