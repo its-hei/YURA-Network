@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, refreshFfxivDalamudInfo, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 import {extractOfficialPatchHero} from "./ffxiv-patch-hero.ts";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
@@ -354,6 +354,30 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         JSON.stringify(attempt).slice(0,1800));
       if(attempt.ok && attempt.fashion_media?.attached===true)
         await writeMeta(env,mediaRepairKey,"done");
+    }
+  }
+  // In-place change of the green Dalamud card from a raw distribution
+  // version link to official explanatory pages; it keeps the same message,
+  // version and history. Cloud automatically retries up to four cron ticks.
+  const dalamudInfoKey="ffxiv_dalamud_information_v1_20261122";
+  const dalamudInfoState=await readMeta(env,dalamudInfoKey);
+  if(dalamudInfoState!=="done" && (Number(dalamudInfoState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled&&cfg.channelId&&cfg.dalamud){
+      await writeMeta(env,dalamudInfoKey,String((Number(dalamudInfoState)||0)+1));
+      try{
+        const status=await refreshFfxivDalamudInfo(env,{
+          guildId:cfg.guildId,channelId:cfg.channelId,
+          events:cfg.events,fashion:cfg.fashion,lodestone:cfg.lodestone,dalamud:cfg.dalamud
+        });
+        await writeMeta(env,"ffxiv_dalamud_information_v1_result",
+          JSON.stringify(status).slice(0,1100));
+        if(status.checked===1 && status.verified===1 && !status.errors.length)
+          await writeMeta(env,dalamudInfoKey,"done");
+      }catch(e:any){
+        await writeMeta(env,"ffxiv_dalamud_information_v1_result",
+          JSON.stringify({error:String(e?.message??e).slice(0,200)}));
+      }
     }
   }
   // One-time migration for already-published Patch Notes: read its own
