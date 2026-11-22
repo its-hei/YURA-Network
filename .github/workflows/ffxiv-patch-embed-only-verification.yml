@@ -1,0 +1,58 @@
+name: Verify compact FFXIV Patch on Discord
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-patch-embed-only-verification.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Confirm the existing Patch message has only its blue embed
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_patch_embed_only_v1_20261122','ffxiv_patch_embed_only_v1_result');" \
+              > "$RUNNER_TEMP/patch-compact.json"
+            if python3 - "$RUNNER_TEMP/patch-compact.json" <<'PY'
+          import json,sys
+          raw=json.load(open(sys.argv[1],encoding="utf8"))
+          vals={}
+          for part in raw if isinstance(raw,list) else [raw]:
+              for row in part.get("results",[]):
+                  vals[row.get("key")]=row.get("value")
+          state=vals.get("ffxiv_patch_embed_only_v1_20261122","pending")
+          try: outcome=json.loads(vals.get("ffxiv_patch_embed_only_v1_result","{}"))
+          except ValueError: outcome={}
+          print("Patch-only status:",state,
+                "checked:",outcome.get("checked",0),
+                "updated:",outcome.get("updated",0),
+                "verified:",outcome.get("verified",0),
+                "errors:",str(outcome.get("errors",outcome.get("error","")))[:300])
+          if state=="done" and outcome.get("checked")==1 and outcome.get("verified")==1 and not outcome.get("errors"):
+              print("SUCCESS: Existing Discord Patch card verified with no duplicate text")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Production Discord Patch embed-only layout has not yet been verified"
+          exit 1
