@@ -112,6 +112,9 @@ jobs:
       - name: Verify FC Linkshell requires XIV plus FC (permissions and membership)
         run: node --experimental-strip-types --test cloud/yura-cloud/tests/discord-fc-linkshell.test.mjs
 
+      - name: Verify configurable Discord automatic roles
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/discord-auto-roles.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit
