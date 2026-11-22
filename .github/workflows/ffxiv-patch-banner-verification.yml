@@ -1,0 +1,63 @@
+name: Verify official Patch cover on existing Discord embed
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-patch-banner-verification.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Confirm original Discord Patch message contains official title cover
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_patch_hero_v1_20261122','ffxiv_patch_hero_v1_result') OR key LIKE 'ffxiv_board_v3_%_patch';" > "$RUNNER_TEMP/patch-hero.json"
+            if python3 - "$RUNNER_TEMP/patch-hero.json" <<'PY'
+          import json,sys
+          raw=json.load(open(sys.argv[1],encoding="utf8"))
+          rows={}
+          for part in raw if isinstance(raw,list) else [raw]:
+              for row in part.get("results",[]):
+                  rows[row.get("key")]=row.get("value")
+          state=rows.get("ffxiv_patch_hero_v1_20261122","pending")
+          try: outcome=json.loads(rows.get("ffxiv_patch_hero_v1_result","{}"))
+          except ValueError: outcome={}
+          image_saved=False
+          for key,value in rows.items():
+              if key.startswith("ffxiv_board_v3_") and key.endswith("_patch"):
+                  try:
+                      source=json.loads(value).get("current") or {}
+                      image_saved="/t/" in str(source.get("image","")) and "img.finalfantasyxiv.com" in str(source.get("image",""))
+                  except ValueError: pass
+          print("Patch hero:",state,"checked:",outcome.get("checked",0),
+                "verified:",outcome.get("verified",0),
+                "image stored:",image_saved,
+                "errors:",str(outcome.get("errors",outcome.get("error","")))[:240])
+          if state=="done" and outcome.get("checked")==1 and outcome.get("verified")==1 and image_saved and not outcome.get("errors"):
+              print("SUCCESS: Official Patch cover confirmed in original Discord embed")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Patch hero not yet confirmed by live Discord API"
+          exit 1
