@@ -174,7 +174,9 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
       // clickable Lodestone link. Do not repeat it as plain bot text above.
       return "";
     case "dalamud":
-      return [header,"**"+title+"**",link("Wersja stabilna • źródło")].join("\n");
+      // The green linked embed has the stable version and information links.
+      // No duplicated Markdown or technical distribution URL above it.
+      return "";
   }
 }
 const textFor=renderFfxivCardText;
@@ -227,12 +229,15 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       break;
     case "dalamud":
       title=safe(x.title.replace(/^Dalamud\s*/i,""),100);
-      description="Aktualnie dostępna stabilna wersja Dalamuda.";
+      description="Aktualnie dostępna stabilna wersja Dalamuda.\n"+
+        "[Informacje o wersjach i kanałach](https://dalamud.dev/versions/) • "+
+        "[Co nowego w Dalamud v15](https://dalamud.dev/versions/v15/)";
       break;
   }
   const embed:any={
     color:FFXIV_CARD_PALETTE[category].color,title,
-    url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
+    url:category==="fashion"?"https://fashionreportxiv.com/":
+      category==="dalamud"?"https://dalamud.dev/versions/":x.url,
     ...(description.trim()?{description:description.trim()}:{}),
     ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
   };
@@ -918,6 +923,46 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
   }catch(e:any){
     errors.push("patch: "+String(e?.message??e).slice(0,200));
   }
+  return {checked,updated,verified,errors};
+}
+
+// Refresh only the original Dalamud message, keeping its member-visible
+// current version (from the stable distribution feed), anchor ID and history.
+// The embed title links to official informational documentation instead of
+// the raw distrib/version file. No history rollover is performed.
+export async function refreshFfxivDalamudInfo(env:Env,cfg:BoardConfig):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
+    return {checked,updated,verified,errors:["Invalid FFXIV Discord channel"]};
+  try{
+    const post=await loadPost(env,cfg,"dalamud");
+    if(!post)return {checked,updated,verified,errors:["Dalamud anchor not initialized"]};
+    checked=1;
+    if(!post.current){
+      verified=1; // no confirmed version yet: leave the explanatory placeholder.
+      return {checked,updated,verified,errors};
+    }
+    const path="channels/"+cfg.channelId+"/messages/"+post.anchor;
+    let actual=await api(env,path);
+    const wanted=(embedsFor("dalamud",post.current) as any[])[0];
+    const matches=(message:any)=>{
+      const embeds=Array.isArray(message?.embeds)?message.embeds:[];
+      return String(message?.content??"")===textFor("dalamud",post.current) &&
+        embeds.length===1 && embeds[0]?.title===wanted.title &&
+        embeds[0]?.url===wanted.url &&
+        embeds[0]?.description===wanted.description &&
+        Number(embeds[0]?.color)===Number(wanted.color);
+    };
+    if(!matches(actual)){
+      const posted=await deliverCard(env,path,"PATCH","dalamud",post.current,errors,actual);
+      if(posted)updated=1;
+      actual=await api(env,path);
+    }
+    if(matches(actual))verified=1;
+    else errors.push("Discord did not confirm the informational Dalamud embed");
+  }catch(e:any){errors.push("dalamud: "+String(e?.message??e).slice(0,200));}
   return {checked,updated,verified,errors};
 }
 
