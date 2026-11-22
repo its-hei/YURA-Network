@@ -43,6 +43,31 @@ test("Official special event page recovers temporarily absent Topics item",async
   },at);
   assert.equal(x.events[0]?.title,"The Path Infernal — FFXIV × FFXVI");
 });
+test("All simultaneous verified active events are returned, not just the latest",async()=>{
+  const at=Date.UTC(2026,10,21,16);
+  const titles=["Starlight Celebration","Heavensturn","The Rising","All Saints Wake","Moonfire Faire"];
+  const topics=titles.map((title,i)=>({
+    title,
+    url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/"+String(i+10).repeat(16),
+    date:at-i*86400000
+  }));
+  const events=await discoverLiveEvents(topics,async()=>currentArticle,at);
+  assert.deepEqual(events.errors,[]);
+  assert.equal(events.events.length,5,"all overlapping verified events returned");
+  assert.equal(new Set(events.events.map(e=>e.url)).size,5);
+});
+test("Official crossover fallback remains visible alongside other live events",async()=>{
+  const at=Date.UTC(2026,10,21,16);
+  const onlyOther=[{
+    title:"Starlight Celebration",
+    url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/abcdef0123456789",
+    date:at-86400000
+  }];
+  const result=await discoverLiveEvents(onlyOther,async()=>currentArticle,at);
+  assert.equal(result.events.length,2);
+  assert.ok(result.events.some(e=>e.title.includes("The Path Infernal")));
+  assert.ok(result.events.some(e=>e.title==="Starlight Celebration"));
+});
 test("An expired event never stays active",async()=>{
   const at=Date.UTC(2026,11,10);
   const x=await discoverLiveEvents([],async()=>currentArticle,at);
