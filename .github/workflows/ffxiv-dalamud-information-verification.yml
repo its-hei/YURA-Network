@@ -46,7 +46,8 @@ jobs:
               if key.startswith("ffxiv_board_v3_") and key.endswith("_dalamud"):
                   try:
                       record=json.loads(value)
-                      saved_versions.append((record.get("current") or {}).get("title","unavailable"))
+                      if isinstance(record,dict) and isinstance(record.get("current"),dict):
+                          saved_versions.append(record["current"].get("title","unavailable"))
                   except ValueError: pass
           print("Dalamud information:",state,
                 "checked:",outcome.get("checked",0),
