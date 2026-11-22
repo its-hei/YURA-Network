@@ -90,7 +90,7 @@ export async function discoverLiveEvents(
   // some announcements may roll off the Topics feed while the event remains
   // active. This one bounded 2026 crossover fallback is NOT a hard-coded
   // "active" status: the date range is parsed from the live official page.
-  if (!events.some(e=>/FFXVI|The Path Infernal|Final Fantasy\\s*XVI/i.test(e.title)||e.url.includes("/ffxvi/")) &&
+  if (!events.some(e=>/FFXVI|The Path Infernal|Final Fantasy\s*XVI/i.test(e.title)||e.url.includes("/ffxvi/")) &&
       at>=Date.UTC(2026,10,18) && at<Date.UTC(2026,11,10)) {
     const official="https://eu.finalfantasyxiv.com/lodestone/special/ffxvi/e86ytg2ko3";
     try {
