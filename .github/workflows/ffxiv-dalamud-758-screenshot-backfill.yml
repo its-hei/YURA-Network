@@ -1,0 +1,77 @@
+name: Verify KazWolfe Patch 7.58 screenshot backfill
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-dalamud-758-screenshot-backfill.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Verify existing Discord Dalamud card was updated from screenshot
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_dalamud_patch_758_screenshot_test_v1','ffxiv_dalamud_patch_758_screenshot_test_result') OR key LIKE 'ffxiv_board_v3_%_dalamud';" \
+              > "$RUNNER_TEMP/dalamud758.json"
+            if python3 - "$RUNNER_TEMP/dalamud758.json" <<'PY'
+          import json,sys
+          raw=json.load(open(sys.argv[1],encoding="utf8"))
+          data={}
+          for batch in raw if isinstance(raw,list) else [raw]:
+              for record in batch.get("results",[]):
+                  data[str(record.get("key"))]=record.get("value")
+          done=data.get("ffxiv_dalamud_patch_758_screenshot_test_v1")=="done"
+          try: outcome=json.loads(data.get("ffxiv_dalamud_patch_758_screenshot_test_result") or "{}")
+          except ValueError: outcome={}
+          snapshots=[]
+          for k,v in data.items():
+              if k.startswith("ffxiv_board_v3_") and k.endswith("_dalamud"):
+                  try:
+                      post=json.loads(v)
+                      if not isinstance(post,dict): continue
+                      current=post.get("current")
+                      if not isinstance(current,dict): continue
+                      status=current.get("dalamudStatus")
+                      if not isinstance(status,dict): continue
+                      snapshots.append({
+                        "id":status.get("messageId",""),
+                        "kind":status.get("sourceKind",""),
+                        "saved":bool(post.get("anchor") and post.get("thread")),
+                        "version":bool(current.get("id","").startswith("stable-"))
+                      })
+                  except (ValueError,TypeError): pass
+          seeded=any(x["kind"]=="user-screenshot" and
+                     x["id"]=="manual-screenshot-kazwolfe-758-20261110" and
+                     x["saved"] and x["version"] for x in snapshots)
+          # If another, newer announcement exists, it correctly takes precedence.
+          newer=any(x["kind"]!="user-screenshot" and x["saved"] and x["version"]
+                    for x in snapshots)
+          print("Backfill done:",done,"Discord verified:",outcome.get("verified"),
+                "saved screenshot:",seeded,"newer official status:",newer,
+                "errors:",str(outcome.get("errors",[]))[:200])
+          if done and outcome.get("verified")==1 and not outcome.get("errors") and (seeded or newer):
+              print("SUCCESS: Patch 7.58 screenshot tested on existing Discord card")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 12
+          done
+          echo "::error::Patch 7.58 screenshot backfill not yet confirmed on Discord"
+          exit 1
