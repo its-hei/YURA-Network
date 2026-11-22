@@ -349,7 +349,8 @@ export async function checkDalamudOfficialAnnouncements(env:NewsEnv,at=Date.now(
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   // Channel Following delivers NEW official messages to this channel after
   // the server subscribes. It cannot backfill pre-subscription announcements.
-  if(scheduledAt.getUTCMinutes()%5===2)
+  if(scheduledAt.getUTCMinutes()%5===2 ||
+     !await readMeta(env,"ffxiv_dalamud_official_status_v1"))
     await checkDalamudOfficialAnnouncements(env,scheduledAt.getTime());
   const t=warsawTime(scheduledAt);
   const today=t.day;

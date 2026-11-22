@@ -241,6 +241,10 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
         description+="\n**Ostatni komunikat:** <t:"+Math.floor(status.at/1000)+":f> • "+
           safe(status.author,60)+
           "\n"+safe(status.excerpt,560)+
+          (recent&&status.state!=="available"?
+            "\n**Dlaczego?** "+(status.reason?
+              safe(status.reason,180):"W komunikacie nie podano dokładnej przyczyny."):
+            "")+
           "\n**Kiedy zadziałają?** "+
           (recent&&status.state==="available"?"Według ostatniego komunikatu: już działają":
            status.eta?"Podano ETA: "+safe(status.eta,110):

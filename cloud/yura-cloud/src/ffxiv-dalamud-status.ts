@@ -19,6 +19,7 @@ export type DalamudOfficialStatus={
   at:number;
   state:"available"|"unavailable"|"working"|"unknown";
   eta:string;
+  reason?:string;
 };
 const SNOW=/^\d{15,22}$/;
 function tidy(value:unknown,max=620):string {
@@ -81,11 +82,13 @@ export function parseFollowedDalamudMessages(messages:unknown,guildId:string,
     const headline=tidy(embeds[0]?.title||full.split(/\n/)[0]||"Komunikat Dalamud",110);
     const etaMatch=/\b(?:no|unknown|not announced|no confirmed)\s+(?:ETA|estimated (?:time|date))\b/i.test(full)
       ?null:full.match(/\b(?:ETA|estimated (?:time|release)|expected (?:by|around|at))\s*[:\-]?\s*([^.!?]{3,110})/i);
+    const reasonMatch=full.match(/\b(?:because|due to|caused by|waiting for)\s+([^.!?]{8,180})/i);
     candidates.push({
       messageId:String(m.id),channelId,guildId,headline,
       excerpt:tidy(full,510),author:author||"XIVLauncher & Dalamud",
       sourceUrl:link,at:stamp,state:status,
-      eta:etaMatch?tidy(etaMatch[1],100):""
+      eta:etaMatch?tidy(etaMatch[1],100):"",
+      reason:reasonMatch?tidy(reasonMatch[1],180):""
     });
   }
   candidates.sort((a,b)=>b.at-a.at||b.messageId.localeCompare(a.messageId));
