@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts} from "../src/ffxiv-dashboard.ts";
+import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -18,9 +18,73 @@ const cases=[
   ["dalamud",{id:"stable",title:"Dalamud Stable 15.0.4.1",url:"https://github.com/goatcorp/dalamud-distrib"},["Dalamud Stable 15.0.4.1","Wersja stabilna"]]
 ];
 
+test("Every FFXIV news category is visually distinct with the intended Discord stripe",()=>{
+  const colors={event:0xF5A544,fashion:0xD976BD,patch:0x5CA9F5,dalamud:0x43C6A2};
+  for(const [category,item] of cases){
+    const [e]=renderFfxivCardEmbeds(category,item);
+    assert.equal(e.color,colors[category],category+" must have a colored embed");
+    assert.equal(e.url,category==="fashion"?"https://fashionreportxiv.com/":item.url);
+  }
+  assert.equal(new Set(Object.values(colors)).size,4);
+});
+test("In-place color migration preserves all anchors, thread IDs and the attached Fashion image",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const stored=new Map(),messages=new Map(),original=globalThis.fetch;
+  const files={id:"988888888888888888",filename:"fashion-report.png"};
+  const anchor=i=>String(933333333333333330n+BigInt(i));
+  for(let i=0;i<cases.length;i++){
+    const [cat,item]=cases[i];
+    stored.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+cat,
+      JSON.stringify({anchor:anchor(i),thread:String(944444444444444440n+BigInt(i)),current:item,renderRevision:10}));
+    messages.set(anchor(i),{id:anchor(i),content:"old",embeds:[{title:"Old",color:1}],
+      attachments:cat==="fashion"?[files]:[]});
+  }
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:stored.get(args[0])??""}),
+    run:async()=>{stored.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  const writes=[];
+  globalThis.fetch=async(url,opts={})=>{
+    const id=new URL(String(url)).pathname.split("/").at(-1);
+    const method=opts.method??"GET";
+    if(!messages.has(id))throw Error("Unexpected message request "+id);
+    if(method==="GET")return new Response(JSON.stringify(messages.get(id)),{status:200,
+      headers:{"content-type":"application/json"}});
+    assert.equal(method,"PATCH","must never create a new message or history");
+    writes.push(id);
+    assert.equal(typeof opts.body,"string","no Fashion image reupload");
+    const body=JSON.parse(opts.body),prior=messages.get(id);
+    if(id===anchor(1)){
+      assert.deepEqual(body.attachments,[files]);
+      assert.equal(body.embeds[0].image.url,"attachment://fashion-report.png");
+    }
+    messages.set(id,{...prior,content:body.content,embeds:body.embeds});
+    return new Response(JSON.stringify(messages.get(id)),{status:200,
+      headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    const result=await refreshFfxivCardPalette({DB,DISCORD_BOT_TOKEN:"test"},cfg);
+    assert.deepEqual(result,{checked:4,updated:4,verified:4,errors:[]});
+    assert.equal(writes.length,4);
+    for(let i=0;i<cases.length;i++){
+      const cat=cases[i][0],saved=JSON.parse(stored.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+cat));
+      assert.equal(saved.anchor,anchor(i));
+      assert.equal(saved.thread,String(944444444444444440n+BigInt(i)));
+      assert.equal(saved.renderRevision,11);
+      assert.equal(messages.get(anchor(i)).embeds[0].color,FFXIV_CARD_PALETTE[cat].color);
+    }
+    assert.deepEqual(messages.get(anchor(1)).attachments,[files]);
+    assert.deepEqual(await refreshFfxivCardPalette({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:4,updated:0,verified:4,errors:[]});
+    assert.equal(writes.length,4,"must not rewrite unchanged posts");
+  }finally{globalThis.fetch=original;}
+});
+
 test("Four active cards contain readable descriptions and clickable sources without embeds",()=>{
   for(const [category,item,parts] of cases.filter(([cat])=>cat!=="fashion")){
     const content=renderFfxivCardText(category,item);
+    assert.ok(content.startsWith(FFXIV_CARD_PALETTE[category].marker+" **"));
     for(const part of parts)assert.ok(content.includes(part),category+": missing "+part);
     assert.match(content,/\]\(https:\/\//,category+" must contain a clickable link");
     assert.ok(content.length>50,"card is merely a header: "+category);
@@ -42,7 +106,7 @@ test("Fashion reset is a clickable embed title, never raw Markdown in content",(
   assert.equal(embed.url,"https://fashionreportxiv.com/");
   assert.equal(embed.description,undefined);
   assert.equal(embed.footer,undefined);
-  assert.equal(embed.color,undefined);
+  assert.equal(embed.color,0xD976BD);
   assert.ok(!/80\/100|MGP|Grafika tygodnia poniżej/i.test(JSON.stringify(embed)));
   // Poland daylight saving time must also be correct in the summer.
   const [summer]=renderFfxivCardEmbeds("fashion",{...reportData,
@@ -328,6 +392,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,10);
+    assert.equal(repaired.renderRevision,11);
   }finally{globalThis.fetch=originalFetch;}
 });

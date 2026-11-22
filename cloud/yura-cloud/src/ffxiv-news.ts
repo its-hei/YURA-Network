@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
@@ -342,6 +342,30 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         JSON.stringify(attempt).slice(0,1800));
       if(attempt.ok && attempt.fashion_media?.attached===true)
         await writeMeta(env,mediaRepairKey,"done");
+    }
+  }
+  // Apply the new coloured style to existing posts at the next :04 cron
+  // without re-fetching articles or creating any new Discord messages.
+  const paletteKey="ffxiv_card_palette_v11_20261122";
+  if(t.minute%5===4){
+    const value=await readMeta(env,paletteKey),attempt=Number(value)||0;
+    if(value!=="done"&&attempt<4){
+      const cfg=await loadConfig(env);
+      if(cfg.enabled&&cfg.channelId){
+        await writeMeta(env,paletteKey,String(attempt+1));
+        try{
+          const status=await refreshFfxivCardPalette(env,{
+            guildId:cfg.guildId,channelId:cfg.channelId,
+            fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+          });
+          await writeMeta(env,"ffxiv_card_palette_v11_result",JSON.stringify(status).slice(0,1900));
+          if(status.checked===4&&status.verified===4&&!status.errors.length)
+            await writeMeta(env,paletteKey,"done");
+        }catch(e:any){
+          await writeMeta(env,"ffxiv_card_palette_v11_result",
+            JSON.stringify({error:String(e?.message||e).slice(0,200)}));
+        }
+      }
     }
   }
   // In-memory D1 deadline check only, hourly, independent of the once-a-day

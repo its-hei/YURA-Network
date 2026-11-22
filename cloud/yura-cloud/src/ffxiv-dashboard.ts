@@ -13,11 +13,18 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=10;
+const RENDER_REVISION=11;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
   patch:"⚔️ AKTUALNY PATCH",dalamud:"🟢 DALAMUD • WERSJA STABILNA"
+};
+// Distinct Discord embed stripes, with emoji fallbacks in plain text.
+export const FFXIV_CARD_PALETTE:Record<Category,{color:number;marker:string}>={
+  event:{color:0xF5A544,marker:"🟠"},
+  fashion:{color:0xD976BD,marker:"🟣"},
+  patch:{color:0x5CA9F5,marker:"🔵"},
+  dalamud:{color:0x43C6A2,marker:"🟢"}
 };
 const LEGACY:Partial<Record<Category,string>>={
   fashion:"fashion",patch:"lodestone",dalamud:"dalamud"
@@ -111,7 +118,7 @@ function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
   return toCurrent("event",active,at);
 }
 export function renderFfxivCardText(category:Category,x:Current|null):string {
-  const header=canonical(category);
+  const header=FFXIV_CARD_PALETTE[category].marker+" "+canonical(category);
   // Discord may suppress rich embeds due to permissions or client settings.
   // All essential information MUST be in regular content, not embed-only.
   if(!x){
@@ -144,9 +151,6 @@ const textFor=renderFfxivCardText;
 
 function embedsFor(category:Category,x:Current|null):unknown[]{
   if(!x)return [];
-  const colours:Record<Category,number>={
-    event:0xA77EEA,fashion:0xE89B52,patch:0x769BEE,dalamud:0x56BC92
-  };
   const source:Record<Category,string>={
     event:"Lodestone • wydarzenia",fashion:"Fashion Reporter • Discord",
     patch:"Lodestone • patch notes",dalamud:"Dalamud Distribution"
@@ -176,7 +180,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       break;
   }
   const embed:any={
-    ...(category==="fashion"?{}:{color:colours[category]}),title,
+    color:FFXIV_CARD_PALETTE[category].color,title,
     url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
     ...(description.trim()?{description:description.trim()}:{}),
     ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
@@ -211,6 +215,7 @@ async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):P
   if(saved)return saved;
   const found=existing.find(m=>m.author?.bot===true && (
     String(m.content??"").startsWith(canonical(cat)) ||
+    String(m.content??"").startsWith(FFXIV_CARD_PALETTE[cat].marker+" "+canonical(cat)) ||
     (cat==="fashion" && (
       /^\[👗 Reset: /.test(String(m.content??"")) ||
       (Array.isArray(m.embeds) && m.embeds.some((e:any)=>
@@ -462,6 +467,7 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
       actualEmbeds.length===1 &&
       actualEmbeds[0]?.title===(expectedEmbeds[0] as any)?.title &&
       actualEmbeds[0]?.description===(expectedEmbeds[0] as any)?.description &&
+      Number(actualEmbeds[0]?.color)===Number((expectedEmbeds[0] as any)?.color) &&
       (!((expectedEmbeds[0] as any)?.image) || !!actualEmbeds[0]?.image)
     );
     const hasFashionAttachment=cat!=="fashion" || !post.current?.image ||
@@ -704,6 +710,42 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
     } catch(e:any){errors.push("legacy placeholder cleanup: "+String(e?.message||e));}
   }
   return {updated:changes.length,changes,errors};
+}
+
+// One-time styling migration reads D1 anchors and PATCHes those SAME Discord
+// messages, preserving history threads and the existing native Fashion PNG.
+// No news feed calls, no newly posted messages and no archive rollover.
+export async function refreshFfxivCardPalette(env:Env,cfg:BoardConfig):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
+    return {checked,updated,verified,errors:["Invalid FFXIV Discord channel configuration"]};
+  for(const category of ORDER){
+    try{
+      const stored=await loadPost(env,cfg,category);
+      if(!stored){errors.push(category+": missing original message");continue;}
+      checked++;
+      // Identical old/new current.id: rollover edits only the existing card.
+      if(await rollover(env,cfg,category,stored,stored.current,errors))updated++;
+      const message=await api(env,"channels/"+cfg.channelId+"/messages/"+stored.anchor);
+      const actual=Array.isArray(message?.embeds)?message.embeds:[];
+      const expected=embedsFor(category,stored.current) as any[];
+      const correctContent=message?.content===textFor(category,stored.current);
+      const correctEmbed=expected.length===0 ? actual.length===0 :
+        actual.some((e:any)=>e?.title===expected[0].title &&
+          Number(e?.color)===Number(expected[0].color) &&
+          (!expected[0].image || !!e?.image));
+      const correctAttachment=category!=="fashion" || !stored.current?.image ||
+        (Array.isArray(message?.attachments) &&
+          message.attachments.some((a:any)=>/^fashion-report\.(png|jpe?g|webp)$/i.test(String(a.filename||""))));
+      if(!correctContent||!correctEmbed||!correctAttachment)
+        errors.push(category+": Discord did not confirm the styled embed"+(
+          !correctAttachment?" (native image missing)":""));
+      else verified++;
+    }catch(e:any){errors.push(category+": "+String(e?.message||e).slice(0,160));}
+  }
+  return {checked,updated,verified,errors};
 }
 
 // A Discord REST read is the source of truth: a successful Cloud run or
