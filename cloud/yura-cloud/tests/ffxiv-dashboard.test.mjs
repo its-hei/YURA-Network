@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -21,7 +21,7 @@ const cases=[
 test("Event has a clickable headline above its official rich preview",()=>{
   const event={id:"thepath",title:"FINAL FANTASY XIV x FINAL FANTASY XVI Crossover Event Returns!",
     url:source,end:Date.UTC(2026,11,9,14,59)};
-  assert.equal(renderFfxivCardText("event",event),"[FF XIV x FF XVI Crossover Event Returns!]("+source+")");
+  assert.equal(renderFfxivCardText("event",event),"","native embed should be the only event link");
   const [embed]=renderFfxivCardEmbeds("event",event);
   assert.equal(embed.title,"The Path Infernal • FFXIV × FFXVI");
   assert.equal(embed.url,source,"title links directly to official event");
@@ -34,7 +34,7 @@ test("Event has a clickable headline above its official rich preview",()=>{
   const other={...event,title:"Starlight Celebration"};
   const [fallback]=renderFfxivCardEmbeds("event",other);
   assert.equal(fallback.title,"Starlight Celebration","other event titles remain unchanged");
-  assert.equal(renderFfxivCardText("event",other),"[Starlight Celebration]("+source+")");
+  assert.equal(renderFfxivCardText("event",other),"");
   const summer={...other,end:Date.UTC(2027,5,1,7)};
   const [summerEmbed]=renderFfxivCardEmbeds("event",summer);
   assert.match(summerEmbed.description,/koniec: 1 czerwca 2027 09:00/,"summer DST is correct");
@@ -61,7 +61,7 @@ test("Source preview restoration preserves event message and history thread",asy
     requests.push(method);
     if(method==="PATCH"){
       const body=JSON.parse(opts.body);
-      assert.equal(body.content,"[FF XIV x FF XVI Crossover Event Returns!]("+source+")");
+      assert.equal(body.content,"","event post has no redundant link above embeds");
       assert.equal(body.embeds[0].url,source);
       assert.equal(body.embeds[0].title,"The Path Infernal • FFXIV × FFXVI");
       assert.deepEqual(body.embeds[0].image,{url:content.image});
@@ -78,12 +78,135 @@ test("Source preview restoration preserves event message and history thread",asy
     const saved=JSON.parse(state.get(key));
     assert.equal(saved.anchor,anchor);
     assert.equal(saved.thread,thread);
-    assert.equal(saved.renderRevision,13);
+    assert.equal(saved.renderRevision,14);
     assert.equal(message.embeds[0].title,"The Path Infernal • FFXIV × FFXVI");
     assert.deepEqual(await refreshFfxivEventCompact({DB,DISCORD_BOT_TOKEN:"test"},cfg),
       {checked:1,updated:0,verified:1,errors:[]});
     assert.equal(requests.filter(x=>x==="PATCH").length,1,"no repeated updates");
   }finally{globalThis.fetch=fetchOld;}
+});
+
+test("All verified events render as separate official embeds, with no redundant text above them",()=>{
+  const start=Date.now()-3*86400000;
+  const now=Date.now();
+  const entries=[
+    {title:"The Path Infernal",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/aa11",
+     date:start,start,end:now+2*86400000,image:"https://lds-img.finalfantasyxiv.com/aa11.png"},
+    {title:"Starlight Celebration",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/bb22",
+     date:start,start,end:now+3*86400000,image:"https://lds-img.finalfantasyxiv.com/bb22.png"},
+    {title:"Heavensturn",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/cc33",
+     date:start,start,end:now+4*86400000}
+  ];
+  const selected=activeEventSet(entries,null,now);
+  assert.ok(selected);
+  assert.equal(selected.otherEvents.length,2);
+  assert.equal(renderFfxivCardText("event",selected),"");
+  const cards=renderFfxivCardEmbeds("event",selected);
+  assert.equal(cards.length,3,"every active event gets its own card");
+  assert.deepEqual(cards.map(x=>x.url),entries.map(x=>x.url));
+  assert.equal(cards[0].color,0xF5A544);
+  assert.equal(cards[1].image.url,entries[1].image);
+  assert.ok(cards[0].description.includes("koniec:"));
+  const onlySecond=activeEventSet([],selected,now+2*86400000+1);
+  assert.equal(renderFfxivCardEmbeds("event",onlySecond).length,2,
+    "only ended event disappears at its deadline");
+  const withExtra=activeEventSet([{
+    title:"New event",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/dd44",
+    date:now,start:now-1000,end:now+6*86400000
+  }],selected,now);
+  assert.equal(renderFfxivCardEmbeds("event",withExtra).length,4,
+    "newly discovered events are added without hiding existing ones");
+  const duplicated=activeEventSet([...entries,entries[0]],null,now);
+  assert.equal(renderFfxivCardEmbeds("event",duplicated).length,3,
+    "the same official event cannot appear twice");
+});
+test("More than ten verified active events remain visible in a linked summary embed",()=>{
+  const now=Date.now();
+  const items=Array.from({length:13},(_,i)=>({
+    title:"Event "+i,url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/"+String(100+i),
+    date:now,start:now-1000,end:now+(i+1)*86400000
+  }));
+  const current=activeEventSet(items,null,now);
+  const cards=renderFfxivCardEmbeds("event",current);
+  assert.equal(cards.length,10,"Discord limits each message to 10 rich embeds");
+  assert.equal(cards[9].title,"Pozostałe aktywne wydarzenia");
+  assert.ok(cards[9].description.includes("Event 12"));
+  assert.equal(renderFfxivCardText("event",current),"");
+});
+test("Reconciliation preserves one existing event post, adds overlapping events and archives only expired ones",async()=>{
+  const original=globalThis.fetch,now=Date.now();
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const events=[
+    {title:"Festival A",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/aa11",
+      date:now-10000,start:now-10000,end:now+3600000},
+    {title:"Festival B",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/bb22",
+      date:now-10000,start:now-10000,end:now+7200000},
+    {title:"Festival C",url:"https://eu.finalfantasyxiv.com/lodestone/topics/detail/cc33",
+      date:now-10000,start:now-10000,end:now+10800000}
+  ];
+  const categories=["event","fashion","patch","dalamud"];
+  const anchor=cat=>String(933333333333333330n+BigInt(categories.indexOf(cat)));
+  const thread=cat=>String(944444444444444440n+BigInt(categories.indexOf(cat)));
+  const cacheKey=cat=>"ffxiv_board_v3_"+guildId+"_"+channelId+"_"+cat;
+  const store=new Map();
+  for(const category of categories)
+    store.set(cacheKey(category),JSON.stringify({anchor:anchor(category),thread:thread(category),
+      current:null,renderRevision:14}));
+  store.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
+  for(const name of ["fashion","lodestone","dalamud"])
+    store.set("ffxiv_board_v3_legacy_finished_"+channelId+"_"+name,"1");
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:store.get(args[0])??""}),
+    run:async()=>{store.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  const operations=[];
+  globalThis.fetch=async(url,opts={})=>{
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    const method=opts.method??"GET";
+    operations.push({method,path,body:opts.body});
+    if(method==="GET" && path==="channels/"+thread("event"))
+      return new Response(JSON.stringify({id:thread("event"),thread_metadata:{archived:false}}),{status:200});
+    if(method==="POST" && path==="channels/"+thread("event")+"/messages")
+      return new Response(JSON.stringify({id:"955555555555555555"}),{status:200});
+    if(method==="PATCH" && path==="channels/"+channelId+"/messages/"+anchor("event")){
+      const payload=JSON.parse(opts.body);
+      return new Response(JSON.stringify({id:anchor("event"),content:payload.content,embeds:payload.embeds}),
+        {status:200,headers:{"content-type":"application/json"}});
+    }
+    if(method==="GET" && path==="channels/"+channelId+"/messages/"+anchor("event"))
+      return new Response(JSON.stringify({id:anchor("event")}),{status:200});
+    throw new Error("Unexpected Discord call "+method+" "+path);
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    const first=await updateFourPosts({DB,DISCORD_BOT_TOKEN:"test"},cfg,{events});
+    assert.deepEqual(first.changes,["event"]);
+    const initialPatch=operations.filter(x=>x.method==="PATCH");
+    assert.equal(initialPatch.length,1);
+    assert.equal(JSON.parse(initialPatch[0].body).embeds.length,3);
+    assert.equal(JSON.parse(initialPatch[0].body).content,"");
+    assert.equal(operations.filter(x=>x.method==="POST").length,0);
+    const before=JSON.parse(store.get(cacheKey("event")));
+    assert.equal(before.anchor,anchor("event"));
+    assert.equal(before.thread,thread("event"));
+    const same=await updateFourPosts({DB,DISCORD_BOT_TOKEN:"test"},cfg,{events});
+    assert.equal(same.updated,0,"do not edit unchanged event sets");
+    assert.equal(operations.filter(x=>x.method==="PATCH").length,1);
+    const expired=await expireFourPosts({DB,DISCORD_BOT_TOKEN:"test"},cfg,now+3600001);
+    assert.deepEqual(expired.expired,["event"]);
+    assert.deepEqual(expired.errors,[]);
+    const posts=operations.filter(x=>x.method==="POST");
+    assert.equal(posts.length,1,"archive only the completed Festival A");
+    assert.equal(JSON.parse(posts[0].body).embeds[0].url,events[0].url);
+    const patches=operations.filter(x=>x.method==="PATCH");
+    assert.equal(patches.length,2);
+    assert.deepEqual(JSON.parse(patches[1].body).embeds.map(x=>x.url),
+      [events[1].url,events[2].url]);
+    const after=JSON.parse(store.get(cacheKey("event")));
+    assert.equal(after.anchor,before.anchor);
+    assert.equal(after.thread,before.thread);
+    assert.equal(after.current.otherEvents.length,1);
+  }finally{globalThis.fetch=original;}
 });
 
 test("Embed Links repair grants only the YURA Discord user, preserving existing bits",async()=>{
@@ -172,7 +295,7 @@ test("In-place color migration preserves all anchors, thread IDs and the attache
       const cat=cases[i][0],saved=JSON.parse(stored.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+cat));
       assert.equal(saved.anchor,anchor(i));
       assert.equal(saved.thread,String(944444444444444440n+BigInt(i)));
-      assert.equal(saved.renderRevision,13);
+      assert.equal(saved.renderRevision,14);
       assert.equal(messages.get(anchor(i)).embeds[0].color,FFXIV_CARD_PALETTE[cat].color);
     }
     assert.deepEqual(messages.get(anchor(1)).attachments,[files]);
@@ -448,7 +571,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?12:13};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?13:14};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -493,6 +616,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,13);
+    assert.equal(repaired.renderRevision,14);
   }finally{globalThis.fetch=originalFetch;}
 });
