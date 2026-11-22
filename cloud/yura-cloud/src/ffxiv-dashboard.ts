@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=12;
+const RENDER_REVISION=13;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -141,9 +141,10 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
     ? "<t:"+Math.floor(time/1000)+":f>":"brak terminu";
   switch(category){
     case "event":
-      // Like Fashion, the single clickable event headline lives in the
-      // native embed (title + url), not raw masked Markdown in bot content.
-      return "";
+      // Compact clickable headline above the ORIGINAL source preview.
+      // The deadline and countdown remain inside that preview.
+      return link(/FFXVI|Final Fantasy XVI/i.test(title)&&/Crossover Event Returns/i.test(title)
+        ?"FF XIV x FF XVI Crossover Event Returns!":title);
     case "fashion":
       // Plain bot content can display a masked link as raw Markdown;
       // the real clickable link is the Fashion embed's title+URL.
@@ -167,12 +168,13 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
   let description="";
   switch(category){
     case "event":
-      // One linked title and one end-date line; no repeated banner, footer
-      // or verbose reward summary. Relative time updates in Discord itself.
+      // Restore the former official Lodestone preview and its optional art.
       if(/FFXVI|Final Fantasy XVI/i.test(title)&&/Crossover Event Returns/i.test(title))
-        title="FF XIV x FF XVI Crossover Event Returns!";
-      description="Koniec: "+eventEndPoland(x.end)+
+        title="The Path Infernal • FFXIV × FFXVI";
+      description="**Trwa teraz** • koniec: "+eventEndPoland(x.end)+
         (x.end?" • <t:"+Math.floor(x.end/1000)+":R>":"");
+      if(x.url.includes("/ffxvi/")||/FFXVI|Final Fantasy XVI/i.test(x.title))
+        description+="\nNagrody: Torgal (mount), Metian Attire, Torgal Pup.";
       break;
     case "fashion":
       title=fashionResetLabel(x.expires);
@@ -190,7 +192,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
     color:FFXIV_CARD_PALETTE[category].color,title,
     url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
     ...(description.trim()?{description:description.trim()}:{}),
-    ...(category==="fashion"||category==="event"?{}:{footer:{text:"Źródło: "+source[category]}})
+    ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
   };
   if(x.image){
     try {
@@ -200,7 +202,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
           img.hostname==="fashionreportxiv.com" ||
           ["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"].includes(img.hostname)
         ))||
-        (category==="event"&&false&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
+        (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
         embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
@@ -763,7 +765,8 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
       actual[0]?.title===desired[0].title &&
       actual[0]?.url===desired[0].url &&
       actual[0]?.description===desired[0].description &&
-      Number(actual[0]?.color)===desired[0].color;
+      Number(actual[0]?.color)===desired[0].color &&
+      (!desired[0]?.image || !!actual[0]?.image);
     if(bodyOK&&embedsOK)verified=1;
     else errors.push("Discord did not confirm the compact event layout"+
       " (bodyOK="+bodyOK+", embedOK="+embedsOK+", embeds="+actual.length+")");
