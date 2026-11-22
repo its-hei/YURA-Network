@@ -739,9 +739,20 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
       const correctAttachment=category!=="fashion" || !stored.current?.image ||
         (Array.isArray(message?.attachments) &&
           message.attachments.some((a:any)=>/^fashion-report\.(png|jpe?g|webp)$/i.test(String(a.filename||""))));
-      if(!correctContent||!correctEmbed||!correctAttachment)
-        errors.push(category+": Discord did not confirm the styled embed"+(
-          !correctAttachment?" (native image missing)":""));
+      if(!correctContent||!correctEmbed||!correctAttachment){
+        // Report safe formatting metadata only; do not leak article content,
+        // private source links, Discord tokens, or CDN image URLs.
+        const seen=actual.slice(0,3).map((e:any)=>({
+          kind:String(e?.type??"unknown"),color:Number(e?.color??0),
+          titleMatch:e?.title===expected[0]?.title,hasImage:!!e?.image
+        }));
+        errors.push(category+": colour verification failed "+JSON.stringify({
+          contentOK:correctContent,embedOK:correctEmbed,imageOK:correctAttachment,
+          embedCount:actual.length,seen,
+          expectedColor:expected[0]?.color??null,
+          messageFlags:message?.flags??null
+        }).slice(0,420));
+      }
       else verified++;
     }catch(e:any){errors.push(category+": "+String(e?.message||e).slice(0,160));}
   }
