@@ -24,7 +24,7 @@ test("validates only distinct low-privilege self-roles",()=>{
   assert.throws(()=>validateSelfRoles([{id:fc,label:"FC"}],roles,8,guild),/protected/);
   assert.throws(()=>validateSelfRoles([valid[0],valid[0]],roles,8,guild),/duplicated/);
   assert.throws(()=>validateSelfRoles([{id:bot,label:"Bot"}],roles,8,guild),/below YURA/);
-  assert.throws(()=>validateSelfRoles([{id:xiv,label:"\nnewline"}],roles,8,guild),/label/);
+  assert.throws(()=>validateSelfRoles([{id:xiv,label:"two\nlines"}],roles,8,guild),/label/);
 });
 test("panel has real Discord buttons and no mention injections",()=>{
   const p=selfRolePanelPayload({roles:[{id:xiv,label:"XIV"},{id:gamba,label:"Gamba"}]});
