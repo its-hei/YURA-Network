@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {planFcLinkshellPermissions,planFcLinkshellMembers,syncFcLinkshell} from "../src/discord-fc-linkshell.ts";
+import {planFcLinkshellPermissions,planFcLinkshellMembers,isFcLinkshellChannelName,syncFcLinkshell} from "../src/discord-fc-linkshell.ts";
 
 const gid="1181989574713557082";
 const xiv="111111111111111111",fc="222222222222222222",gate="333333333333333333";
@@ -36,6 +36,16 @@ function mockDb(){
     run:async()=>{data.set(values[0],values[1]);return {meta:{changes:1}};}
   })})}};
 }
+test("decorated Discord channel names match exactly one FC Linkshell suffix",()=>{
+  assert.equal(isFcLinkshellChannelName("fc-linkshell"),true);
+  assert.equal(isFcLinkshellChannelName("🔗・fc-linkshell"),true);
+  assert.equal(isFcLinkshellChannelName("🔗 • fc-linkshell"),true);
+  assert.equal(isFcLinkshellChannelName("🔗│fc-linkshell"),true);
+  assert.equal(isFcLinkshellChannelName("other-fc-linkshell"),true);
+  assert.equal(isFcLinkshellChannelName("notafc-linkshell"),false);
+  assert.equal(isFcLinkshellChannelName("fc-linkshell-archive"),false);
+  assert.equal(isFcLinkshellChannelName("ffxiv-linkshell"),false);
+});
 test("channel override AND gate removes direct XIV/Zira/individual access, preserves admin and YURA",()=>{
   const changes=planFcLinkshellPermissions(current,roles,gid,gate,[yurabot],yurabot);
   const byId=new Map(changes.map(x=>[x.id,x]));
@@ -64,7 +74,7 @@ test("one cron reconciliation repairs channel overrides and assigns only matchin
     if(method==="GET"){
       let body;
       if(path==="guilds/"+gid+"/roles")body=roles;
-      else if(path==="guilds/"+gid+"/channels")body=[{id:channelId,guild_id:gid,type:0,name:"fc-linkshell"}];
+      else if(path==="guilds/"+gid+"/channels")body=[{id:channelId,guild_id:gid,type:0,name:"🔗・fc-linkshell"}];
       else if(path==="users/@me")body={id:yurabot};
       else if(path==="channels/"+channelId)body={id:channelId,guild_id:gid,permission_overwrites:current};
       else if(path==="guilds/"+gid+"/members/"+yurabot)body={user:{id:yurabot,bot:true},roles:[yurabot]};

@@ -20,6 +20,13 @@ const api=discordFfxivRequest;
 
 const bits=(value:unknown):bigint=>BigInt(String(value??"0"));
 const has=(value:unknown,flag:bigint)=> (bits(value)&flag)!==0n;
+export function isFcLinkshellChannelName(name:unknown):boolean {
+  // Discord channel names may have emoji and visual separators before
+  // the canonical suffix, e.g. "🔗・fc-linkshell" or "🔗 • fc-linkshell".
+  // Require the suffix to be a separate token, not part of another word.
+  return typeof name==="string" &&
+    /(?:^|[^a-z0-9])fc-linkshell$/i.test(name.normalize("NFKC").trim());
+}
 const once=(roles:Role[],name:string):Role=>{
   const found=roles.filter(role=>role.name===name);
   if(found.length!==1)throw new Error("Expected exactly one Discord role named "+name+" (found "+found.length+")");
@@ -149,7 +156,7 @@ export async function syncFcLinkshell(env:Env):Promise<Status>{
       has(xiv.permissions,ADMIN)||has(fc.permissions,ADMIN))
       throw new Error("One of the FC gate roles has unsafe permissions");
     const channelMatches=rawChannels.filter((c:any)=>
-      c?.name==="fc-linkshell"&&Number(c.type)===0&&String(c.guild_id)===guild);
+      isFcLinkshellChannelName(c?.name)&&Number(c.type)===0&&String(c.guild_id)===guild);
     if(channelMatches.length!==1)
       throw new Error("Expected exactly one #fc-linkshell text channel");
     const channelId=String(channelMatches[0].id);
