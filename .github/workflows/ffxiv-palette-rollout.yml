@@ -1,0 +1,58 @@
+name: Verify FFXIV coloured cards in production
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-palette-rollout.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Confirm all four existing Discord messages have their new colours
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_card_palette_v11_20261122','ffxiv_card_palette_v11_result');" \
+              > "$RUNNER_TEMP/palette.json"
+            if python3 - "$RUNNER_TEMP/palette.json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding="utf8"))
+          rows={}
+          for part in data if isinstance(data,list) else [data]:
+              for item in part.get("results",[]):
+                  rows[item.get("key")]=item.get("value")
+          state=rows.get("ffxiv_card_palette_v11_20261122","pending")
+          try: result=json.loads(rows.get("ffxiv_card_palette_v11_result","{}"))
+          except ValueError: result={}
+          print("Discord palette:",state,
+                "checked:",result.get("checked",0),
+                "updated:",result.get("updated",0),
+                "verified:",result.get("verified",0),
+                "errors:",str(result.get("errors",result.get("error","")))[:350])
+          if state=="done" and result.get("checked")==4 and result.get("verified")==4 and not result.get("errors"):
+              print("SUCCESS: Four existing anchored messages verified against live Discord REST")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 15
+          done
+          echo "::error::FFXIV Discord palette was not fully verified by live Discord API"
+          exit 1
