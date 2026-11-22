@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {classifyDalamudAnnouncement,parseFollowedDalamudMessages} from "../src/ffxiv-dalamud-status.ts";
+import {classifyDalamudAnnouncement,parseFollowedDalamudMessages,testBackfillPatch758Announcement} from "../src/ffxiv-dalamud-status.ts";
 const guild="911111111111111111",channel="922222222222222222",
   sourceGuild="933333333333333333",sourceChannel="944444444444444444";
 const now=Date.UTC(2026,10,22,18);
@@ -63,4 +63,18 @@ test("Vague plugin update wording is not proof plugins work",()=>{
   assert.equal(classifyDalamudAnnouncement("Dalamud updated, plugins still being tested."),"working");
   assert.equal(classifyDalamudAnnouncement("The patch is live, but plugins do not yet work."),"unknown");
   assert.equal(classifyDalamudAnnouncement("Plugins are back."),"available");
+});
+
+test("User-provided KazWolfe screenshot is a dated, unlinked historical backfill, not live evidence",()=>{
+  const x=testBackfillPatch758Announcement();
+  assert.equal(x.headline,"Patch 7.58 - Dalamud Updated");
+  assert.equal(x.state,"available");
+  assert.equal(x.sourceKind,"user-screenshot");
+  assert.equal(x.at,Date.parse("2026-11-10T22:05:00Z"));
+  assert.equal(x.sourceUrl,"","no invented link to the original private message");
+  assert.equal(x.eta,"","no ETA in KazWolfe's 10 Nov announcement");
+  assert.match(x.excerpt,/pluginy Dalamuda wróciły po patchu 7.58/);
+  assert.match(x.support,/wyjątków antywirusa/);
+  assert.match(x.support,/naprawy gry/);
+  assert.match(x.support,/niestandardowych repozytoriów/);
 });

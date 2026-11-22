@@ -20,6 +20,8 @@ export type DalamudOfficialStatus={
   state:"available"|"unavailable"|"working"|"unknown";
   eta:string;
   reason?:string;
+  sourceKind?:"discord-follow"|"user-screenshot";
+  support?:string;
 };
 const SNOW=/^\d{15,22}$/;
 function tidy(value:unknown,max=620):string {
@@ -98,4 +100,21 @@ export async function pollFollowedDalamud(env:Env,guildId:string,channelId:strin
   if(!SNOW.test(guildId)||!SNOW.test(channelId))throw Error("Invalid Discord source location");
   const messages=await discordFfxivRequest(env,"channels/"+channelId+"/messages?limit=100");
   return parseFollowedDalamudMessages(messages,guildId,channelId,at);
+}
+
+// Historical, user-supplied screenshot of the official #announcements post.
+// This is a one-time TEST BACKFILL, NOT a fresh Discord webhook or proof
+// of the live state on 22 November. Timestamp shown: 10 Nov 2026, 23:05 CET.
+// No fabricated Discord message snowflake or link to a private server.
+export function testBackfillPatch758Announcement():DalamudOfficialStatus{
+  return {
+    messageId:"manual-screenshot-kazwolfe-758-20261110",
+    channelId:"",guildId:"",
+    headline:"Patch 7.58 - Dalamud Updated",
+    author:"KazWolfe • #announcements (zrzut użytkownika)",
+    at:Date.parse("2026-11-10T22:05:00Z"),
+    state:"available",eta:"",sourceUrl:"",sourceKind:"user-screenshot",
+    excerpt:"10 listopada KazWolfe potwierdził: serwery FFXIV i pluginy Dalamuda wróciły po patchu 7.58. Osobom będącym w grze zalecił dokończenie aktywności przed restartem klienta.",
+    support:"Jeśli pluginy nie działają: dodaj Dalamud i XIVLauncher do wyjątków antywirusa, spróbuj naprawy gry i uruchom ją bez pluginów z niestandardowych repozytoriów."
+  };
 }

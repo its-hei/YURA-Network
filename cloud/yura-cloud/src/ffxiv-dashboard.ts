@@ -238,18 +238,25 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       description="**Pluginy:** "+(recent?label:"⚪ Brak aktualnego potwierdzenia")+
         "\n**Wersja stabilna:** "+safe(x.title.replace(/^Dalamud\s+Stable\s*/i,""),60);
       if(status){
-        description+="\n**Ostatni komunikat:** <t:"+Math.floor(status.at/1000)+":f> • "+
-          safe(status.author,60)+
+        const historical=status.sourceKind==="user-screenshot";
+        description+="\n**"+(historical?"Testowy komunikat z 10.11":"Ostatni komunikat")+
+          ":** <t:"+Math.floor(status.at/1000)+":f> • "+
+          safe(status.author,65)+
           "\n"+safe(status.excerpt,560)+
+          (status.support?"\n**W razie problemów:** "+safe(status.support,360):"")+
           (recent&&status.state!=="available"?
             "\n**Dlaczego?** "+(status.reason?
               safe(status.reason,180):"W komunikacie nie podano dokładnej przyczyny."):
             "")+
           "\n**Kiedy zadziałają?** "+
-          (recent&&status.state==="available"?"Według ostatniego komunikatu: już działają":
+          (recent&&status.state==="available"?
+            "Według ostatniego komunikatu: już działają":
+           historical&&status.state==="available"?
+            "10 listopada potwierdzono przywrócenie pluginów po patchu 7.58. Bieżący status wymaga nowszego komunikatu.":
            status.eta?"Podano ETA: "+safe(status.eta,110):
            "Brak potwierdzonego ETA")+
-          "\n[Otwórz oryginalne ogłoszenie]("+status.sourceUrl+")";
+          (status.sourceUrl?"\n[Otwórz oryginalne ogłoszenie]("+status.sourceUrl+")":"")+
+          (historical?"\n*Archiwalny test na podstawie przesłanego zrzutu; nie jest aktualną informacją z Discorda.*":"");
       }else{
         description+="\nBrak nowego oficjalnego komunikatu z obserwowanych kanałów "+
           "XIVLauncher & Dalamud. Sam numer wersji nie potwierdza działania pluginów."+

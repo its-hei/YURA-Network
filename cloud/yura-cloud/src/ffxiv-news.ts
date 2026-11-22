@@ -4,7 +4,7 @@ import {discordFfxivRequest} from "./ffxiv-discord-api";
 import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, refreshFfxivDalamudInfo, refreshFfxivDalamudStatus, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 import {extractOfficialPatchHero} from "./ffxiv-patch-hero.ts";
-import {pollFollowedDalamud} from "./ffxiv-dalamud-status.ts";
+import {pollFollowedDalamud,testBackfillPatch758Announcement} from "./ffxiv-dalamud-status.ts";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
   DB: D1Database;
@@ -347,6 +347,25 @@ export async function checkDalamudOfficialAnnouncements(env:NewsEnv,at=Date.now(
   }
 }
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
+  // One-time, explicitly requested user-screenshot backfill for Patch 7.58.
+  // Never post a new message, never mark a 10 Nov announcement as live,
+  // and never overwrite a newer official Channel Following announcement.
+  const fixtureKey="ffxiv_dalamud_patch_758_screenshot_test_v1";
+  const fixtureState=await readMeta(env,fixtureKey);
+  if(fixtureState!=="done"&&(Number(fixtureState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled&&cfg.channelId&&cfg.dalamud){
+      await writeMeta(env,fixtureKey,String((Number(fixtureState)||0)+1));
+      const result=await refreshFfxivDalamudStatus(env,{
+        guildId:cfg.guildId,channelId:cfg.channelId,
+        events:cfg.events,fashion:cfg.fashion,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+      },testBackfillPatch758Announcement());
+      await writeMeta(env,"ffxiv_dalamud_patch_758_screenshot_test_result",
+        JSON.stringify(result).slice(0,1000));
+      if(result.checked===1&&result.verified===1&&!result.errors.length)
+        await writeMeta(env,fixtureKey,"done");
+    }
+  }
   // Channel Following delivers NEW official messages to this channel after
   // the server subscribes. It cannot backfill pre-subscription announcements.
   if(scheduledAt.getUTCMinutes()%5===2 ||

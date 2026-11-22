@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,refreshFfxivDalamudInfo,refreshFfxivDalamudStatus,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 import {extractOfficialPatchHero} from "../src/ffxiv-patch-hero.ts";
+import {testBackfillPatch758Announcement} from "../src/ffxiv-dalamud-status.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -426,6 +427,54 @@ test("Official forwarded KazWolfe message updates only the existing Dalamud card
     assert.equal(requests.filter(r=>r.method==="PATCH").length,1);
     assert.equal(requests.filter(r=>r.method==="POST").length,0);
   }finally{globalThis.fetch=previous;}
+});
+test("Patch 7.58 screenshot backfills the current Dalamud card without pretending to be live",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const anchor="933333333333333333",thread="944444444444444444";
+  const seed=testBackfillPatch758Announcement();
+  const current={id:"stable-15.0.4.1",title:"Dalamud Stable 15.0.4.1",
+    url:"https://github.com/goatcorp/dalamud-distrib/blob/main/version"};
+  const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_dalamud";
+  const meta=new Map([[key,JSON.stringify({anchor,thread,current,renderRevision:14})]]);
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:meta.get(args[0])??""}),
+    run:async()=>{meta.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  let message={id:anchor,content:"",embeds:[]};
+  const orig=globalThis.fetch,operations=[];
+  globalThis.fetch=async(url,opts={})=>{
+    const method=opts.method??"GET";
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    operations.push(method);
+    assert.equal(path,"channels/"+channelId+"/messages/"+anchor,"no new post or history");
+    if(method==="PATCH"){
+      const body=JSON.parse(opts.body);
+      assert.equal(body.content,"");
+      assert.equal(body.embeds[0].url,"https://dalamud.dev/faq/updates/");
+      assert.match(body.embeds[0].description,/10 listopada/);
+      assert.match(body.embeds[0].description,/archiwalny test/i);
+      assert.match(body.embeds[0].description,/Brak aktualnego potwierdzenia/);
+      assert.match(body.embeds[0].description,/wyjątków antywirusa/);
+      assert.doesNotMatch(body.embeds[0].description,/\]\(\)/,"no fake message URL");
+      message={...message,content:body.content,embeds:body.embeds};
+    }
+    return new Response(JSON.stringify(message),{status:200,
+      headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    assert.deepEqual(await refreshFfxivDalamudStatus({DB,DISCORD_BOT_TOKEN:"test"},cfg,seed),
+      {checked:1,updated:1,verified:1,errors:[]});
+    const saved=JSON.parse(meta.get(key));
+    assert.equal(saved.anchor,anchor);
+    assert.equal(saved.thread,thread);
+    assert.equal(saved.current.id,current.id);
+    assert.equal(saved.current.dalamudStatus.messageId,seed.messageId);
+    assert.deepEqual(await refreshFfxivDalamudStatus({DB,DISCORD_BOT_TOKEN:"test"},cfg,seed),
+      {checked:1,updated:0,verified:1,errors:[]});
+    assert.equal(operations.filter(x=>x==="PATCH").length,1);
+    assert.equal(operations.filter(x=>x==="POST").length,0);
+  }finally{globalThis.fetch=orig;}
 });
 test("Official Patch 7.58 hero art is selected without unrelated image links",()=>{
   const id="b5a3ecf6c8e56e3f669681a077bf6d389dce10bd";
