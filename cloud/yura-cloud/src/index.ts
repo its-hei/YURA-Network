@@ -1,4 +1,5 @@
 import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat, syncDiscordVips } from "./discord-onboarding";
+import { syncFcLinkshell,fcLinkshellStatus } from "./discord-fc-linkshell";
 import { ffxivNewsAdmin, scheduleFfxivNews } from "./ffxiv-news";
 
 interface Env {
@@ -3897,6 +3898,12 @@ export default {
       if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
       return discordOnboardingAdmin(req,env,()=>loadDiscordTwitchVips(env));
     }
+    if (url.pathname === "/api/admin/fc-linkshell" && (req.method==="GET"||req.method==="POST")) {
+      if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
+      if(req.method==="GET")return json({ok:true,last_sync:await fcLinkshellStatus(env)});
+      try{return json({ok:true,...await syncFcLinkshell(env)});}
+      catch(e:any){return json({ok:false,error:String(e?.message??e).slice(0,300),last_sync:await fcLinkshellStatus(env)},502);}
+    }
     if (url.pathname === "/api/admin/ffxiv-news") {
       if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
       return ffxivNewsAdmin(req,env);
@@ -3990,6 +3997,10 @@ export default {
     // Independent waitUntil: news outages cannot block stream/presence cron jobs.
     ctx.waitUntil(scheduleFfxivNews(env,vipSyncAt).catch(e=>console.warn("FFXIV News:",String(e))));
     if(vipSyncAt.getUTCHours()===3 && vipSyncAt.getUTCMinutes()===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
+    // Five-minute fail-closed FC Linkshell role AND gate (XIV + FC -> FC XIV).
+    // Independent of Desktop, FFXIV feeds and the once-daily Twitch VIP sync.
+    if(vipSyncAt.getUTCMinutes()%5===2)
+      ctx.waitUntil(syncFcLinkshell(env).catch(e=>console.warn("FC Linkshell sync:",String(e))));
     ctx.waitUntil((async () => {
       // Deadline alarms handle manual raffle; cron is recovery only.
       await warnYuraRaffleIfDue(env);

@@ -109,6 +109,9 @@ jobs:
       - name: Verify readable FFXIV cards and native Fashion image attachments
         run: node --experimental-strip-types --test cloud/yura-cloud/tests/ffxiv-dashboard.test.mjs
 
+      - name: Verify FC Linkshell requires XIV plus FC (permissions and membership)
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/discord-fc-linkshell.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit
@@ -132,6 +135,27 @@ jobs:
           curl --retry 4 --retry-delay 3 --retry-connrefused -fsS \
             'https://yura-cloud.heiyeshi.workers.dev/health' \
             | python3 -c 'import json,sys; v=json.load(sys.stdin); assert v.get("ok") is True, "Worker health check did not return ok=true"; print("YURA Cloud HEALTHY:",v.get("version","version unavailable"))'
+
+      - name: Diagnose FC Linkshell role gate status (read-only)
+        continue-on-error: true
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute yura-cloud --remote --json \
+            --command="SELECT value FROM meta WHERE key='discord_fc_linkshell_last_sync_v1';" \
+            > "$RUNNER_TEMP/fc_sync.json"
+          python3 - "$RUNNER_TEMP/fc_sync.json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding="utf-8"))
+          for group in data if isinstance(data,list) else [data]:
+              for row in group.get("results",[]):
+                  try:
+                      info=json.loads(row.get("value","{}"))
+                      print("FC LINK:",info.get("status"),"eligible:",info.get("eligible"),"members:",info.get("members"),"error:",info.get("error","")[:160])
+                  except (ValueError,TypeError):
+                      print("FC LINK: status unavailable")
+          PY
 
       - name: Diagnose production Fashion image delivery (read-only)
         continue-on-error: true
