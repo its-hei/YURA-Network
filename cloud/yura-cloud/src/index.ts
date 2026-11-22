@@ -1,4 +1,5 @@
 import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat, syncDiscordVips } from "./discord-onboarding";
+import { selfRolePanelAdmin,ensureSelfRolePanel } from "./discord-self-roles";
 import { syncFcLinkshell,fcLinkshellStatus } from "./discord-fc-linkshell";
 import { syncDiscordAutoRoles,getDiscordAutoRoles,saveDiscordAutoRoles } from "./discord-auto-roles";
 import { ffxivNewsAdmin, scheduleFfxivNews } from "./ffxiv-news";
@@ -3895,6 +3896,11 @@ export default {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null,{status:204,headers:{"access-control-allow-origin":"*","access-control-allow-headers":"authorization,content-type"}});
     if (url.pathname === "/discord/interactions" && req.method === "POST") return discordOnboardingInteraction(req,env,ctx);
+    if (url.pathname === "/api/admin/discord-self-roles" && ["GET","PUT","POST"].includes(req.method)) {
+      if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env))
+        return json({error:"unauthorized"},401);
+      return selfRolePanelAdmin(req,env);
+    }
     if (url.pathname === "/api/admin/discord-onboarding") {
       if (!requireAdmin(req,env) && !await requireBroadcasterToken(req,env)) return json({error:"unauthorized"},401);
       return discordOnboardingAdmin(req,env,()=>loadDiscordTwitchVips(env));
@@ -4007,6 +4013,9 @@ export default {
     // FFXIV sources are checked once at 10:00 Europe/Warsaw (DST-aware).
     // Independent waitUntil: news outages cannot block stream/presence cron jobs.
     ctx.waitUntil(scheduleFfxivNews(env,vipSyncAt).catch(e=>console.warn("FFXIV News:",String(e))));
+    // Legacy Zira replacement: one owned button-role panel, auto-published
+    // on the first Cloud cron tick. Existing Zira messages remain untouched.
+    ctx.waitUntil(ensureSelfRolePanel(env).catch(e=>console.warn("Self roles:",String(e))));
     if(vipSyncAt.getUTCHours()===3 && vipSyncAt.getUTCMinutes()===0) ctx.waitUntil(syncDiscordVips(env,()=>loadDiscordTwitchVips(env)).catch(e=>console.warn("Discord VIP sync:",String(e))));
     // Five-minute fail-closed FC Linkshell role AND gate (XIV + FC -> FC XIV).
     // Independent of Desktop, FFXIV feeds and the once-daily Twitch VIP sync.

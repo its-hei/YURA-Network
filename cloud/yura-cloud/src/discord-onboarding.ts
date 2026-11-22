@@ -11,6 +11,7 @@ type Profile = {
   twitch_id: string | null; ffxiv_name: string; fc_state: string;
   verify_code: string | null; verify_until: number; review_message: string | null; boomer_granted: number;
 };
+import {handleSelfRoleClick} from "./discord-self-roles.ts";
 const prefix = "yura:join:";
 const cfgKey = "discord_onboarding_config_v1";
 const snowflake = (v: unknown): v is string => typeof v === "string" && /^[0-9]{15,22}$/.test(v);
@@ -275,6 +276,8 @@ export async function discordOnboardingInteraction(req:Request,env:OnboardingEnv
   if (!c || !await verifySignature(req,raw,c.key)) return new Response("invalid signature",{status:401});
   let i:any; try {i=JSON.parse(raw);} catch {return new Response("bad JSON",{status:400});}
   if (i.type===1) return response({type:1});
+  if(i.type===3 && String(i.data?.custom_id??"").startsWith("yura:self:"))
+    return handleSelfRoleClick(env,ctx,i);
   if (i.guild_id!==c.guild || !snowflake(i.member?.user?.id) || i.member.user.bot) return ephemeral("Rejestracja jest niedostępna.");
   const id=String(i.data?.custom_id||"");
   if (!id.startsWith(prefix)) return ephemeral("Nieobsługiwana akcja.");

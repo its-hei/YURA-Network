@@ -115,6 +115,9 @@ jobs:
       - name: Verify configurable Discord automatic roles
         run: node --experimental-strip-types --test cloud/yura-cloud/tests/discord-auto-roles.test.mjs
 
+      - name: Test self-role panel permissions and button flow
+        run: node --experimental-strip-types --test cloud/yura-cloud/tests/discord-self-roles.test.mjs
+
       - name: Type-check YURA Cloud TypeScript
         working-directory: cloud/yura-cloud
         run: npx tsc --noEmit

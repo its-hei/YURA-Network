@@ -140,6 +140,43 @@ export async function saveDiscordAutoRoles(env:Env,body:unknown){
   await write(env,CONFIG,updated);
   return {ok:true,...updated};
 }
+// Fast path used by YURA self-role buttons. Never scans other members.
+export async function reconcileDiscordAutoRolesMember(env:Env,guildId:string,userId:string){
+  if(!SNOW.test(guildId)||!SNOW.test(userId)||guildId!==await guild(env))
+    throw new Error("Invalid Discord member for auto-role reconciliation");
+  const c=await config(env);
+  if(!c.builtin_enabled&&!c.rules.some(r=>r.enabled))return {added:0,removed:0};
+  const {roles,botRoles}=await rolesFor(env,guildId);
+  const active=validateAutoRules(c.rules,roles,botRoles,guildId).filter(r=>r.enabled);
+  if(c.builtin_enabled){
+    const named=(name:string)=>{
+      const hits=roles.filter(r=>r.name===name);
+      if(hits.length!==1)throw new Error("Missing or ambiguous Discord role "+name);
+      return hits[0];
+    };
+    const xiv=named("XIV"),fc=named("FC"),target=named("FC XIV");
+    if(target.managed||Number(target.position)>=botHighest(roles,botRoles)||
+       (BigInt(target.permissions||"0")&BLOCKED_ROLE_PERMISSIONS)!==0n)
+      throw new Error("FC XIV cannot be safely managed by YURA");
+    active.push({id:"fc-linkshell",name:"FC Linkshell",
+      required_role_ids:[xiv.id,fc.id],target_role_id:target.id,enabled:true});
+  }
+  const member=await api(env,"guilds/"+guildId+"/members/"+userId);
+  if(!Array.isArray(member?.roles)||member?.user?.bot===true)
+    throw new Error("Discord member role list unavailable");
+  const held=new Set<string>(member.roles);
+  let added=0,removed=0;
+  for(const rule of active){
+    const should=rule.required_role_ids.every(id=>held.has(id));
+    const has=held.has(rule.target_role_id);
+    if(should===has)continue;
+    await api(env,"guilds/"+guildId+"/members/"+userId+"/roles/"+rule.target_role_id,
+      should?"PUT":"DELETE");
+    if(should){added++;held.add(rule.target_role_id);}
+    else{removed++;held.delete(rule.target_role_id);}
+  }
+  return {added,removed};
+}
 export async function syncDiscordAutoRoles(env:Env){
   const result={status:"ready",checked_at_utc:new Date().toISOString(),added:0,removed:0,
     members:0,eligible:0,pending:0,builtin_status:"disabled",errors:[] as string[]};
