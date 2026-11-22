@@ -248,7 +248,8 @@ test("Every FFXIV news category is visually distinct with the intended Discord s
   for(const [category,item] of cases){
     const [e]=renderFfxivCardEmbeds(category,item);
     assert.equal(e.color,colors[category],category+" must have a colored embed");
-    assert.equal(e.url,category==="fashion"?"https://fashionreportxiv.com/":item.url);
+    assert.equal(e.url,category==="fashion"?"https://fashionreportxiv.com/":
+      category==="dalamud"?"https://dalamud.dev/versions/":item.url);
   }
   assert.equal(new Set(Object.values(colors)).size,4);
 });
