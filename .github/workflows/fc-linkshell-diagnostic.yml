@@ -1,0 +1,58 @@
+name: FC Linkshell production diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fc-linkshell-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Inspect FC role sync (D1 read-only, no IDs or tokens)
+        working-directory: cloud/yura-cloud
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute yura-cloud --remote --json \
+            --command="SELECT key,value FROM meta WHERE key IN ('discord_fc_linkshell_last_sync_v1','discord_onboarding_config_v1');" \
+            > "$RUNNER_TEMP/fc_diag.json"
+          python3 - "$RUNNER_TEMP/fc_diag.json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding="utf-8"))
+          rows={}
+          for group in data if isinstance(data,list) else [data]:
+              for row in group.get("results",[]):
+                  rows[row["key"]]=row.get("value","")
+          try:
+              cfg=json.loads(rows.get("discord_onboarding_config_v1","{}"))
+          except Exception:
+              cfg={}
+          print("Onboarding guild configured:", bool(cfg.get("guild")))
+          print("Onboarding FC role configured:", bool(cfg.get("fc")))
+          try:
+              status=json.loads(rows.get("discord_fc_linkshell_last_sync_v1","null"))
+          except Exception:
+              status=None
+          if not status:
+              print("FC sync status: NEVER RUN / not recorded")
+          else:
+              for key in ("status","checked_at_utc","members","eligible","added","removed","permission_changes","pending","error"):
+                  if key in status:
+                      print("FC sync "+key+":",str(status[key])[:250])
+          PY
