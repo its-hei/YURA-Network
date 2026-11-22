@@ -1,4 +1,5 @@
 import { discordOnboardingInteraction, discordOnboardingAdmin, verifyOnboardingChat, syncDiscordVips } from "./discord-onboarding";
+import { syncFcLinkshell,fcLinkshellStatus } from "./discord-fc-linkshell";
 import { syncDiscordAutoRoles,getDiscordAutoRoles,saveDiscordAutoRoles } from "./discord-auto-roles";
 import { ffxivNewsAdmin, scheduleFfxivNews } from "./ffxiv-news";
 
