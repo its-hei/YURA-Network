@@ -21,8 +21,7 @@ jobs:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
         working-directory: cloud/yura-cloud
-      - name: Allow the next scheduled Cloud role reconciliation to run
-        run: sleep 125
+      # Read the current status immediately; Cloud runs role gate every 5 minutes.
       - name: Inspect FC role sync (D1 read-only, no IDs or tokens)
         working-directory: cloud/yura-cloud
         env:
