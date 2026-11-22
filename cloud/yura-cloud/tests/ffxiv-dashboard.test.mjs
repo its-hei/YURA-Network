@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
-import {extractOfficialPatchHero} from "../src/ffxiv-news.ts";
+import {extractOfficialPatchHero} from "../src/ffxiv-patch-hero.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
