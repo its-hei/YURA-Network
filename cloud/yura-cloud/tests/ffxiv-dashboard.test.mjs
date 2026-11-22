@@ -316,7 +316,7 @@ test("Dalamud card reports plugin status rather than just a stable version numbe
   assert.equal(card.title,"Dalamud • status pluginów");
   assert.equal(card.url,"https://dalamud.dev/faq/updates/");
   assert.equal(card.color,0x43C6A2);
-  assert.match(card.description,/Pluginy.*Brak aktualnego potwierdzenia/);
+  assert.match(card.description,/Pluginy.*Brak potwierdzonego statusu/);
   assert.match(card.description,/15\.0\.4\.1/);
   assert.match(card.description,/Brak potwierdzonego ETA/);
   assert.ok(!card.description.includes("dalamud-distrib"));
@@ -406,7 +406,7 @@ test("Official forwarded KazWolfe message updates only the existing Dalamud card
       assert.match(payload.embeds[0].description,/Przywrócone/);
       assert.match(payload.embeds[0].description,/15\.0\.4\.1/);
       assert.match(payload.embeds[0].description,/KazWolfe/);
-      assert.match(payload.embeds[0].description,/Według ostatniego komunikatu: już działają/);
+      assert.match(payload.embeds[0].description,/Pluginy przywrócone — potwierdzono w ostatnim komunikacie/);
       assert.deepEqual(payload.allowed_mentions,{parse:[]});
       live={...live,content:payload.content,embeds:payload.embeds};
     }
@@ -442,6 +442,7 @@ test("Confirmed KazWolfe Patch 7.58 notice is authoritative until superseded, pr
   })})};
   let message={id:anchor,content:"",embeds:[]};
   const orig=globalThis.fetch,operations=[];
+  let expectedStatus=seed;
   globalThis.fetch=async(url,opts={})=>{
     const method=opts.method??"GET";
     const path=new URL(String(url)).pathname.replace("/api/v10/","");
@@ -450,13 +451,19 @@ test("Confirmed KazWolfe Patch 7.58 notice is authoritative until superseded, pr
     if(method==="PATCH"){
       const body=JSON.parse(opts.body);
       assert.equal(body.content,"");
-      assert.equal(body.embeds[0].url,"https://dalamud.dev/faq/updates/");
-      assert.match(body.embeds[0].description,/Przywrócone/);
+      assert.equal(body.embeds[0].url,expectedStatus.sourceUrl||"https://dalamud.dev/faq/updates/");
       assert.match(body.embeds[0].description,/Ostatni komunikat/);
-      assert.match(body.embeds[0].description,/Pluginy przywrócone/);
-      assert.match(body.embeds[0].description,/wyjątków antywirusa/);
       assert.doesNotMatch(body.embeds[0].description,/testow|archiwaln|Brak aktualnego potwierdzenia/i);
-      assert.match(body.embeds[0].description,/10 listopada|<t:1794348300:f>/);
+      if(expectedStatus===seed){
+        assert.match(body.embeds[0].description,/Przywrócone/);
+        assert.match(body.embeds[0].description,/Pluginy przywrócone/);
+        assert.match(body.embeds[0].description,/wyjątków antywirusa/);
+        assert.match(body.embeds[0].description,/<t:1794348300:f>/);
+      }else{
+        assert.match(body.embeds[0].description,/Niedostępne/);
+        assert.match(body.embeds[0].description,/Podano ETA: 27 listopada 19:00/);
+        assert.doesNotMatch(body.embeds[0].description,/Pluginy przywrócone/);
+      }
       assert.doesNotMatch(body.embeds[0].description,/\]\(\)/,"no fake message URL");
       message={...message,content:body.content,embeds:body.embeds};
     }
@@ -475,6 +482,27 @@ test("Confirmed KazWolfe Patch 7.58 notice is authoritative until superseded, pr
     assert.deepEqual(await refreshFfxivDalamudStatus({DB,DISCORD_BOT_TOKEN:"test"},cfg,seed),
       {checked:1,updated:0,verified:1,errors:[]});
     assert.equal(operations.filter(x=>x==="PATCH").length,1);
+    // A newer official notice supersedes the 10 November confirmation,
+    // while its stable version, anchor and history thread stay unchanged.
+    const newer={...seed,messageId:"955555555555555555",
+      at:Date.parse("2026-11-27T12:00:00Z"),state:"unavailable",
+      eta:"27 listopada 19:00",reason:"pluginy wymagają aktualizacji",
+      author:"KazWolfe",
+      sourceKind:"discord-follow",
+      sourceUrl:"https://discord.com/channels/911111111111111111/922222222222222222/955555555555555555",
+      excerpt:"Po nowej aktualizacji gry pluginy są tymczasowo niedostępne.",
+      support:""};
+    expectedStatus=newer;
+    assert.deepEqual(await refreshFfxivDalamudStatus({DB,DISCORD_BOT_TOKEN:"test"},cfg,newer),
+      {checked:1,updated:1,verified:1,errors:[]});
+    assert.equal(JSON.parse(meta.get(key)).current.dalamudStatus.messageId,newer.messageId);
+    assert.deepEqual(await refreshFfxivDalamudStatus({DB,DISCORD_BOT_TOKEN:"test"},cfg,seed),
+      {checked:1,updated:0,verified:1,errors:[]},
+      "older confirmed notices must never overwrite newer ones");
+    assert.equal(JSON.parse(meta.get(key)).current.id,current.id);
+    assert.equal(JSON.parse(meta.get(key)).anchor,anchor);
+    assert.equal(JSON.parse(meta.get(key)).thread,thread);
+    assert.equal(operations.filter(x=>x==="PATCH").length,2);
     assert.equal(operations.filter(x=>x==="POST").length,0);
   }finally{globalThis.fetch=orig;}
 });
