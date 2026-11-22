@@ -11,9 +11,10 @@ export type Sources={
 };
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
-type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
+type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number;
+  otherEvents?:Current[]};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=13;
+const RENDER_REVISION=14;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -120,9 +121,29 @@ function toCurrent(category:Category,item:SourceItem|LiveEvent|undefined,at:numb
     ...(x.image?{image:x.image}:{}),
     ...(x.imageProxy?{imageProxy:x.imageProxy}:{})};
 }
-function eventCurrent(events:LiveEvent[]|null,at:number):Current|null{
-  const active=events?.filter(e=>e.start<=at&&at<e.end).sort((a,b)=>b.start-a.start)[0];
-  return toCurrent("event",active,at);
+// The event post stores ALL verified active events in its single existing D1
+// record. Previous single-event records remain valid without a migration.
+function eventItems(current:Current|null):Current[]{
+  if(!current)return [];
+  return [current,...(Array.isArray(current.otherEvents)?current.otherEvents:[])]
+    .filter(validCurrent)
+    .map(x=>({id:x.id,title:x.title,url:x.url,...(x.end?{end:x.end}:{}),
+      ...(x.image?{image:x.image}:{})}));
+}
+export function activeEventSet(events:LiveEvent[],previous:Current|null,at=Date.now()):Current|null{
+  const byUrl=new Map<string,Current>();
+  // An announcement can disappear from the latest Topics feed while its
+  // verified official end date is still in the future. Keep it until then.
+  for(const old of eventItems(previous))
+    if(old.end && old.end>at)byUrl.set(old.url,old);
+  for(const live of events){
+    const value=toCurrent("event",live,at);
+    if(value)byUrl.set(value.url,value); // Fresh official dates win.
+  }
+  const ordered=[...byUrl.values()].sort((a,b)=>
+    (a.end||Infinity)-(b.end||Infinity)||a.url.localeCompare(b.url));
+  const [first,...remaining]=ordered;
+  return first?{...first,...(remaining.length?{otherEvents:remaining}:{})}:null;
 }
 export function renderFfxivCardText(category:Category,x:Current|null):string {
   const header=FFXIV_CARD_PALETTE[category].marker+" "+canonical(category);
@@ -141,10 +162,9 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
     ? "<t:"+Math.floor(time/1000)+":f>":"brak terminu";
   switch(category){
     case "event":
-      // Compact clickable headline above the ORIGINAL source preview.
-      // The deadline and countdown remain inside that preview.
-      return link(/FFXVI|Final Fantasy XVI/i.test(title)&&/Crossover Event Returns/i.test(title)
-        ?"FF XIV x FF XVI Crossover Event Returns!":title);
+      // The official link is already clickable in the embedded card below.
+      // No duplicated title or plain-text header above the cards.
+      return "";
     case "fashion":
       // Plain bot content can display a masked link as raw Markdown;
       // the real clickable link is the Fashion embed's title+URL.
@@ -159,6 +179,26 @@ const textFor=renderFfxivCardText;
 
 function embedsFor(category:Category,x:Current|null):unknown[]{
   if(!x)return [];
+  // One native embedded preview per concurrently active event, all in the
+  // same EVENT message. Discord supports up to 10 embeds per message.
+  // If more than 10 are verified, the final embed lists the remaining ones
+  // with their official links and deadlines rather than hiding events.
+  if(category==="event" && x.otherEvents?.length){
+    const items=eventItems(x);
+    const detailed=items.slice(0,items.length<=10?10:9);
+    const embeds=detailed.map(item=>embedsFor("event",item)[0]);
+    if(items.length>10) {
+      const others=items.slice(9).map(item=>
+        "• ["+safe(item.title,90).replace(/[\\[\\]()*]/g,"")+"]("+item.url+")"+
+        " • do "+eventEndPoland(item.end));
+      embeds.push({
+        color:FFXIV_CARD_PALETTE.event.color,
+        title:"Pozostałe aktywne wydarzenia",
+        description:others.join("\n").slice(0,3900)
+      });
+    }
+    return embeds;
+  }
   const source:Record<Category,string>={
     event:"Lodestone • wydarzenia",fashion:"Fashion Reporter • Discord",
     patch:"Lodestone • patch notes",dalamud:"Dalamud Distribution"
@@ -211,9 +251,10 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
 }
 export const renderFfxivCardEmbeds=embedsFor;
 function changed(a:Current|null,b:Current|null):boolean{
-  // Ignore fetched-at timestamps and cache-busting changes. Expiry is a
-  // property of the weekly instance, not a reason to republish daily.
-  return a?.id!==b?.id || a?.url!==b?.url;
+  // A new or finished event requires an update even when the lead event has
+  // not changed. Stable order and IDs prevent duplicate Discord PATCH calls.
+  return a?.id!==b?.id || a?.url!==b?.url ||
+    JSON.stringify(a?.otherEvents?.map(x=>x.id)||[])!==JSON.stringify(b?.otherEvents?.map(x=>x.id)||[]);
 }
 async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
   const saved=await loadPost(env,cfg,cat);
@@ -472,13 +513,13 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
     const actualEmbeds=Array.isArray(displayed.embeds)?displayed.embeds:[];
     // Recover missing/unreadable preview images, and convert old long raw
     // links into the compact one-embed layout exactly once.
-    const hasCurrentEmbed=expectedEmbeds.length===0 || (
-      actualEmbeds.length===1 &&
-      actualEmbeds[0]?.title===(expectedEmbeds[0] as any)?.title &&
-      actualEmbeds[0]?.description===(expectedEmbeds[0] as any)?.description &&
-      Number(actualEmbeds[0]?.color)===Number((expectedEmbeds[0] as any)?.color) &&
-      (!((expectedEmbeds[0] as any)?.image) || !!actualEmbeds[0]?.image)
-    );
+    const hasCurrentEmbed=expectedEmbeds.length===actualEmbeds.length &&
+      expectedEmbeds.every((wanted:any,i:number)=>
+        actualEmbeds[i]?.title===wanted?.title &&
+        actualEmbeds[i]?.description===wanted?.description &&
+        Number(actualEmbeds[i]?.color)===Number(wanted?.color) &&
+        (!wanted?.image || !!actualEmbeds[i]?.image)
+      );
     const hasFashionAttachment=cat!=="fashion" || !post.current?.image ||
       (Array.isArray(displayed.attachments) &&
        displayed.attachments.some((a:any)=>String(a.filename||"").startsWith("fashion-report.")));
@@ -496,19 +537,21 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
   }
   const old=post.current;
   if(old){
-    // The old item is copied BEFORE the main post is edited. This is how
-    // Discord can offer history, since it has no "move message" API.
-    const archivedKey=keyFor(cfg,cat)+"_archived_"+encodeURIComponent(old.id).slice(0,300);
-    // Switching this week's card from the former web image to the
-    // user's manually uploaded Discord image is a change of artwork
-    // provider, NOT a completed Fashion Report week. Do not create
-    // a duplicate historical week just because the source changed.
-    const sameWeekSourceSwitch=cat==="fashion" && !!fresh &&
-      old.id.startsWith("image-sha256-") &&
-      fresh.id.startsWith("discord-fashion-");
-    if(!sameWeekSourceSwitch && await getMeta(env,archivedKey)!=="1"){
-      await threadWrite(env,post.thread,cat,old,warnings);
-      await putMeta(env,archivedKey,"1");
+    // Only events that ACTUALLY ended leave the active panel. Adding a new
+    // event must never archive another still-active event.
+    const stillActive=new Set(cat==="event"?eventItems(fresh).map(x=>x.id):[]);
+    const retired=cat==="event"
+      ?eventItems(old).filter(item=>!stillActive.has(item.id))
+      :[old];
+    for(const previous of retired){
+      const archivedKey=keyFor(cfg,cat)+"_archived_"+encodeURIComponent(previous.id).slice(0,300);
+      // Swapping Fashion's artwork is not a new completed weekly report.
+      const sameWeekSourceSwitch=cat==="fashion" && !!fresh &&
+        previous.id.startsWith("image-sha256-") && fresh.id.startsWith("discord-fashion-");
+      if(!sameWeekSourceSwitch && await getMeta(env,archivedKey)!=="1"){
+        await threadWrite(env,post.thread,cat,previous,warnings);
+        await putMeta(env,archivedKey,"1");
+      }
     }
   }
   const imageOK=await deliverCard(env,"channels/"+cfg.channelId+"/messages/"+post.anchor,
@@ -640,9 +683,8 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))throw new Error("Discord news channel not configured");
   const at=Date.now();
   const events=src.events;
-  const activeEvent=events===null?undefined:eventCurrent(events,at);
   const expected:Record<Category,Current|null|undefined>={
-    event:cfg.events?activeEvent:null,
+    event:cfg.events?undefined:null,
     fashion:undefined,
     patch:cfg.lodestone?toCurrent("patch",src.patch,at):undefined,
     dalamud:cfg.dalamud?toCurrent("dalamud",src.dalamud,at):undefined
@@ -688,7 +730,15 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
       }
     }
   }
-  if(posts.event?.current?.end && posts.event.current.end<=at && events===null) expected.event=null;
+  if(cfg.events){
+    // Include every verified active event plus those still active according
+    // to previously confirmed end dates, even after they leave the RSS feed.
+    if(events!==null)expected.event=activeEventSet(events,posts.event?.current||null,at);
+    else if(posts.event?.current){
+      const remaining=activeEventSet([],posts.event.current,at);
+      if(changed(posts.event.current,remaining))expected.event=remaining;
+    }
+  }
   const changes:string[]=[];
   for(const cat of ORDER){
     const post=posts[cat];
@@ -761,12 +811,14 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
     const desired=embedsFor("event",post.current) as any[];
     const actual=Array.isArray(message?.embeds)?message.embeds:[];
     const bodyOK=String(message?.content??"")===textFor("event",post.current);
-    const embedsOK=desired.length===0?actual.length===0:actual.length===1&&
-      actual[0]?.title===desired[0].title &&
-      actual[0]?.url===desired[0].url &&
-      actual[0]?.description===desired[0].description &&
-      Number(actual[0]?.color)===desired[0].color &&
-      (!desired[0]?.image || !!actual[0]?.image);
+    const embedsOK=actual.length===desired.length &&
+      desired.every((wanted:any,i:number)=>
+        actual[i]?.title===wanted?.title &&
+        actual[i]?.url===wanted?.url &&
+        actual[i]?.description===wanted?.description &&
+        Number(actual[i]?.color)===wanted?.color &&
+        (!wanted?.image || !!actual[i]?.image)
+      );
     if(bodyOK&&embedsOK)verified=1;
     else errors.push("Discord did not confirm the compact event layout"+
       " (bodyOK="+bodyOK+", embedOK="+embedsOK+", embeds="+actual.length+")");
@@ -811,10 +863,11 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
       }
       const actual=Array.isArray(message?.embeds)?message.embeds:[];
       const correctContent=message?.content===textFor(category,stored.current);
-      const correctEmbed=expected.length===0 ? actual.length===0 :
-        actual.some((e:any)=>e?.title===expected[0].title &&
-          Number(e?.color)===Number(expected[0].color) &&
-          (!expected[0].image || !!e?.image));
+      const correctEmbed=actual.length===expected.length &&
+        expected.every((wanted:any,i:number)=>
+          actual[i]?.title===wanted?.title &&
+          Number(actual[i]?.color)===Number(wanted?.color) &&
+          (!wanted?.image || !!actual[i]?.image));
       const correctAttachment=category!=="fashion" || !stored.current?.image ||
         (Array.isArray(message?.attachments) &&
           message.attachments.some((a:any)=>/^fashion-report\.(png|jpe?g|webp)$/i.test(String(a.filename||""))));
@@ -867,9 +920,15 @@ Promise<{expired:Category[];errors:string[]}> {
     try{
       const post=await loadPost(env,cfg,cat);
       if(!post?.current)continue;
-      const deadline=cat==="event"?post.current.end:post.current.expires;
-      if(!deadline || deadline>at)continue;
-      await rollover(env,cfg,cat,post,null,errors);
+      if(cat==="event"){
+        const remaining=activeEventSet([],post.current,at);
+        if(!changed(post.current,remaining))continue;
+        await rollover(env,cfg,cat,post,remaining,errors);
+      }else{
+        const deadline=post.current.expires;
+        if(!deadline || deadline>at)continue;
+        await rollover(env,cfg,cat,post,null,errors);
+      }
       expired.push(cat);
     }catch(e:any){errors.push(cat+": "+String(e?.message||e));}
   }

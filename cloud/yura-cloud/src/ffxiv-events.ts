@@ -74,7 +74,7 @@ export async function discoverLiveEvents(
       /^https:\/\/(?:eu|na)\.finalfantasyxiv\.com\/lodestone\/topics\/detail\/[a-f0-9]+\/?$/i.test(x.url) &&
       x.date<=at+86400000 && x.date>=at-90*86400000)
     .sort((a,b)=>b.date-a.date)
-    .slice(0,9);
+    .slice(0,18); // bounded daily source reads, enough for overlapping events
   const events:LiveEvent[]=[];
   const errors:string[]=[];
   for(const topic of candidates) {
@@ -90,7 +90,8 @@ export async function discoverLiveEvents(
   // some announcements may roll off the Topics feed while the event remains
   // active. This one bounded 2026 crossover fallback is NOT a hard-coded
   // "active" status: the date range is parsed from the live official page.
-  if (!events.length && at>=Date.UTC(2026,10,18) && at<Date.UTC(2026,11,10)) {
+  if (!events.some(e=>/FFXVI|The Path Infernal/i.test(e.title)||e.url.includes("/ffxvi/")) &&
+      at>=Date.UTC(2026,10,18) && at<Date.UTC(2026,11,10)) {
     const official="https://eu.finalfantasyxiv.com/lodestone/special/ffxvi/e86ytg2ko3";
     try {
       const parsed=parseOfficialEventPage(await getPage(official));
@@ -101,5 +102,5 @@ export async function discoverLiveEvents(
         });
     } catch(e:any) {errors.push("official event site: "+String(e?.message||e).slice(0,120));}
   }
-  return {events:events.sort((a,b)=>b.start-a.start).slice(0,3),errors};
+  return {events:events.sort((a,b)=>a.end-b.end||a.url.localeCompare(b.url)),errors};
 }
