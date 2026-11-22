@@ -13,7 +13,7 @@ export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
-const RENDER_REVISION=11;
+const RENDER_REVISION=12;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
 const LABEL:Record<Category,string>={
   event:"🎉 AKTUALNY EVENT",fashion:"👗 FASHION REPORT",
@@ -34,6 +34,13 @@ const NO_PINGS={parse:[]};
 const keyFor=(cfg:BoardConfig,category:Category)=>"ffxiv_board_v3_"+cfg.guildId+"_"+cfg.channelId+"_"+category;
 const canonical=(category:Category)=>"**"+LABEL[category]+"**";
 const safe=(v:unknown,n=160)=>String(v??"").replace(/[\r\n]/g," ").slice(0,n);
+function eventEndPoland(time?:number):string {
+  if(!time||!Number.isFinite(time))return "termin nieznany";
+  return new Intl.DateTimeFormat("pl-PL",{
+    timeZone:"Europe/Warsaw",day:"numeric",month:"long",year:"numeric",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  }).format(new Date(time));
+}
 function fashionResetLabel(expires?:number):string {
   if(!expires || !Number.isFinite(expires))return "👗 Reset: termin nieznany";
   // Use Poland's wall clock time (winter/summer DST) rather than UTC or
@@ -134,9 +141,9 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
     ? "<t:"+Math.floor(time/1000)+":f>":"brak terminu";
   switch(category){
     case "event":
-      return [header,"**"+title+"** • trwa teraz",
-        "Koniec: "+date(x.end)+(x.end?" • <t:"+Math.floor(x.end/1000)+":R>":""),
-        link("Szczegóły wydarzenia")].join("\n");
+      // Like Fashion, the single clickable event headline lives in the
+      // native embed (title + url), not raw masked Markdown in bot content.
+      return "";
     case "fashion":
       // Plain bot content can display a masked link as raw Markdown;
       // the real clickable link is the Fashion embed's title+URL.
@@ -160,12 +167,12 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
   let description="";
   switch(category){
     case "event":
+      // One linked title and one end-date line; no repeated banner, footer
+      // or verbose reward summary. Relative time updates in Discord itself.
       if(/FFXVI|Final Fantasy XVI/i.test(title)&&/Crossover Event Returns/i.test(title))
-        title="The Path Infernal • FFXIV × FFXVI";
-      description="**Trwa teraz** • koniec: "+at(x.end)+"\n"+
-        (x.end?"Pozostało <t:"+Math.floor(x.end/1000)+":R>\n":"")+
-        (x.url.includes("/ffxvi/")||/FFXVI|Final Fantasy XVI/i.test(title)
-          ?"Nagrody: Torgal (mount), Metian Attire, Torgal Pup.":"");
+        title="FF XIV x FF XVI Crossover Event Returns!";
+      description="Koniec: "+eventEndPoland(x.end)+
+        (x.end?" • <t:"+Math.floor(x.end/1000)+":R>":"");
       break;
     case "fashion":
       title=fashionResetLabel(x.expires);
@@ -183,7 +190,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
     color:FFXIV_CARD_PALETTE[category].color,title,
     url:category==="fashion"?"https://fashionreportxiv.com/":x.url,
     ...(description.trim()?{description:description.trim()}:{}),
-    ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
+    ...(category==="fashion"||category==="event"?{}:{footer:{text:"Źródło: "+source[category]}})
   };
   if(x.image){
     try {
@@ -193,7 +200,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
           img.hostname==="fashionreportxiv.com" ||
           ["cdn.discordapp.com","media.discordapp.net","images-ext-1.discordapp.net","images-ext-2.discordapp.net"].includes(img.hostname)
         ))||
-        (category==="event"&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
+        (category==="event"&&false&&/(?:^|\.)finalfantasyxiv\.com$/.test(img.hostname))))
         embed.image={url:category==="fashion"?publicFashionImageUrl(x.image)||img.toString():img.toString()};
     }catch{}
   }
@@ -734,6 +741,34 @@ export async function ensureFfxivEmbedLinks(env:Env,cfg:BoardConfig):Promise<str
     type:1,allow:allow.toString(),deny:deny.toString()
   });
   return "enabled-for-yura-only";
+}
+
+// Layout-only migration, never posts a new announcement or archives history.
+export async function refreshFfxivEventCompact(env:Env,cfg:BoardConfig):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
+    return {checked,updated,verified,errors:["Invalid FFXIV Discord channel configuration"]};
+  try{
+    const post=await loadPost(env,cfg,"event");
+    if(!post)return {checked,updated,verified,errors:["Event anchor not initialized"]};
+    checked=1;
+    if(await rollover(env,cfg,"event",post,post.current,errors))updated=1;
+    const message=await api(env,"channels/"+cfg.channelId+"/messages/"+post.anchor);
+    const desired=embedsFor("event",post.current) as any[];
+    const actual=Array.isArray(message?.embeds)?message.embeds:[];
+    const bodyOK=String(message?.content??"")===textFor("event",post.current);
+    const embedsOK=desired.length===0?actual.length===0:actual.length===1&&
+      actual[0]?.title===desired[0].title &&
+      actual[0]?.url===desired[0].url &&
+      actual[0]?.description===desired[0].description &&
+      Number(actual[0]?.color)===desired[0].color;
+    if(bodyOK&&embedsOK)verified=1;
+    else errors.push("Discord did not confirm the compact event layout"+
+      " (bodyOK="+bodyOK+", embedOK="+embedsOK+", embeds="+actual.length+")");
+  }catch(e:any){errors.push(String(e?.message??e).slice(0,220));}
+  return {checked,updated,verified,errors};
 }
 
 // One-time styling migration reads D1 anchors and PATCHes those SAME Discord

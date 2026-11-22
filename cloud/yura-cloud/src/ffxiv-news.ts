@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
@@ -342,6 +342,23 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         JSON.stringify(attempt).slice(0,1800));
       if(attempt.ok && attempt.fashion_media?.attached===true)
         await writeMeta(env,mediaRepairKey,"done");
+    }
+  }
+  // Apply compact Event header to its original message in-place at the
+  // next Cloud cron tick, without re-fetching FFXIV news or creating history.
+  const compactKey="ffxiv_event_compact_v12_20261122";
+  const compactState=await readMeta(env,compactKey);
+  if(compactState!=="done"&&(Number(compactState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled&&cfg.channelId&&cfg.events){
+      await writeMeta(env,compactKey,String((Number(compactState)||0)+1));
+      const status=await refreshFfxivEventCompact(env,{
+        guildId:cfg.guildId,channelId:cfg.channelId,
+        fashion:cfg.fashion,events:cfg.events,dalamud:cfg.dalamud,lodestone:cfg.lodestone
+      });
+      await writeMeta(env,"ffxiv_event_compact_v12_result",JSON.stringify(status).slice(0,1300));
+      if(status.checked===1&&status.verified===1&&!status.errors.length)
+        await writeMeta(env,compactKey,"done");
     }
   }
   // Apply the new coloured style to existing posts at the next :04 cron

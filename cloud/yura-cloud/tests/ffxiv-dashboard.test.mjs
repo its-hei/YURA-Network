@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -17,6 +17,69 @@ const cases=[
   ["patch",{id:"7.58",title:"Patch 7.58 Notes",url:source},["Patch 7.58 Notes","Przeczytaj patch notes"]],
   ["dalamud",{id:"stable",title:"Dalamud Stable 15.0.4.1",url:"https://github.com/goatcorp/dalamud-distrib"},["Dalamud Stable 15.0.4.1","Wersja stabilna"]]
 ];
+
+test("Event is exactly one linked title and one Polish deadline line",()=>{
+  const event={id:"thepath",title:"FINAL FANTASY XIV x FINAL FANTASY XVI Crossover Event Returns!",
+    url:source,end:Date.UTC(2026,11,9,14,59)};
+  assert.equal(renderFfxivCardText("event",event),"","no duplicate text above embed");
+  const [embed]=renderFfxivCardEmbeds("event",event);
+  assert.equal(embed.title,"FF XIV x FF XVI Crossover Event Returns!");
+  assert.equal(embed.url,source,"title links directly to official event");
+  assert.equal(embed.description,"Koniec: 9 grudnia 2026 15:59 • <t:1796828340:R>");
+  assert.equal(embed.color,0xF5A544);
+  assert.equal(embed.footer,undefined);
+  assert.equal(embed.image,undefined);
+  assert.equal(embed.description.split("\\n").length,1,"only one deadline line beneath the title");
+  const other={...event,title:"Starlight Celebration"};
+  const [fallback]=renderFfxivCardEmbeds("event",other);
+  assert.equal(fallback.title,"Starlight Celebration","other event titles remain unchanged");
+  const summer={...other,end:Date.UTC(2027,5,1,7)};
+  const [summerEmbed]=renderFfxivCardEmbeds("event",summer);
+  assert.match(summerEmbed.description,/Koniec: 1 czerwca 2027 09:00/,"summer DST is correct");
+});
+test("Compact event reuses the original Discord message and its history thread",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const anchor="933333333333333333",thread="944444444444444444",content={
+    id:"event",title:"FINAL FANTASY XIV x FINAL FANTASY XVI Crossover Event Returns!",
+    url:source,end:Date.UTC(2026,11,9,14,59)};
+  const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_event";
+  const state=new Map([[key,JSON.stringify({anchor,thread,current:content,renderRevision:11})]]);
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:state.get(args[0])??""}),
+    run:async()=>{state.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  let message={id:anchor,content:"Old verbose event content",embeds:[{title:"Old event",color:1}]};
+  const requests=[],fetchOld=globalThis.fetch;
+  globalThis.fetch=async(url,opts={})=>{
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    assert.equal(path,"channels/"+channelId+"/messages/"+anchor,
+      "never POST another event or archive a history thread");
+    const method=opts.method??"GET";
+    requests.push(method);
+    if(method==="PATCH"){
+      const body=JSON.parse(opts.body);
+      assert.equal(body.content,"");
+      assert.equal(body.embeds[0].url,source);
+      message={...message,content:body.content,embeds:body.embeds};
+    }else assert.equal(method,"GET");
+    return new Response(JSON.stringify(message),{
+      status:200,headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    assert.deepEqual(await refreshFfxivEventCompact({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:1,verified:1,errors:[]});
+    assert.deepEqual(requests,["GET","PATCH","GET"]);
+    const saved=JSON.parse(state.get(key));
+    assert.equal(saved.anchor,anchor);
+    assert.equal(saved.thread,thread);
+    assert.equal(saved.renderRevision,12);
+    assert.equal(message.embeds[0].title,"FF XIV x FF XVI Crossover Event Returns!");
+    assert.deepEqual(await refreshFfxivEventCompact({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:0,verified:1,errors:[]});
+    assert.equal(requests.filter(x=>x==="PATCH").length,1,"no repeated updates");
+  }finally{globalThis.fetch=fetchOld;}
+});
 
 test("Embed Links repair grants only the YURA Discord user, preserving existing bits",async()=>{
   const original=globalThis.fetch;
@@ -104,7 +167,7 @@ test("In-place color migration preserves all anchors, thread IDs and the attache
       const cat=cases[i][0],saved=JSON.parse(stored.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+cat));
       assert.equal(saved.anchor,anchor(i));
       assert.equal(saved.thread,String(944444444444444440n+BigInt(i)));
-      assert.equal(saved.renderRevision,11);
+      assert.equal(saved.renderRevision,12);
       assert.equal(messages.get(anchor(i)).embeds[0].color,FFXIV_CARD_PALETTE[cat].color);
     }
     assert.deepEqual(messages.get(anchor(1)).attachments,[files]);
@@ -115,7 +178,7 @@ test("In-place color migration preserves all anchors, thread IDs and the attache
 });
 
 test("Four active cards contain readable descriptions and clickable sources without embeds",()=>{
-  for(const [category,item,parts] of cases.filter(([cat])=>cat!=="fashion")){
+  for(const [category,item,parts] of cases.filter(([cat])=>cat!=="fashion"&&cat!=="event")){
     const content=renderFfxivCardText(category,item);
     assert.ok(content.startsWith(FFXIV_CARD_PALETTE[category].marker+" **"));
     for(const part of parts)assert.ok(content.includes(part),category+": missing "+part);
@@ -380,7 +443,7 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
   };
   const meta=new Map();
   for(const name of categories){
-    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?10:11};
+    const state={...refs[name],current:name==="fashion"?fashionCurrent:null,renderRevision:name==="fashion"?11:12};
     meta.set("ffxiv_board_v3_"+guildId+"_"+channelId+"_"+name,JSON.stringify(state));
   }
   meta.set("ffxiv_board_v3_cleanup_done_"+guildId+"_"+channelId,"1");
@@ -425,6 +488,6 @@ test("existing blank Fashion card is repaired in-place after source cursor was a
     assert.equal(calls.filter(c=>c.method==="POST").length,0,"must not create another Discord message");
     const repaired=JSON.parse(meta.get("ffxiv_board_v3_"+guildId+"_"+channelId+"_fashion"));
     assert.equal(repaired.current.id,"discord-fashion-week-460");
-    assert.equal(repaired.renderRevision,11);
+    assert.equal(repaired.renderRevision,12);
   }finally{globalThis.fetch=originalFetch;}
 });
