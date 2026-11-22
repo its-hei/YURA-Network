@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,refreshFfxivCardPalette,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -17,6 +17,39 @@ const cases=[
   ["patch",{id:"7.58",title:"Patch 7.58 Notes",url:source},["Patch 7.58 Notes","Przeczytaj patch notes"]],
   ["dalamud",{id:"stable",title:"Dalamud Stable 15.0.4.1",url:"https://github.com/goatcorp/dalamud-distrib"},["Dalamud Stable 15.0.4.1","Wersja stabilna"]]
 ];
+
+test("Embed Links repair grants only the YURA Discord user, preserving existing bits",async()=>{
+  const original=globalThis.fetch;
+  const guildId="911111111111111111",channelId="922222222222222222",botId="933333333333333333";
+  const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+  const overwrites=[
+    {id:guildId,type:0,allow:"0",deny:"1024"},
+    {id:botId,type:1,allow:"32",deny:"16384"}
+  ];
+  let writes=0;
+  globalThis.fetch=async (url,opts)=>{
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    if(opts.method==="GET"){
+      const result=path==="users/@me"?{id:botId}:
+        path==="channels/"+channelId?{guild_id:guildId,type:0,permission_overwrites:overwrites}:null;
+      if(!result)throw Error("Unexpected read: "+path);
+      return new Response(JSON.stringify(result),{status:200,
+        headers:{"content-type":"application/json"}});
+    }
+    writes++;
+    assert.equal(opts.method,"PUT");
+    assert.equal(path,"channels/"+channelId+"/permissions/"+botId);
+    const payload=JSON.parse(opts.body);
+    assert.equal(payload.type,1);
+    assert.equal(BigInt(payload.allow),32n|16384n);
+    assert.equal(BigInt(payload.deny),0n);
+    return new Response(null,{status:204});
+  };
+  try{
+    assert.equal(await ensureFfxivEmbedLinks({DISCORD_BOT_TOKEN:"test"},cfg),"enabled-for-yura-only");
+    assert.equal(writes,1);
+  }finally{globalThis.fetch=original;}
+});
 
 test("Every FFXIV news category is visually distinct with the intended Discord stripe",()=>{
   const colors={event:0xF5A544,fashion:0xD976BD,patch:0x5CA9F5,dalamud:0x43C6A2};

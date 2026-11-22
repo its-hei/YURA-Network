@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           for attempt in {1..2}; do
             npx wrangler d1 execute yura-cloud --remote --json \
-              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_card_palette_v11_20261122','ffxiv_card_palette_v11_result');" \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_card_palette_v11_embed_repair_20261122','ffxiv_card_palette_v11_result');" \
               > "$RUNNER_TEMP/palette.json"
             if python3 - "$RUNNER_TEMP/palette.json" <<'PY'
           import json,sys
@@ -38,7 +38,7 @@ jobs:
           for part in data if isinstance(data,list) else [data]:
               for item in part.get("results",[]):
                   rows[item.get("key")]=item.get("value")
-          state=rows.get("ffxiv_card_palette_v11_20261122","pending")
+          state=rows.get("ffxiv_card_palette_v11_embed_repair_20261122","pending")
           try: result=json.loads(rows.get("ffxiv_card_palette_v11_result","{}"))
           except ValueError: result={}
           print("Discord palette:",state,

@@ -346,8 +346,9 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
   }
   // Apply the new coloured style to existing posts at the next :04 cron
   // without re-fetching articles or creating any new Discord messages.
-  const paletteKey="ffxiv_card_palette_v11_20261122";
-  if(t.minute%5===4){
+  const paletteKey="ffxiv_card_palette_v11_embed_repair_20261122";
+  // The next cron tick retries this migration, at most four times, then stops.
+  {
     const value=await readMeta(env,paletteKey),attempt=Number(value)||0;
     if(value!=="done"&&attempt<4){
       const cfg=await loadConfig(env);
