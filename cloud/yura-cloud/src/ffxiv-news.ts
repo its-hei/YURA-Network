@@ -1,9 +1,10 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, refreshFfxivDalamudInfo, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, refreshFfxivPatchBanner, refreshFfxivDalamudInfo, refreshFfxivDalamudStatus, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 import {extractOfficialPatchHero} from "./ffxiv-patch-hero.ts";
+import {pollFollowedDalamud} from "./ffxiv-dalamud-status.ts";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
   DB: D1Database;
@@ -318,7 +319,38 @@ export async function checkFfxivNews(env: NewsEnv, force = false, repairFashion 
     return {ok:false,status:"error",error,channel_id:channelId};
   }
 }
+// Polling #statusy is inexpensive: one Discord read every five minutes,
+// no Gateway, no Desktop PC, no polling members and no extra Discord posts.
+export async function checkDalamudOfficialAnnouncements(env:NewsEnv,at=Date.now()){
+  const cfg=await loadConfig(env);
+  if(!cfg.enabled||!cfg.channelId||!cfg.dalamud)
+    return {ok:true,status:"disabled"};
+  try{
+    const scan=await pollFollowedDalamud(env,cfg.guildId,cfg.channelId,at);
+    const update=await refreshFfxivDalamudStatus(env,{
+      guildId:cfg.guildId,channelId:cfg.channelId,events:cfg.events,
+      fashion:cfg.fashion,lodestone:cfg.lodestone,dalamud:cfg.dalamud
+    },scan.status);
+    const diagnostic={
+      at:new Date(at).toISOString(),inspected:scan.inspected,
+      followed:scan.followed,qualified:scan.qualified,
+      hasOfficialStatus:!!scan.status,latestId:scan.status?.messageId||"",
+      state:scan.status?.state||"unknown",verified:update.verified,
+      errors:update.errors
+    };
+    await writeMeta(env,"ffxiv_dalamud_official_status_v1",JSON.stringify(diagnostic).slice(0,1350));
+    return {ok:update.errors.length===0,...diagnostic};
+  }catch(e:any){
+    const diagnostic={at:new Date(at).toISOString(),error:String(e?.message||e).slice(0,180)};
+    await writeMeta(env,"ffxiv_dalamud_official_status_v1",JSON.stringify(diagnostic));
+    return {ok:false,...diagnostic};
+  }
+}
 export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
+  // Channel Following delivers NEW official messages to this channel after
+  // the server subscribes. It cannot backfill pre-subscription announcements.
+  if(scheduledAt.getUTCMinutes()%5===2)
+    await checkDalamudOfficialAnnouncements(env,scheduledAt.getTime());
   const t=warsawTime(scheduledAt);
   const today=t.day;
   // One-time compact Fashion text refresh. Edit the existing anchored
@@ -547,6 +579,7 @@ export async function ffxivNewsAdmin(req: Request,env:NewsEnv):Promise<Response>
       error:await readMeta(env,"ffxiv_news_last_error"),
       fashion_source_diagnostic:await readMeta(env,"ffxiv_fashion_follow_last_diagnostic"),
       fashion_media_status:await readMeta(env,"ffxiv_fashion_media_status_v1"),
+      dalamud_official_status:await readMeta(env,"ffxiv_dalamud_official_status_v1"),
       daily_at:"10:00 Europe/Warsaw",layout:"4 editable posts with history threads"});
   }
   if(req.method==="PUT"){

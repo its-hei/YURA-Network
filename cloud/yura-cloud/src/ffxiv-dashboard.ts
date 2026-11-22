@@ -3,6 +3,7 @@
 // thread before the main message is edited. No daily no-news posts.
 import type {LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api.ts";
+import type {DalamudOfficialStatus} from "./ffxiv-dalamud-status.ts";
 
 interface Env {DB:D1Database; DISCORD_BOT_TOKEN?:string}
 export type SourceItem={source:string;id:string;title:string;url:string;date:number;image?:string;imageProxy?:string};
@@ -12,7 +13,7 @@ export type Sources={
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number;
-  otherEvents?:Current[]};
+  otherEvents?:Current[];dalamudStatus?:DalamudOfficialStatus};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
 const RENDER_REVISION=14;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
@@ -227,19 +228,39 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
     case "patch":
       description="Oficjalne informacje o aktualizacji FFXIV.";
       break;
-    case "dalamud":
-      title=safe(x.title.replace(/^Dalamud\s*/i,""),100);
-      description="Aktualnie dostępna stabilna wersja Dalamuda.\n"+
-        "[Informacje o wersjach i kanałach](https://dalamud.dev/versions/) • "+
-        "[Co nowego w Dalamud v15](https://dalamud.dev/versions/v15/)";
+    case "dalamud": {
+      const status=x.dalamudStatus;
+      const recent=!!status && Date.now()-status.at<=7*86400000;
+      const label=status?.state==="available"?"🟢 Przywrócone":
+        status?.state==="unavailable"?"🔴 Niedostępne":
+        status?.state==="working"?"🟠 Trwa aktualizacja":"⚪ Niepotwierdzone";
+      title="Dalamud • status pluginów";
+      description="**Pluginy:** "+(recent?label:"⚪ Brak aktualnego potwierdzenia")+
+        "\n**Wersja stabilna:** "+safe(x.title.replace(/^Dalamud\s*/i,""),60);
+      if(status){
+        description+="\n**Ostatni komunikat:** <t:"+Math.floor(status.at/1000)+":f> • "+
+          safe(status.author,60)+
+          "\n"+safe(status.excerpt,560)+
+          "\n**Kiedy zadziałają?** "+
+          (recent&&status.state==="available"?"Według ostatniego komunikatu: już działają":
+           status.eta?"Podano ETA: "+safe(status.eta,110):
+           "Brak potwierdzonego ETA")+
+          "\n[Otwórz oryginalne ogłoszenie]("+status.sourceUrl+")";
+      }else{
+        description+="\nBrak nowego oficjalnego komunikatu z obserwowanych kanałów "+
+          "XIVLauncher & Dalamud. Sam numer wersji nie potwierdza działania pluginów."+
+          "\n**Kiedy zadziałają?** Brak potwierdzonego ETA.";
+      }
       break;
+    }
   }
   const embed:any={
     color:FFXIV_CARD_PALETTE[category].color,title,
     url:category==="fashion"?"https://fashionreportxiv.com/":
-      category==="dalamud"?"https://dalamud.dev/versions/":x.url,
+      category==="dalamud"?(x.dalamudStatus?.sourceUrl||"https://dalamud.dev/faq/updates/"):x.url,
     ...(description.trim()?{description:description.trim()}:{}),
-    ...(category==="fashion"?{}:{footer:{text:"Źródło: "+source[category]}})
+    ...(category==="fashion"?{}:{footer:{text:category==="dalamud"?
+      "Ogłoszenia XIVLauncher & Dalamud • Discord": "Źródło: "+source[category]}})
   };
   if(x.image){
     try {
@@ -264,6 +285,7 @@ function changed(a:Current|null,b:Current|null):boolean{
     // Image improvements on the SAME official article are presentation-only
     // changes. A transient page fetch failure must not remove existing art.
     (!!b?.image && a?.image!==b.image) ||
+    a?.dalamudStatus?.messageId!==b?.dalamudStatus?.messageId ||
     JSON.stringify(a?.otherEvents?.map(x=>x.id)||[])!==JSON.stringify(b?.otherEvents?.map(x=>x.id)||[]);
 }
 async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
@@ -546,7 +568,7 @@ async function rollover(env:Env,cfg:BoardConfig,cat:Category,post:Post,fresh:Cur
     return false;
   }
   const old=post.current;
-  if(old && !(cat==="patch"&&fresh&&old.id===fresh.id&&old.url===fresh.url)){
+  if(old && !((cat==="patch"||cat==="dalamud")&&fresh&&old.id===fresh.id&&old.url===fresh.url)){
     // The patch banner is allowed to arrive after publication. Updating the
     // same Patch's artwork is NOT a new patch and must not archive it.
     // Only events that ACTUALLY ended leave the active panel. Adding a new
@@ -751,6 +773,10 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
       if(changed(posts.event.current,remaining))expected.event=remaining;
     }
   }
+  if(cfg.dalamud && posts.dalamud?.current && expected.dalamud &&
+    posts.dalamud.current.id===expected.dalamud.id)
+    expected.dalamud={...expected.dalamud,
+      dalamudStatus:posts.dalamud.current.dalamudStatus};
   const changes:string[]=[];
   for(const cat of ORDER){
     const post=posts[cat];
@@ -767,6 +793,9 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
       if(edited)changes.push(cat);
     }catch(e:any){errors.push(cat+" update: "+String(e?.message||e));}
   }
+  // Preserve the latest verified announcement during daily version checks.
+  // A NEW stable version intentionally clears an old patch's status: it
+  // cannot be assumed compatible until official confirmation.
   // Only migrate legacy bot-owned category anchors after all four canonical
   // messages exist, leaving anything unrecognized untouched.
   for(const cat of ["fashion","patch","dalamud"] as const)
@@ -923,6 +952,47 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
   }catch(e:any){
     errors.push("patch: "+String(e?.message??e).slice(0,200));
   }
+  return {checked,updated,verified,errors};
+}
+
+// Status updates are cosmetic edits to one persistent Dalamud message, not
+// releases. They must never generate history entries, duplicate announcements
+// or overwrite the stable version source.
+export async function refreshFfxivDalamudStatus(env:Env,cfg:BoardConfig,
+  status:DalamudOfficialStatus|null):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.guildId)||!ID.test(cfg.channelId))
+    return {checked,updated,verified,errors:["Invalid news channel"]};
+  try{
+    const post=await loadPost(env,cfg,"dalamud");
+    if(!post?.current)return {checked,updated,verified,errors:["Dalamud version not initialized"]};
+    checked=1;
+    // A missing/new source must never erase a more recent signed-off status.
+    const previous=post.current.dalamudStatus;
+    const chosen=(!status||previous&&previous.at>status.at)?previous:status;
+    const fresh:Current={...post.current,...(chosen?{dalamudStatus:chosen}:{})};
+    const layoutKey="ffxiv_dalamud_status_layout_v1_"+cfg.guildId+"_"+cfg.channelId;
+    const oldLayout=await getMeta(env,layoutKey);
+    if(oldLayout!=="1"||JSON.stringify(previous)!==JSON.stringify(chosen)){
+      const path="channels/"+cfg.channelId+"/messages/"+post.anchor;
+      const sent=await deliverCard(env,path,"PATCH","dalamud",fresh,errors);
+      if(sent){
+        updated=1;
+        const message=await api(env,path);
+        const desired=(embedsFor("dalamud",fresh) as any[])[0];
+        const actual=Array.isArray(message?.embeds)?message.embeds:[];
+        if(message?.content===textFor("dalamud",fresh)&&actual.length===1&&
+          actual[0]?.title===desired.title&&actual[0]?.description===desired.description&&
+          actual[0]?.url===desired.url){
+          verified=1;
+          await savePost(env,cfg,"dalamud",{...post,current:fresh});
+          await putMeta(env,layoutKey,"1");
+        }else errors.push("Discord did not confirm Dalamud status embed");
+      }else errors.push("Discord rejected Dalamud status edit");
+    }else verified=1;
+  }catch(e:any){errors.push("dalamud-status: "+String(e?.message||e).slice(0,180));}
   return {checked,updated,verified,errors};
 }
 
