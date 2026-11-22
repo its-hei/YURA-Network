@@ -1,0 +1,68 @@
+name: Verify FFXIV all-active events in production
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ffxiv-all-active-verification.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Verify live EVENT card and count of confirmed active events
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..14}; do
+            npx wrangler d1 execute yura-cloud --remote --json \
+              --command="SELECT key,value FROM meta WHERE key IN ('ffxiv_events_all_active_v14_20261122','ffxiv_events_all_active_v14_result') OR key LIKE 'ffxiv_board_v3_%_event';" \
+              > "$RUNNER_TEMP/events.json"
+            if python3 - "$RUNNER_TEMP/events.json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding="utf8"))
+          rows={}
+          for part in data if isinstance(data,list) else [data]:
+              for row in part.get("results",[]):
+                  rows[row.get("key")]=row.get("value")
+          state=rows.get("ffxiv_events_all_active_v14_20261122","pending")
+          try: result=json.loads(rows.get("ffxiv_events_all_active_v14_result") or "{}")
+          except ValueError: result={}
+          verified=result.get("verification") or {}
+          counts=[]
+          for key,raw in rows.items():
+              if key.startswith("ffxiv_board_v3_") and key.endswith("_event"):
+                  try:
+                      post=json.loads(raw)
+                      current=post.get("current")
+                      counts.append((1+len(current.get("otherEvents") or [])) if current else 0)
+                  except ValueError: pass
+          print("Migration:",state,"Discord checked:",verified.get("checked",0),
+                "verified:",verified.get("verified",0),
+                "active event count:",counts,
+                "event source errors:",str(result.get("event_source_errors",[]))[:250],
+                "verification errors:",str(verified.get("errors",[]))[:250])
+          if (state=="done" and verified.get("verified")==1 and
+              not result.get("event_source_errors") and not verified.get("errors")):
+              print("SUCCESS: Native Discord event embeds verified, with no redundant text")
+              sys.exit(0)
+          sys.exit(1)
+          PY
+            then exit 0; fi
+            sleep 15
+          done
+          echo "::error::All-active FFXIV event card is not yet verified by Discord API"
+          exit 1
