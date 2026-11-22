@@ -1,7 +1,7 @@
 // One compact, server-side FFXIV news job. Runs without Desktop or Discord Gateway.
 import {discoverLiveEvents, type LiveEvent} from "./ffxiv-events";
 import {discordFfxivRequest} from "./ffxiv-discord-api";
-import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, type SourceItem} from "./ffxiv-dashboard";
+import {updateFourPosts, expireFourPosts, verifyFashionReportImage, refreshFfxivCardPalette, refreshFfxivEventCompact, refreshFfxivPatchEmbedOnly, type SourceItem} from "./ffxiv-dashboard";
 import {pollFollowedFashion, acknowledgeFashionPoll, type FashionPoll} from "./ffxiv-fashion-follow";
 // Twitch broadcaster/Admin authentication is performed by the main Worker router.
 interface NewsEnv {
@@ -342,6 +342,31 @@ export async function scheduleFfxivNews(env: NewsEnv, scheduledAt: Date) {
         JSON.stringify(attempt).slice(0,1800));
       if(attempt.ok && attempt.fashion_media?.attached===true)
         await writeMeta(env,mediaRepairKey,"done");
+    }
+  }
+  // One-shot cosmetic Patch cleanup: the linked blue embed already
+  // contains the headline and official source. Remove duplicate bot text
+  // from the SAME anchored post; do not touch its history or other cards.
+  const patchCompactKey="ffxiv_patch_embed_only_v1_20261122";
+  const patchState=await readMeta(env,patchCompactKey);
+  if(patchState!=="done" && (Number(patchState)||0)<4){
+    const cfg=await loadConfig(env);
+    if(cfg.enabled && cfg.channelId && cfg.lodestone){
+      await writeMeta(env,patchCompactKey,String((Number(patchState)||0)+1));
+      try{
+        const result=await refreshFfxivPatchEmbedOnly(env,{
+          guildId:cfg.guildId,channelId:cfg.channelId,
+          events:cfg.events,fashion:cfg.fashion,
+          lodestone:cfg.lodestone,dalamud:cfg.dalamud
+        });
+        await writeMeta(env,"ffxiv_patch_embed_only_v1_result",
+          JSON.stringify(result).slice(0,1000));
+        if(result.checked===1 && result.verified===1 && !result.errors.length)
+          await writeMeta(env,patchCompactKey,"done");
+      }catch(e:any){
+        await writeMeta(env,"ffxiv_patch_embed_only_v1_result",
+          JSON.stringify({error:String(e?.message??e).slice(0,200)}));
+      }
     }
   }
   // One-shot v14 reconciliation: fetch the current official event schedule
