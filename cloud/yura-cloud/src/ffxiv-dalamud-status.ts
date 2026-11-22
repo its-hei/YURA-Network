@@ -102,19 +102,19 @@ export async function pollFollowedDalamud(env:Env,guildId:string,channelId:strin
   return parseFollowedDalamudMessages(messages,guildId,channelId,at);
 }
 
-// Historical, user-supplied screenshot of the official #announcements post.
-// This is a one-time TEST BACKFILL, NOT a fresh Discord webhook or proof
-// of the live state on 22 November. Timestamp shown: 10 Nov 2026, 23:05 CET.
-// No fabricated Discord message snowflake or link to a private server.
-export function testBackfillPatch758Announcement():DalamudOfficialStatus{
+// Confirmed KazWolfe statement supplied by the user from the official
+// #announcements channel. Keep its real date (10 Nov 2026, 23:05 CET) and
+// internally retain screenshot provenance. Never invent a Discord message ID
+// or private-server link. A newer forwarded announcement supersedes it.
+export function confirmedPatch758Announcement():DalamudOfficialStatus{
   return {
     messageId:"manual-screenshot-kazwolfe-758-20261110",
     channelId:"",guildId:"",
     headline:"Patch 7.58 - Dalamud Updated",
-    author:"KazWolfe • #announcements (zrzut użytkownika)",
+    author:"KazWolfe • XIVLauncher & Dalamud",
     at:Date.parse("2026-11-10T22:05:00Z"),
     state:"available",eta:"",sourceUrl:"",sourceKind:"user-screenshot",
-    excerpt:"10 listopada KazWolfe potwierdził: serwery FFXIV i pluginy Dalamuda wróciły po patchu 7.58. Osobom będącym w grze zalecił dokończenie aktywności przed restartem klienta.",
+    excerpt:"Po patchu 7.58 serwery FFXIV i pluginy Dalamuda zostały przywrócone. Graczom będącym w grze zalecono dokończenie aktywności przed restartem klienta.",
     support:"Jeśli pluginy nie działają: dodaj Dalamud i XIVLauncher do wyjątków antywirusa, spróbuj naprawy gry i uruchom ją bez pluginów z niestandardowych repozytoriów."
   };
 }

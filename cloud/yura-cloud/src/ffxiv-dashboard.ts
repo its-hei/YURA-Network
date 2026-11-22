@@ -230,33 +230,31 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
       break;
     case "dalamud": {
       const status=x.dalamudStatus;
-      const recent=!!status && Date.now()-status.at<=7*86400000;
+      // Official availability confirmations remain authoritative until a
+      // newer official announcement replaces them, irrespective of age.
+      // The source date is shown so the claim is not presented as a new post.
+      const confirmed=!!status;
       const label=status?.state==="available"?"🟢 Przywrócone":
         status?.state==="unavailable"?"🔴 Niedostępne":
         status?.state==="working"?"🟠 Trwa aktualizacja":"⚪ Niepotwierdzone";
       title="Dalamud • status pluginów";
-      description="**Pluginy:** "+(recent?label:"⚪ Brak aktualnego potwierdzenia")+
+      description="**Pluginy:** "+(confirmed?label:"⚪ Brak potwierdzonego statusu")+
         "\n**Wersja stabilna:** "+safe(x.title.replace(/^Dalamud\s+Stable\s*/i,""),60);
       if(status){
-        const historical=status.sourceKind==="user-screenshot";
-        description+="\n**"+(historical?"Testowy komunikat z 10.11":"Ostatni komunikat")+
-          ":** <t:"+Math.floor(status.at/1000)+":f> • "+
+        description+="\n**Ostatni komunikat:** <t:"+Math.floor(status.at/1000)+":f> • "+
           safe(status.author,65)+
           "\n"+safe(status.excerpt,560)+
           (status.support?"\n**W razie problemów:** "+safe(status.support,360):"")+
-          (recent&&status.state!=="available"?
+          (status.state!=="available"?
             "\n**Dlaczego?** "+(status.reason?
               safe(status.reason,180):"W komunikacie nie podano dokładnej przyczyny."):
             "")+
           "\n**Kiedy zadziałają?** "+
-          (recent&&status.state==="available"?
-            "Według ostatniego komunikatu: już działają":
-           historical&&status.state==="available"?
-            "10 listopada potwierdzono przywrócenie pluginów po patchu 7.58. Bieżący status wymaga nowszego komunikatu.":
+          (status.state==="available"?
+            "Pluginy przywrócone — potwierdzono w ostatnim komunikacie":
            status.eta?"Podano ETA: "+safe(status.eta,110):
            "Brak potwierdzonego ETA")+
-          (status.sourceUrl?"\n[Otwórz oryginalne ogłoszenie]("+status.sourceUrl+")":"")+
-          (historical?"\n*Archiwalny test na podstawie przesłanego zrzutu; nie jest aktualną informacją z Discorda.*":"");
+          (status.sourceUrl?"\n[Otwórz oryginalne ogłoszenie]("+status.sourceUrl+")":"");
       }else{
         description+="\nBrak nowego oficjalnego komunikatu z obserwowanych kanałów "+
           "XIVLauncher & Dalamud. Sam numer wersji nie potwierdza działania pluginów."+
@@ -985,7 +983,8 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
     // A missing/new source must never erase a more recent signed-off status.
     const previous=post.current.dalamudStatus;
     const chosen=(!status||previous&&previous.at>status.at)?previous:status;
-    const freshFlag=!!chosen && Date.now()-chosen.at<=7*86400000;
+    // No seven-day expiry: a confirmed status stays until a newer notice.
+    const freshFlag=!!chosen;
     const fresh:Current={...post.current,dalamudStatusFresh:freshFlag,
       ...(chosen?{dalamudStatus:chosen}:{})};
     const layoutKey="ffxiv_dalamud_status_layout_v1_"+cfg.guildId+"_"+cfg.channelId;

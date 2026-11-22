@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,refreshFfxivPatchBanner,refreshFfxivDalamudInfo,refreshFfxivDalamudStatus,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 import {extractOfficialPatchHero} from "../src/ffxiv-patch-hero.ts";
-import {testBackfillPatch758Announcement} from "../src/ffxiv-dalamud-status.ts";
+import {confirmedPatch758Announcement} from "../src/ffxiv-dalamud-status.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -428,10 +428,10 @@ test("Official forwarded KazWolfe message updates only the existing Dalamud card
     assert.equal(requests.filter(r=>r.method==="POST").length,0);
   }finally{globalThis.fetch=previous;}
 });
-test("Patch 7.58 screenshot backfills the current Dalamud card without pretending to be live",async()=>{
+test("Confirmed KazWolfe Patch 7.58 notice is authoritative until superseded, preserving its date",async()=>{
   const guildId="911111111111111111",channelId="922222222222222222";
   const anchor="933333333333333333",thread="944444444444444444";
-  const seed=testBackfillPatch758Announcement();
+  const seed=confirmedPatch758Announcement();
   const current={id:"stable-15.0.4.1",title:"Dalamud Stable 15.0.4.1",
     url:"https://github.com/goatcorp/dalamud-distrib/blob/main/version"};
   const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_dalamud";
@@ -451,10 +451,12 @@ test("Patch 7.58 screenshot backfills the current Dalamud card without pretendin
       const body=JSON.parse(opts.body);
       assert.equal(body.content,"");
       assert.equal(body.embeds[0].url,"https://dalamud.dev/faq/updates/");
-      assert.match(body.embeds[0].description,/10 listopada/);
-      assert.match(body.embeds[0].description,/archiwalny test/i);
-      assert.match(body.embeds[0].description,/Brak aktualnego potwierdzenia/);
+      assert.match(body.embeds[0].description,/Przywrócone/);
+      assert.match(body.embeds[0].description,/Ostatni komunikat/);
+      assert.match(body.embeds[0].description,/Pluginy przywrócone/);
       assert.match(body.embeds[0].description,/wyjątków antywirusa/);
+      assert.doesNotMatch(body.embeds[0].description,/testow|archiwaln|Brak aktualnego potwierdzenia/i);
+      assert.match(body.embeds[0].description,/10 listopada|<t:1794348300:f>/);
       assert.doesNotMatch(body.embeds[0].description,/\]\(\)/,"no fake message URL");
       message={...message,content:body.content,embeds:body.embeds};
     }
