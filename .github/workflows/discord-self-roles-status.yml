@@ -1,0 +1,49 @@
+name: Discord Self Roles status check
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/discord-self-roles-status.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+        working-directory: cloud/yura-cloud
+      - name: Verify self-role publication in production D1 (read-only)
+        working-directory: cloud/yura-cloud
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute yura-cloud --remote --json \
+            --command="SELECT key,value FROM meta WHERE key IN ('discord_self_roles_panel_v1','discord_self_roles_panel_status_v1');" > "$RUNNER_TEMP/selfrole.json"
+          python3 - "$RUNNER_TEMP/selfrole.json" <<'PY'
+          import json,sys
+          raw=json.load(open(sys.argv[1],encoding='utf8'))
+          rows={}
+          for part in raw if isinstance(raw,list) else [raw]:
+              for row in part.get("results",[]):
+                  rows[row["key"]]=row["value"]
+          config=json.loads(rows.get("discord_self_roles_panel_v1") or "null")
+          status=json.loads(rows.get("discord_self_roles_panel_status_v1") or "null")
+          print("SELF ROLES configured:",bool(config))
+          print("SELF ROLES published:",bool(config and config.get("message_id")))
+          print("SELF ROLES channel configured:",bool(config and config.get("channel_id")))
+          print("SELF ROLES buttons:",[r.get("label") for r in config.get("roles",[])] if config else [])
+          print("SELF ROLES status:",status.get("status","none") if status else "none")
+          print("SELF ROLES operation:",status.get("operation","none") if status else "none")
+          if status and status.get("error"):
+              print("SELF ROLES error:",str(status["error"])[:180])
+          PY
