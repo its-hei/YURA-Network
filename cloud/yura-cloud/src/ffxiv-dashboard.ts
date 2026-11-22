@@ -170,7 +170,9 @@ export function renderFfxivCardText(category:Category,x:Current|null):string {
       // the real clickable link is the Fashion embed's title+URL.
       return "";
     case "patch":
-      return [header,"**"+title+"**",link("Przeczytaj patch notes")].join("\n");
+      // As with Event and Fashion, the blue embed title is already a direct
+      // clickable Lodestone link. Do not repeat it as plain bot text above.
+      return "";
     case "dalamud":
       return [header,"**"+title+"**",link("Wersja stabilna • źródło")].join("\n");
   }
@@ -823,6 +825,51 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
     else errors.push("Discord did not confirm the compact event layout"+
       " (bodyOK="+bodyOK+", embedOK="+embedsOK+", embeds="+actual.length+")");
   }catch(e:any){errors.push(String(e?.message??e).slice(0,220));}
+  return {checked,updated,verified,errors};
+}
+
+// One-shot compact Patch update. It edits only the existing PATCH anchor
+// (no new posts, no history changes) and verifies the live Discord response.
+// This deliberately does not change the global renderRevision, which would
+// force unrelated Event/Fashion/Dalamud cards through a migration.
+export async function refreshFfxivPatchEmbedOnly(env:Env,cfg:BoardConfig):
+Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
+  let checked=0,updated=0,verified=0;
+  const errors:string[]=[];
+  if(!ID.test(cfg.channelId)||!ID.test(cfg.guildId))
+    return {checked,updated,verified,errors:["Invalid FFXIV Discord channel"]};
+  try {
+    const post=await loadPost(env,cfg,"patch");
+    if(!post)return {checked,updated,verified,errors:["Patch anchor not initialized"]};
+    checked=1;
+    if(!post.current) {
+      // No published patch notes yet: preserve the informative placeholder.
+      verified=1;
+      return {checked,updated,verified,errors};
+    }
+    const path="channels/"+cfg.channelId+"/messages/"+post.anchor;
+    let actual=await api(env,path);
+    const expected=embedsFor("patch",post.current) as any[];
+    const matching=(message:any)=>{
+      const embeds=Array.isArray(message?.embeds)?message.embeds:[];
+      return String(message?.content??"")===textFor("patch",post.current) &&
+        embeds.length===expected.length &&
+        expected.every((want:any,i:number)=>
+          embeds[i]?.title===want.title &&
+          embeds[i]?.url===want.url &&
+          embeds[i]?.description===want.description &&
+          Number(embeds[i]?.color)===Number(want.color));
+    };
+    if(!matching(actual)) {
+      await deliverCard(env,path,"PATCH","patch",post.current,errors,actual);
+      updated=1;
+      actual=await api(env,path);
+    }
+    if(matching(actual))verified=1;
+    else errors.push("Discord did not confirm the embed-only Patch card");
+  }catch(e:any){
+    errors.push("patch: "+String(e?.message??e).slice(0,200));
+  }
   return {checked,updated,verified,errors};
 }
 
