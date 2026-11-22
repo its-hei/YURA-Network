@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
+import {activeEventSet,renderFfxivCardText,renderFfxivCardEmbeds,deliverCard,updateFourPosts,expireFourPosts,refreshFfxivCardPalette,refreshFfxivEventCompact,refreshFfxivPatchEmbedOnly,ensureFfxivEmbedLinks,FFXIV_CARD_PALETTE} from "../src/ffxiv-dashboard.ts";
 
 const source="https://eu.finalfantasyxiv.com/lodestone/topics/detail/abc123";
 const report="https://cdn.discordapp.com/attachments/111111111111111111/222222222222222222/report.png?ex=1234";
@@ -305,14 +305,76 @@ test("In-place color migration preserves all anchors, thread IDs and the attache
   }finally{globalThis.fetch=original;}
 });
 
-test("Four active cards contain readable descriptions and clickable sources without embeds",()=>{
-  for(const [category,item,parts] of cases.filter(([cat])=>cat!=="fashion"&&cat!=="event")){
+test("Dalamud retains a readable text fallback outside the embed",()=>{
+  for(const [category,item,parts] of cases.filter(([cat])=>cat==="dalamud")){
     const content=renderFfxivCardText(category,item);
     assert.ok(content.startsWith(FFXIV_CARD_PALETTE[category].marker+" **"));
     for(const part of parts)assert.ok(content.includes(part),category+": missing "+part);
     assert.match(content,/\]\(https:\/\//,category+" must contain a clickable link");
     assert.ok(content.length>50,"card is merely a header: "+category);
   }
+});
+test("Published Patch uses only its blue official Lodestone embed",()=>{
+  const current=cases.find(([category])=>category==="patch")[1];
+  assert.equal(renderFfxivCardText("patch",current),"",
+    "no redundant status line, title or Read Patch Notes link above embed");
+  const cards=renderFfxivCardEmbeds("patch",current);
+  assert.equal(cards.length,1);
+  assert.equal(cards[0].title,"Patch 7.58 Notes");
+  assert.equal(cards[0].url,source,"clicking the blue title opens the official notes");
+  assert.equal(cards[0].color,0x5CA9F5,"blue Patch category styling preserved");
+  assert.equal(cards[0].description,"Oficjalne informacje o aktualizacji FFXIV.");
+  assert.match(renderFfxivCardText("patch",null),/Czekamy na oficjalne patch notes/,
+    "keep explanatory placeholder when there is no confirmed patch");
+});
+test("Patch cleanup updates the existing Discord post only, preserving its thread",async()=>{
+  const guildId="911111111111111111",channelId="922222222222222222";
+  const anchorId="933333333333333333",threadId="944444444444444444";
+  const current={id:"7.58",title:"Patch 7.58 Notes",url:source};
+  const key="ffxiv_board_v3_"+guildId+"_"+channelId+"_patch";
+  const stored=new Map([[key,JSON.stringify({
+    anchor:anchorId,thread:threadId,current,renderRevision:14
+  })]]);
+  const DB={prepare:()=>({bind:(...args)=>({
+    first:async()=>({value:stored.get(args[0])??""}),
+    run:async()=>{stored.set(args[0],args[1]);return {meta:{changes:1}};}
+  })})};
+  let message={id:anchorId,content:"Old duplicated header",embeds:[{
+    title:"Patch 7.58 Notes",url:source,color:0x5CA9F5,
+    description:"Oficjalne informacje o aktualizacji FFXIV."
+  }]};
+  const old=globalThis.fetch,requests=[];
+  globalThis.fetch=async(url,opts={})=>{
+    const method=opts.method??"GET";
+    const path=new URL(String(url)).pathname.replace("/api/v10/","");
+    requests.push(method);
+    assert.equal(path,"channels/"+channelId+"/messages/"+anchorId,
+      "must only operate on the saved Patch message, not create new posts");
+    if(method==="PATCH"){
+      const payload=JSON.parse(opts.body);
+      assert.equal(payload.content,"","clean content only");
+      assert.equal(payload.embeds.length,1);
+      assert.equal(payload.embeds[0].title,"Patch 7.58 Notes");
+      assert.equal(payload.embeds[0].url,source);
+      assert.equal(payload.embeds[0].color,0x5CA9F5);
+      assert.deepEqual(payload.allowed_mentions,{parse:[]});
+      message={...message,content:payload.content,embeds:payload.embeds};
+    }else assert.equal(method,"GET");
+    return new Response(JSON.stringify(message),{
+      status:200,headers:{"content-type":"application/json"}});
+  };
+  try{
+    const cfg={guildId,channelId,events:true,fashion:true,lodestone:true,dalamud:true};
+    assert.deepEqual(await refreshFfxivPatchEmbedOnly({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:1,verified:1,errors:[]});
+    assert.deepEqual(requests,["GET","PATCH","GET"]);
+    assert.equal(JSON.parse(stored.get(key)).anchor,anchorId,"anchor preserved");
+    assert.equal(JSON.parse(stored.get(key)).thread,threadId,"history thread preserved");
+    assert.deepEqual(await refreshFfxivPatchEmbedOnly({DB,DISCORD_BOT_TOKEN:"test"},cfg),
+      {checked:1,updated:0,verified:1,errors:[]});
+    assert.deepEqual(requests,["GET","PATCH","GET","GET"],"repeat is read-only");
+    assert.equal(requests.filter(x=>x==="POST").length,0);
+  }finally{globalThis.fetch=old;}
 });
 test("Expired cards show an explanatory text even with embeds disabled",()=>{
   for(const category of ["event","fashion","patch","dalamud"]){
