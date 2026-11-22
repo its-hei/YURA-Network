@@ -30,8 +30,8 @@ function tidy(value:unknown,max=620):string {
 }
 export function classifyDalamudAnnouncement(text:string):DalamudOfficialStatus["state"]{
   const content=text.toLowerCase();
-  const online=/\bplugins? (?:are |is )?(?:back|working|online|available|restored|enabled)\b|\bdalamud (?:is |has been )?(?:back|working|available|restored|updated|live)\b|\bplugin support (?:is |has been )?(?:restored|enabled)\b/i.test(content);
-  const offline=/\b(?:dalamud|plugins?) (?:are |is )?(?:disabled|unavailable|offline|down|broken|not working)\b|\b(?:not available|still disabled|currently disabled|not yet supported|plugins? (?:will not|won't) work)\b/i.test(content);
+  const online=/\bplugins? (?:are |is )?(?:back|working|online|available|restored|enabled)\b|\bdalamud (?:is |has been )?(?:back|working|available|restored|live)\b|\bplugin support (?:is |has been )?(?:restored|enabled)\b/i.test(content);
+  const offline=/\b(?:dalamud|plugins?) (?:are |is )?(?:currently |still )?(?:disabled|unavailable|offline|down|broken|not working)\b|\b(?:dalamud|plugins?) (?:will not|won't|cannot|can't) (?:work|load|start)\b|\b(?:not available|still disabled|currently disabled|not yet supported|plugins? (?:will not|won't) work)\b/i.test(content);
   const ongoing=/\b(?:working on|investigating|still testing|awaiting|waiting for|in progress|under maintenance|being updated|updating dalamud)\b/i.test(content);
   if(online&&offline)return "unknown";
   if(offline)return "unavailable";
