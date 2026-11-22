@@ -315,7 +315,7 @@ test("Dalamud card reports plugin status rather than just a stable version numbe
   assert.equal(card.title,"Dalamud • status pluginów");
   assert.equal(card.url,"https://dalamud.dev/faq/updates/");
   assert.equal(card.color,0x43C6A2);
-  assert.match(card.description,/Pluginy.*Niepotwierdzone/);
+  assert.match(card.description,/Pluginy.*Brak aktualnego potwierdzenia/);
   assert.match(card.description,/15\.0\.4\.1/);
   assert.match(card.description,/Brak potwierdzonego ETA/);
   assert.ok(!card.description.includes("dalamud-distrib"));
