@@ -13,7 +13,7 @@ export type Sources={
 export type BoardConfig={guildId:string;channelId:string;fashion:boolean;events:boolean;dalamud:boolean;lodestone:boolean};
 type Category="event"|"fashion"|"patch"|"dalamud";
 type Current={id:string;title:string;url:string;end?:number;image?:string;imageProxy?:string;expires?:number;
-  otherEvents?:Current[];dalamudStatus?:DalamudOfficialStatus};
+  otherEvents?:Current[];dalamudStatus?:DalamudOfficialStatus;dalamudStatusFresh?:boolean};
 type Post={anchor:string;thread:string;current:Current|null;retiredId?:string;renderRevision?:number};
 const RENDER_REVISION=14;
 const ORDER:Category[]=["event","fashion","patch","dalamud"];
@@ -236,7 +236,7 @@ function embedsFor(category:Category,x:Current|null):unknown[]{
         status?.state==="working"?"🟠 Trwa aktualizacja":"⚪ Niepotwierdzone";
       title="Dalamud • status pluginów";
       description="**Pluginy:** "+(recent?label:"⚪ Brak aktualnego potwierdzenia")+
-        "\n**Wersja stabilna:** "+safe(x.title.replace(/^Dalamud\s*/i,""),60);
+        "\n**Wersja stabilna:** "+safe(x.title.replace(/^Dalamud\s+Stable\s*/i,""),60);
       if(status){
         description+="\n**Ostatni komunikat:** <t:"+Math.floor(status.at/1000)+":f> • "+
           safe(status.author,60)+
@@ -286,6 +286,7 @@ function changed(a:Current|null,b:Current|null):boolean{
     // changes. A transient page fetch failure must not remove existing art.
     (!!b?.image && a?.image!==b.image) ||
     a?.dalamudStatus?.messageId!==b?.dalamudStatus?.messageId ||
+    a?.dalamudStatusFresh!==b?.dalamudStatusFresh ||
     JSON.stringify(a?.otherEvents?.map(x=>x.id)||[])!==JSON.stringify(b?.otherEvents?.map(x=>x.id)||[]);
 }
 async function ensurePost(env:Env,cfg:BoardConfig,cat:Category,existing:any[]):Promise<Post>{
@@ -776,7 +777,8 @@ Promise<{updated:number;changes:string[];errors:string[]}>{
   if(cfg.dalamud && posts.dalamud?.current && expected.dalamud &&
     posts.dalamud.current.id===expected.dalamud.id)
     expected.dalamud={...expected.dalamud,
-      dalamudStatus:posts.dalamud.current.dalamudStatus};
+      dalamudStatus:posts.dalamud.current.dalamudStatus,
+      dalamudStatusFresh:posts.dalamud.current.dalamudStatusFresh};
   const changes:string[]=[];
   for(const cat of ORDER){
     const post=posts[cat];
@@ -972,10 +974,13 @@ Promise<{checked:number;updated:number;verified:number;errors:string[]}>{
     // A missing/new source must never erase a more recent signed-off status.
     const previous=post.current.dalamudStatus;
     const chosen=(!status||previous&&previous.at>status.at)?previous:status;
-    const fresh:Current={...post.current,...(chosen?{dalamudStatus:chosen}:{})};
+    const freshFlag=!!chosen && Date.now()-chosen.at<=7*86400000;
+    const fresh:Current={...post.current,dalamudStatusFresh:freshFlag,
+      ...(chosen?{dalamudStatus:chosen}:{})};
     const layoutKey="ffxiv_dalamud_status_layout_v1_"+cfg.guildId+"_"+cfg.channelId;
     const oldLayout=await getMeta(env,layoutKey);
-    if(oldLayout!=="1"||JSON.stringify(previous)!==JSON.stringify(chosen)){
+    if(oldLayout!=="1"||JSON.stringify(previous)!==JSON.stringify(chosen)||
+      post.current.dalamudStatusFresh!==freshFlag){
       const path="channels/"+cfg.channelId+"/messages/"+post.anchor;
       const sent=await deliverCard(env,path,"PATCH","dalamud",fresh,errors);
       if(sent){
